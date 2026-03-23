@@ -3,16 +3,19 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
+import HomeClient from './home-client';
 
-export default function Page() {
+export default function HomePage() {
   const { token, loading } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-    if (!loading) {
-      router.push(token ? '/home' : '/login');
+    if (!loading && !token) {
+      router.push('/login');
     }
   }, [loading, token, router]);
 
-  return null;
+  if (loading || !token) return null;
+
+  return <HomeClient />;
 }
