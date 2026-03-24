@@ -1,5 +1,5 @@
 'use client';
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from './AuthContext';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
@@ -24,6 +24,7 @@ interface LocationContextType {
   setShowModal: (v: boolean) => void;
   saveLocation: (lat: number, lng: number, name: string) => Promise<void>;
   clearLocation: () => void;
+  previousLocation: Location | null;
 }
 
 const LocationContext = createContext<LocationContextType>({} as LocationContextType);
@@ -32,25 +33,35 @@ export const useLocation = () => useContext(LocationContext);
 export function LocationProvider({ children }: { children: React.ReactNode }) {
   const { token, user } = useAuth();
   const [location, setLocation] = useState<Location | null>(null);
+  const [previousLocation, setPreviousLocation] = useState<Location | null>(null);
   const [kitchens, setKitchens] = useState<NearbyKitchen[]>([]);
   const [showModal, setShowModal] = useState(false);
+  const askedRef = useRef(false); // only ask once per session
 
-  // Load from localStorage on mount
+  // Load saved location from localStorage on mount
   useEffect(() => {
     const saved = localStorage.getItem('userLocation');
     if (saved) {
-      try { setLocation(JSON.parse(saved)); } catch {}
+      try {
+        const parsed = JSON.parse(saved);
+        setLocation(parsed);
+        setPreviousLocation(parsed); // remember it as "previous"
+      } catch {}
     }
   }, []);
 
-  // After auth, show modal if location not yet set
+  // Always ask on login/app open — once per session
   useEffect(() => {
-    if (token && user && !location) {
-      // small delay so the home page renders first
-      const t = setTimeout(() => setShowModal(true), 800);
+    if (token && user && !askedRef.current) {
+      askedRef.current = true;
+      const t = setTimeout(() => setShowModal(true), 600);
       return () => clearTimeout(t);
     }
-  }, [token, user, location]);
+    // Reset when user logs out
+    if (!token) {
+      askedRef.current = false;
+    }
+  }, [token, user]);
 
   // Whenever location changes, fetch nearby kitchens
   useEffect(() => {
@@ -72,9 +83,9 @@ export function LocationProvider({ children }: { children: React.ReactNode }) {
   const saveLocation = useCallback(async (lat: number, lng: number, name: string) => {
     const loc = { latitude: lat, longitude: lng, locationName: name };
     setLocation(loc);
+    setPreviousLocation(loc);
     localStorage.setItem('userLocation', JSON.stringify(loc));
     setShowModal(false);
-    // Save to backend
     if (token) {
       await fetch(`${API_URL}/auth/location`, {
         method: 'PUT',
@@ -95,6 +106,7 @@ export function LocationProvider({ children }: { children: React.ReactNode }) {
     <LocationContext.Provider value={{
       location, kitchens, locationSet: !!location,
       showModal, setShowModal, saveLocation, clearLocation,
+      previousLocation,
     }}>
       {children}
     </LocationContext.Provider>

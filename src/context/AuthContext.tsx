@@ -48,6 +48,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (res.ok) {
         const data = await res.json();
         setUser(data);
+        // Start pinging admin to track live users
+        startPing(t);
       }
     } catch (e) {
       console.error('Failed to fetch profile', e);
@@ -60,6 +62,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setToken(null);
     setUser(null);
     localStorage.removeItem('token');
+    stopPing();
+  };
+
+  // Ping every 60s so admin can see live users
+  let pingInterval: ReturnType<typeof setInterval> | null = null;
+
+  const startPing = (t: string) => {
+    stopPing();
+    fetch(`${API_URL}/admin/ping`, { method: 'POST', headers: { Authorization: `Bearer ${t}` } }).catch(() => {});
+    pingInterval = setInterval(() => {
+      fetch(`${API_URL}/admin/ping`, { method: 'POST', headers: { Authorization: `Bearer ${t}` } }).catch(() => {});
+    }, 60000);
+  };
+
+  const stopPing = () => {
+    if (pingInterval) { clearInterval(pingInterval); pingInterval = null; }
   };
 
   const updateUser = (u: User) => setUser(u);

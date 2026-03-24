@@ -3,6 +3,10 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { ArrowLeft, ShoppingCart } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
+import { useLocation } from '@/context/LocationContext';
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
 export default function MenuClient() {
   const [menuItems, setMenuItems] = useState([]);
@@ -10,15 +14,15 @@ export default function MenuClient() {
   const [cart, setCart] = useState({});
   const searchParams = useSearchParams();
   const router = useRouter();
+  const { token } = useAuth();
+  const { locationSet } = useLocation();
 
   const date = searchParams.get('date');
   const mealType = searchParams.get('mealType');
 
   useEffect(() => {
     const storedCart = localStorage.getItem('scheduleCart');
-    if (storedCart) {
-      setCart(JSON.parse(storedCart));
-    }
+    if (storedCart) setCart(JSON.parse(storedCart));
   }, []);
 
   useEffect(() => {
@@ -26,24 +30,26 @@ export default function MenuClient() {
   }, [cart]);
 
   useEffect(() => {
+    if (!token) return;
     const fetchMenuItems = async () => {
       try {
         setLoading(true);
-        const response = await fetch('/api/menu-items');
-        if (response.ok) {
-          const data = await response.json();
-          setMenuItems(data.items.filter(item => item.category === mealType));
-        } else {
-          console.error('Failed to fetch menu items');
+        // Use location-based endpoint if location is set
+        const url = locationSet
+          ? `${API_URL}/menu/by-location`
+          : `${API_URL}/menu/mealtype/${mealType}`;
+        const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+        if (res.ok) {
+          const data = await res.json();
+          const all = data.items || [];
+          // Filter by mealType client-side when using by-location
+          setMenuItems(locationSet ? all.filter(i => i.mealType === mealType) : all);
         }
-      } catch (error) {
-        console.error('Error fetching menu items:', error);
-      } finally {
-        setLoading(false);
-      }
+      } catch {}
+      finally { setLoading(false); }
     };
     fetchMenuItems();
-  }, [mealType]);
+  }, [mealType, token, locationSet]);
 
   const handleAddToCart = (item) => {
     setCart(prevCart => {

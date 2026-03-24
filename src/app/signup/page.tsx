@@ -4,106 +4,136 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
+import { usePWAInstall } from '@/hooks/usePWAInstall';
+import { Eye, EyeOff, Mail, Lock, User, Phone, ArrowRight, Download, Loader2 } from 'lucide-react';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
 export default function SignUpPage() {
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
+  const [name, setName]         = useState('');
+  const [email, setEmail]       = useState('');
+  const [phone, setPhone]       = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [showPass, setShowPass] = useState(false);
+  const [error, setError]       = useState('');
+  const [loading, setLoading]   = useState(false);
   const router = useRouter();
   const { login } = useAuth();
+  const { canInstall, install } = usePWAInstall();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(''); setLoading(true);
     try {
-      const res = await fetch(`${API_URL}/auth/register`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res  = await fetch(`${API_URL}/auth/register`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, email, phone, password }),
       });
       const data = await res.json();
-      if (res.ok) {
-        await login(data.token);
-        router.push('/home');
-      } else {
-        setError(data.msg || 'Something went wrong');
-      }
+      if (res.ok) { await login(data.token); router.push('/onboarding'); }
+      else setError(data.msg || 'Something went wrong');
     } catch { setError('Connection error. Is the server running?'); }
     finally { setLoading(false); }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-amber-50 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        {/* Logo */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-orange-500 to-amber-500 rounded-2xl shadow-lg mb-4">
-            <span className="text-3xl">🍱</span>
+    <div className="min-h-screen flex flex-col relative overflow-hidden bg-gray-950">
+
+      {/* Background food image — different from login */}
+      <div
+        className="absolute inset-0 bg-cover bg-center"
+        style={{ backgroundImage: `url('https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800&auto=format&fit=crop')` }}
+      />
+      <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/20 to-black/85" />
+
+      {/* PWA install banner */}
+      {canInstall && (
+        <div className="relative z-10 mx-4 mt-12">
+          <button onClick={install}
+            className="w-full flex items-center gap-3 bg-white/15 backdrop-blur-md border border-white/20 text-white rounded-2xl px-4 py-3">
+            <Download className="w-4 h-4 flex-shrink-0" />
+            <span className="text-sm font-bold flex-1 text-left">Install Tiffica App</span>
+            <span className="text-xs bg-white/20 px-3 py-1 rounded-xl font-bold">Install</span>
+          </button>
+        </div>
+      )}
+
+      <div className="relative z-10 flex-1 flex flex-col justify-center px-5 py-8">
+
+        {/* Branding */}
+        <div className="mb-5">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-12 h-12 bg-orange-500 rounded-2xl flex items-center justify-center shadow-lg">
+              <span className="text-2xl">🍱</span>
+            </div>
+            <h1 className="text-4xl font-black text-white tracking-tight">Tiffica</h1>
           </div>
-          <h1 className="text-3xl font-extrabold text-gray-900">Tiffica</h1>
-          <p className="text-gray-500 mt-1 text-sm">Join thousands who love home-cooked meals</p>
+          <p className="text-white/60 text-sm font-medium">Join thousands who love home-cooked meals</p>
         </div>
 
-        <div className="bg-white rounded-3xl shadow-xl p-8">
-          <h2 className="text-xl font-bold text-gray-800 mb-6">Create your account</h2>
+        {/* Card */}
+        <div className="bg-white/10 backdrop-blur-2xl border border-white/20 rounded-3xl p-6 shadow-2xl">
+
+          <h2 className="text-lg font-extrabold text-white mb-4">Create your account ✨</h2>
 
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-600 text-sm rounded-xl px-4 py-3 mb-4">
-              {error}
-            </div>
+            <div className="bg-red-500/20 border border-red-400/30 text-red-200 text-xs rounded-2xl px-4 py-2.5 mb-4">{error}</div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
-              <input
-                type="text" value={name} onChange={e => setName(e.target.value)}
-                placeholder="John Doe" required
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 bg-gray-50"
-              />
+          <form onSubmit={handleSubmit} className="space-y-3">
+
+            {/* Name */}
+            <div className="flex items-center gap-3 bg-white border border-white/20 rounded-2xl px-4 py-3">
+              <User className="w-4 h-4 text-gray-400 flex-shrink-0" />
+              <input type="text" value={name} onChange={e => setName(e.target.value)}
+                placeholder="Full name" required
+                className="flex-1 bg-transparent text-black text-sm placeholder:text-gray-400 focus:outline-none" />
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-              <input
-                type="email" value={email} onChange={e => setEmail(e.target.value)}
-                placeholder="you@example.com" required
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 bg-gray-50"
-              />
+
+            {/* Email */}
+            <div className="flex items-center gap-3 bg-white border border-white/20 rounded-2xl px-4 py-3">
+              <Mail className="w-4 h-4 text-gray-400 flex-shrink-0" />
+              <input type="email" value={email} onChange={e => setEmail(e.target.value)}
+                placeholder="Email address" required
+                className="flex-1 bg-transparent text-black text-sm placeholder:text-gray-400 focus:outline-none" />
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
-              <input
-                type="tel" value={phone} onChange={e => setPhone(e.target.value)}
-                placeholder="+91 9876543210" required
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 bg-gray-50"
-              />
+
+            {/* Phone */}
+            <div className="flex items-center gap-3 bg-white border border-white/20 rounded-2xl px-4 py-3">
+              <Phone className="w-4 h-4 text-gray-400 flex-shrink-0" />
+              <input type="tel" value={phone} onChange={e => setPhone(e.target.value)}
+                placeholder="Phone number" required
+                className="flex-1 bg-transparent text-black text-sm placeholder:text-gray-400 focus:outline-none" />
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
-              <input
-                type="password" value={password} onChange={e => setPassword(e.target.value)}
-                placeholder="••••••••" required minLength={6}
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 bg-gray-50"
-              />
+
+            {/* Password */}
+            <div className="flex items-center gap-3 bg-white border border-white/20 rounded-2xl px-4 py-3">
+              <Lock className="w-4 h-4 text-gray-400 flex-shrink-0" />
+              <input type={showPass ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)}
+                placeholder="Create password" required minLength={6}
+                className="flex-1 bg-transparent text-black text-sm placeholder:text-gray-400 focus:outline-none" />
+              <button type="button" onClick={() => setShowPass(v => !v)}>
+                {showPass ? <EyeOff className="w-4 h-4 text-gray-400" /> : <Eye className="w-4 h-4 text-gray-400" />}
+              </button>
             </div>
-            <button
-              type="submit" disabled={loading}
-              className="w-full py-3 bg-gradient-to-r from-orange-500 to-amber-500 text-white font-bold rounded-xl shadow-md hover:shadow-orange-200 hover:shadow-xl transition-all disabled:opacity-60 mt-2"
-            >
-              {loading ? 'Creating account…' : 'Create Account'}
+
+            <button type="submit" disabled={loading}
+              className="w-full py-3.5 bg-orange-500 hover:bg-orange-600 text-white font-extrabold rounded-2xl shadow-lg shadow-orange-500/30 flex items-center justify-center gap-2 transition active:scale-95 disabled:opacity-60 mt-1">
+              {loading
+                ? <Loader2 className="w-5 h-5 animate-spin" />
+                : <><span>Create Account</span><ArrowRight className="w-4 h-4" /></>}
             </button>
           </form>
 
-          <p className="text-center text-sm text-gray-500 mt-6">
+          <p className="text-center text-xs text-white/50 mt-5">
             Already have an account?{' '}
-            <Link href="/login" className="text-orange-500 font-semibold hover:underline">Login</Link>
+            <Link href="/login" className="text-orange-300 font-bold">Login →</Link>
           </p>
         </div>
+
+        <p className="text-center text-xs text-white/30 mt-4 pb-6">
+          By signing up you agree to our Terms & Privacy Policy
+        </p>
       </div>
     </div>
   );

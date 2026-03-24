@@ -1,13 +1,31 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { Search, ChevronDown, MapPin, Flame, Wallet, SlidersHorizontal } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  Search, Flame,
+  SlidersHorizontal, Plus, Star, Clock, Leaf,
+  Sunrise, Sun, Sunset, Moon, MapPin
+} from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useLocation } from '@/context/LocationContext';
+import { useCart } from '@/context/CartContext';
+import { useToast } from '@/context/ToastContext';
+import { openRazorpay } from '@/hooks/useRazorpay';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
-const FALLBACK = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&h=300&fit=crop';
+const FALLBACK_IMG = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&auto=format&fit=crop';
+const FALLBACK_VIDEO = 'https://assets.mixkit.co/videos/preview/mixkit-fresh-vegetables-being-prepared-for-a-salad-40432-large.mp4';
+const CATEGORIES = [
+  { id: 'All',       label: 'All',        emoji: '🍽️' },
+  { id: 'Under79',   label: 'Under ₹79',  emoji: '💸' },
+  { id: 'Under99',   label: 'Under ₹99',  emoji: '🏷️' },
+  { id: 'Breakfast', label: 'Breakfast',  emoji: '☕' },
+  { id: 'Lunch',     label: 'Lunch',      emoji: '🍛' },
+  { id: 'Dinner',    label: 'Dinner',     emoji: '🌙' },
+  { id: 'Snack',     label: 'Snack',      emoji: '🥪' },
+];
 
 interface MenuItem {
   _id: string;
@@ -18,231 +36,334 @@ interface MenuItem {
   category?: string;
   mealType?: string;
   isVeg?: boolean;
-  cloudKitchen?: { _id: string; name: string };
+  rating?: number;
 }
 
-const CATS = ['All', 'Breakfast', 'Lunch', 'Dinner', 'Snack'];
+// ── Time-based greeting ──────────────────────────────────
+function getGreeting(name?: string) {
+  const h = new Date().getHours();
+  let Icon = Sunrise;
+  let greeting = 'Good Morning';
+  let color = 'text-amber-300';
+  if (h >= 12 && h < 17) { Icon = Sun;    greeting = 'Good Afternoon'; color = 'text-yellow-300'; }
+  else if (h >= 17 && h < 21) { Icon = Sunset; greeting = 'Good Evening';   color = 'text-orange-300'; }
+  else if (h >= 21 || h < 5)  { Icon = Moon;   greeting = 'Good Night';     color = 'text-blue-300'; }
+  return { Icon, greeting, color, firstName: name?.split(' ')[0] || '' };
+}
 
 export default function HomeClient() {
   const { user, token } = useAuth();
-  const { location, kitchens, setShowModal, locationSet } = useLocation();
+  const { location, kitchens, locationSet } = useLocation();
+
   const router = useRouter();
-
-  const [items, setItems] = useState<MenuItem[]>([]);
+  const [items, setItems]             = useState<MenuItem[]>([]);
   const [todaySpecial, setTodaySpecial] = useState<MenuItem[]>([]);
-  const [cat, setCat] = useState('All');
-  const [search, setSearch] = useState('');
-  const [loading, setLoading] = useState(true);
+  const [activeCat, setActiveCat]     = useState('All');
+  const [loading, setLoading]         = useState(true);
+  const [videoUrl, setVideoUrl]       = useState(FALLBACK_VIDEO);
+  const [greeting, setGreeting]       = useState(() => getGreeting());
 
-  const fetchMenu = useCallback(async () => {
+  // Update greeting every minute
+  useEffect(() => {
+    setGreeting(getGreeting(user?.name));
+    const t = setInterval(() => setGreeting(getGreeting(user?.name)), 60000);
+    return () => clearInterval(t);
+  }, [user?.name]);
+
+  // Fetch video from DB (homestyles)
+  useEffect(() => {
+    fetch(`${API_URL}/homestyles`)
+      .then(r => r.ok ? r.json() : null)
+      .then(d => {
+        const links: string[] = d?.data?.videoLinks || [];
+        if (links.length > 0) setVideoUrl(links[0]);
+      })
+      .catch(() => {});
+  }, []);
+
+  // Fetch menu
+  const fetchData = useCallback(async () => {
     if (!token) return;
     setLoading(true);
-    const h: Record<string, string> = { 'Authorization': `Bearer ${token}` };
+    const headers = { Authorization: `Bearer ${token}` };
     try {
-      // If location set → use by-location endpoint; else fall back to all menu
-      const menuUrl = locationSet
-        ? `${API_URL}/menu/by-location`
-        : `${API_URL}/menu`;
-
+      const menuUrl    = locationSet ? `${API_URL}/menu/by-location` : `${API_URL}/menu`;
+      const specialUrl  = locationSet ? `${API_URL}/menu/today-special/by-location` : `${API_URL}/menu/today-special`;
       const [menuRes, specialRes] = await Promise.all([
-        fetch(menuUrl, { headers: h }),
-        fetch(`${API_URL}/menu/today-special`, { headers: h }),
+        fetch(menuUrl,   { headers }),
+        fetch(specialUrl, { headers }),
       ]);
-
-      if (menuRes.ok) {
-        const d = await menuRes.json();
-        setItems(d.items || d.menuItems || []);
-      }
-      if (specialRes.ok) {
-        const d = await specialRes.json();
-        setTodaySpecial(d.items || []);
-      }
-    } catch (e) { console.error(e); }
+      if (menuRes.ok)    { const d = await menuRes.json();    setItems(d.items || d.menuItems || []); }
+      if (specialRes.ok) { const d = await specialRes.json(); setTodaySpecial(d.items || []); }
+    } catch {}
     finally { setLoading(false); }
   }, [token, locationSet]);
 
-  useEffect(() => { fetchMenu(); }, [fetchMenu]);
+  useEffect(() => { fetchData(); }, [fetchData]);
 
-  const filtered = items.filter(item => {
-    const matchCat = cat === 'All' || item.mealType === cat || item.category === cat;
-    const matchSearch = item.name.toLowerCase().includes(search.toLowerCase());
-    return matchCat && matchSearch;
-  });
-
-  const img = (item: MenuItem) => item.image?.trim() ? item.image : FALLBACK;
+  const filteredItems = useMemo(() => {
+    if (activeCat === 'All') return items;
+    if (activeCat === 'Under79') return items.filter(i => i.price < 79);
+    if (activeCat === 'Under99') return items.filter(i => i.price < 99);
+    return items.filter(item => item.mealType === activeCat || item.category === activeCat);
+  }, [items, activeCat]);
 
   return (
-    <div className="bg-gray-50 min-h-screen pb-24">
-      {/* Header */}
-      <div className="bg-gradient-to-br from-orange-500 via-orange-400 to-amber-400 pt-10 pb-16 px-5 relative overflow-hidden">
-        <div className="absolute -top-10 -right-10 w-48 h-48 bg-white/10 rounded-full" />
-        <div className="absolute -bottom-6 -left-6 w-32 h-32 bg-white/10 rounded-full" />
+    <div className="bg-[#F8F9FB] min-h-screen pb-24 font-sans antialiased">
 
-        <div className="relative z-10">
-          {/* Location bar */}
-          <button
-            onClick={() => setShowModal(true)}
-            className="flex items-center gap-1.5 bg-white/20 backdrop-blur rounded-xl px-3 py-1.5 mb-4 hover:bg-white/30 transition"
-          >
-            <MapPin className="w-3.5 h-3.5 text-white" />
-            <span className="text-white text-xs font-semibold truncate max-w-[200px]">
-              {location?.locationName || 'Set your location'}
-            </span>
-            <ChevronDown className="w-3.5 h-3.5 text-white/80" />
-          </button>
+      {/* ── HERO ── */}
+      <header className="relative w-full overflow-hidden rounded-b-[40px] shadow-2xl" style={{ height: '42vh' }}>
 
-          <h1 className="text-2xl font-extrabold text-white leading-tight">
-            {user?.name ? `Hey ${user.name.split(' ')[0]}! 👋` : 'What are you craving?'}
-          </h1>
-          <p className="text-white/80 text-sm mt-1">
-            {locationSet
-              ? `${kitchens.length} cloud kitchen${kitchens.length !== 1 ? 's' : ''} near you`
-              : 'Set location to see nearby kitchens'}
-          </p>
-        </div>
+        {/* Video background */}
+        <video
+          key={videoUrl}
+          autoPlay loop muted playsInline
+          className="absolute inset-0 w-full h-full object-cover"
+          src={videoUrl}
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-black/50" />
 
-        {/* Wallet chip */}
-        {user?.walletBalance !== undefined && (
-          <div className="absolute top-10 right-5 bg-white/20 backdrop-blur rounded-xl px-3 py-2 flex items-center gap-2">
-            <Wallet className="w-4 h-4 text-green-200" />
-            <div>
-              <p className="text-white/70 text-xs">Wallet</p>
-              <p className="text-white font-bold text-sm">₹{user.walletBalance?.toFixed(0)}</p>
-            </div>
+        <div className="relative z-10 h-full flex flex-col justify-end px-5 pt-14 pb-6">
+
+          {/* Greeting */}
+          <div>
+            <motion.div
+              key={greeting.greeting}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4 }}
+              className="mb-4"
+            >
+              <div className="flex items-center gap-2 mb-1">
+                <greeting.Icon size={28} className={`${greeting.color} drop-shadow-lg flex-shrink-0`} strokeWidth={1.8} />
+                <p className="text-white/80 text-base font-bold tracking-wide">
+                  {greeting.greeting}{greeting.firstName ? `, ${greeting.firstName}!` : '!'}
+                </p>
+              </div>
+              <h1 className="text-3xl font-black text-white leading-tight tracking-tight drop-shadow-md">
+                What&apos;s cooking today? 🍱
+              </h1>
+              {locationSet && (
+                <div className="flex items-center gap-1 mt-2">
+                  <MapPin size={12} className="text-orange-300" />
+                  <p className="text-white/60 text-xs font-medium">
+                    {kitchens.length} kitchen{kitchens.length !== 1 ? 's' : ''} near you
+                  </p>
+                </div>
+              )}
+            </motion.div>
+
+            {/* Search bar — tap to go to search page */}
+            <button
+              onClick={() => router.push('/search')}
+              className="mt-4 w-full flex items-center gap-3 bg-white rounded-2xl px-4 py-3 shadow-xl active:scale-95 transition"
+            >
+              <Search className="text-gray-400 flex-shrink-0" size={18} />
+              <span className="flex-1 text-left text-sm font-medium text-gray-400">Search homemade dishes...</span>
+              <SlidersHorizontal className="text-orange-500 flex-shrink-0" size={18} />
+            </button>
           </div>
-        )}
-      </div>
-
-      {/* Search */}
-      <div className="mx-5 -mt-6 relative z-20 mb-5">
-        <div className="flex items-center gap-2 bg-white rounded-2xl shadow-lg px-4 py-3 border border-gray-100">
-          <Search className="w-5 h-5 text-gray-400 flex-shrink-0" />
-          <input
-            value={search} onChange={e => setSearch(e.target.value)}
-            placeholder="Search meals…"
-            className="flex-1 text-sm text-gray-800 bg-transparent focus:outline-none placeholder:text-gray-400"
-          />
-          <SlidersHorizontal className="w-5 h-5 text-gray-300" />
         </div>
-      </div>
+      </header>
 
-      <div className="px-5">
-        {/* Set location prompt */}
-        {!locationSet && (
-          <button
-            onClick={() => setShowModal(true)}
-            className="w-full flex items-center gap-3 bg-orange-50 border border-orange-200 rounded-2xl px-4 py-3.5 mb-6 hover:bg-orange-100 transition"
-          >
-            <MapPin className="w-5 h-5 text-orange-500" />
-            <div className="text-left">
-              <p className="text-sm font-bold text-orange-700">Set your delivery location</p>
-              <p className="text-xs text-orange-500">See restaurant menus available near you</p>
-            </div>
-            <span className="ml-auto text-orange-500 text-sm font-bold">Set →</span>
-          </button>
-        )}
+      {/* ── CATEGORY BAR — sticky below top bar ── */}
+      <nav className="sticky top-[52px] z-30 bg-white/95 backdrop-blur-xl border-b border-gray-100 shadow-sm transition-all duration-300">
+        <div className="flex gap-2 overflow-x-auto px-5 py-3 scrollbar-hide">
+          {CATEGORIES.map(c => (
+            <button
+              key={c.id}
+              onClick={() => setActiveCat(c.id)}
+              className={`whitespace-nowrap px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 flex-shrink-0 flex items-center gap-1.5 ${
+                activeCat === c.id
+                  ? 'bg-gray-900 text-white shadow-md'
+                  : 'bg-gray-100 text-gray-500'
+              }`}
+            >
+              <span>{c.emoji}</span>
+              <span>{c.label}</span>
+            </button>
+          ))}
+        </div>
+      </nav>
 
-        {/* Today's Special */}
+      <main className="px-5 mt-5 space-y-8">
+
+        {/* ── TODAY'S SPECIALS ── */}
         {todaySpecial.length > 0 && (
-          <section className="mb-7">
-            <div className="flex items-center gap-2 mb-3">
-              <Flame className="w-5 h-5 text-orange-500" />
-              <h2 className="text-lg font-extrabold text-gray-900">Today's Special</h2>
+          <section>
+            <div className="flex items-center gap-2 mb-4">
+              <div className="bg-orange-100 p-1.5 rounded-xl">
+                <Flame size={18} className="text-orange-600" />
+              </div>
+              <h2 className="text-lg font-black text-gray-900 uppercase tracking-tight">Today's Hot Deals</h2>
             </div>
             <div className="flex gap-4 overflow-x-auto pb-2 -mx-5 px-5 scrollbar-hide">
-              {todaySpecial.map(item => (
-                <div key={item._id} className="flex-shrink-0 w-44 bg-white rounded-2xl shadow-sm overflow-hidden">
-                  <div className="relative h-28">
-                    <img src={img(item)} alt={item.name} className="w-full h-full object-cover" />
-                    {item.isVeg !== undefined && (
-                      <span className={`absolute top-2 left-2 text-xs px-1.5 py-0.5 rounded-full font-bold ${item.isVeg ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                        {item.isVeg ? '🌿' : '🍖'}
-                      </span>
-                    )}
-                  </div>
-                  <div className="p-3">
-                    <h3 className="font-bold text-sm text-gray-900 truncate">{item.name}</h3>
-                    <p className="text-xs text-gray-400 mt-0.5 line-clamp-1">{item.description}</p>
-                    <p className="text-orange-500 font-extrabold text-sm mt-1.5">₹{item.price}</p>
-                  </div>
-                </div>
-              ))}
+              {todaySpecial.map(item => <SpecialCard key={item._id} item={item} />)}
             </div>
           </section>
         )}
 
-        {/* Categories */}
-        <section className="mb-5">
-          <h2 className="text-lg font-extrabold text-gray-900 mb-3">Browse Menu</h2>
-          <div className="flex gap-2 overflow-x-auto pb-1 -mx-5 px-5 scrollbar-hide">
-            {CATS.map(c => (
-              <button key={c} onClick={() => setCat(c)}
-                className={`flex-shrink-0 px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
-                  cat === c
-                    ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-md'
-                    : 'bg-white text-gray-600 border border-gray-200'
-                }`}>{c}
-              </button>
-            ))}
+        {/* ── MENU GRID ── */}
+        <section>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-black text-gray-900">Cooked Near You</h2>
+            <button className="text-orange-600 font-bold text-xs bg-orange-50 px-3 py-1.5 rounded-xl">View All</button>
           </div>
-        </section>
 
-        {/* Menu Grid */}
-        {loading ? (
-          <div className="grid grid-cols-2 gap-4">
-            {[...Array(6)].map((_, i) => (
-              <div key={i} className="h-52 bg-gray-200 rounded-2xl animate-pulse" />
-            ))}
-          </div>
-        ) : filtered.length === 0 ? (
-          <div className="text-center py-16 text-gray-400">
-            <p className="text-5xl mb-3">🍽️</p>
-            <p className="font-bold text-gray-600">
-              {locationSet ? 'No items found nearby' : 'Set location to browse the menu'}
-            </p>
-            <p className="text-sm mt-1">
-              {locationSet
-                ? 'Try a different category or broaden your search'
-                : 'We\'ll show menus from kitchens within 5km of you'}
-            </p>
-            {!locationSet && (
-              <button onClick={() => setShowModal(true)}
-                className="mt-4 px-6 py-2.5 bg-gradient-to-r from-orange-500 to-amber-500 text-white font-bold rounded-xl shadow">
-                Set Location
-              </button>
-            )}
-          </div>
-        ) : (
-          <div className="grid grid-cols-2 gap-4">
-            {filtered.map(item => (
-              <div key={item._id} className="bg-white rounded-2xl shadow-sm overflow-hidden group hover:shadow-md transition-shadow">
-                <div className="relative h-32 overflow-hidden">
-                  <img src={img(item)} alt={item.name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-                  {item.isVeg !== undefined && (
-                    <span className={`absolute top-2 left-2 text-xs px-1.5 py-0.5 rounded-full font-bold ${item.isVeg ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                      {item.isVeg ? '🌿' : '🍖'}
-                    </span>
-                  )}
-                </div>
-                <div className="p-3">
-                  <h3 className="font-bold text-sm text-gray-900 truncate">{item.name}</h3>
-                  {item.cloudKitchen && (
-                    <p className="text-xs text-orange-400 font-medium mt-0.5 truncate">🏠 {item.cloudKitchen.name}</p>
-                  )}
-                  <p className="text-xs text-gray-400 capitalize">{item.mealType || item.category || ''}</p>
-                  <div className="flex items-center justify-between mt-2">
-                    <span className="text-orange-500 font-extrabold text-sm">₹{item.price}</span>
-                    <button className="bg-orange-50 text-orange-600 text-xs font-bold px-3 py-1 rounded-lg hover:bg-orange-100 transition">
-                      + Add
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+          {loading ? (
+            <div className="grid grid-cols-2 gap-4">
+              {[1, 2, 3, 4].map(i => <div key={i} className="h-60 bg-gray-200 rounded-3xl animate-pulse" />)}
+            </div>
+          ) : filteredItems.length > 0 ? (
+            <div className="grid grid-cols-2 gap-4">
+              <AnimatePresence>
+                {filteredItems.map(item => <MenuCard key={item._id} item={item} token={token} user={user} />)}
+              </AnimatePresence>
+            </div>
+          ) : (
+            <EmptyState locationSet={locationSet} />
+          )}
+        </section>
+      </main>
+    </div>
+  );
+}
+
+// ── Sub-components ────────────────────────────────────────
+
+function SpecialCard({ item }: { item: MenuItem }) {
+  const { addToCart } = useCart();
+  const { addToast } = useToast();
+  const router = useRouter();
+
+  const handleAdd = () => {
+    addToCart({
+      _id: item._id,
+      name: item.name,
+      price: item.price,
+      image: item.image,
+    });
+
+    addToast(
+      `✅ ${item.name} added!`,
+      'success',
+      {
+        label: 'View Cart',
+        onClick: () => router.push('/checkout'),
+      },
+      5000
+    );
+  };
+
+  return (
+    <motion.div
+      whileTap={{ scale: 0.97 }}
+      className="flex-shrink-0 w-56 bg-white rounded-3xl p-3 shadow-sm border border-gray-100"
+    >
+      <div className="relative h-36 w-full overflow-hidden rounded-2xl mb-3">
+        <img src={item.image || FALLBACK_IMG} className="w-full h-full object-cover" alt={item.name} />
+        <div className="absolute bottom-2 left-2 bg-white/90 backdrop-blur px-2 py-1 rounded-full flex items-center gap-1">
+          <Star size={10} className="fill-orange-500 text-orange-500" />
+          <span className="text-[10px] font-black text-gray-900">{item.rating || '4.9'}</span>
+        </div>
       </div>
+      <h3 className="font-bold text-gray-900 text-sm truncate">{item.name}</h3>
+      <div className="flex items-center justify-between mt-2">
+        <span className="text-base font-black text-orange-600">₹{item.price}</span>
+        <button 
+          onClick={handleAdd} 
+          className="bg-gray-900 text-white p-2 rounded-xl hover:bg-gray-800 transition active:scale-90"
+        >
+          <Plus size={16} />
+        </button>
+      </div>
+    </motion.div>
+  );
+}
+
+function MenuCard({ item, token, user }: { item: MenuItem; token: string | null; user: any }) {
+  const { addToCart } = useCart();
+  const { addToast } = useToast();
+  const router = useRouter();
+
+  const handleAdd = () => {
+    if (!token) return;
+    
+    addToCart({
+      _id: item._id,
+      name: item.name,
+      price: item.price,
+      image: item.image,
+    });
+
+    addToast(
+      `✅ ${item.name} added to cart!`,
+      'success',
+      {
+        label: 'Checkout',
+        onClick: () => router.push('/checkout'),
+      },
+      5000
+    );
+  };
+
+  return (
+    <motion.div
+      layout
+      initial={{ opacity: 0, scale: 0.92 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.92 }}
+      className="bg-white rounded-3xl p-3 shadow-sm border border-gray-50"
+    >
+      <div className="relative h-40 rounded-2xl overflow-hidden mb-3">
+        <img src={item.image || FALLBACK_IMG} className="w-full h-full object-cover" alt={item.name} />
+        <div className={`absolute top-2 left-2 px-2 py-1 rounded-full backdrop-blur-md flex items-center gap-1 text-[9px] font-black uppercase tracking-wide
+          ${item.isVeg ? 'bg-green-500/20 text-green-700' : 'bg-red-500/20 text-red-700'}`}>
+          {item.isVeg ? <Leaf size={9} className="fill-current" /> : null}
+          {item.isVeg ? 'Veg' : 'Non-Veg'}
+        </div>
+      </div>
+      <div className="px-1">
+        <div className="flex items-center justify-between mb-1">
+          <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">{item.category || 'Meal'}</span>
+          <div className="flex items-center gap-1 text-gray-400">
+            <Clock size={9} />
+            <span className="text-[9px] font-bold">25 min</span>
+          </div>
+        </div>
+        <h3 className="text-sm font-black text-gray-900 line-clamp-1 mb-3">{item.name}</h3>
+        <div className="flex items-center justify-between">
+          <span className="text-lg font-black text-gray-900">₹{item.price}</span>
+          <motion.button
+            whileTap={{ scale: 0.9 }}
+            onClick={handleAdd}
+            className="bg-orange-500 text-white px-4 py-2 rounded-xl shadow-md shadow-orange-200 font-black text-xs hover:bg-orange-600 transition"
+          >
+            Add
+          </motion.button>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
+function EmptyState({ locationSet }: { locationSet: boolean }) {
+  const { setShowModal } = useLocation();
+  return (
+    <div className="text-center py-16 bg-white rounded-3xl border border-dashed border-gray-200">
+      <div className="text-5xl mb-4 opacity-40">🍱</div>
+      <h3 className="text-lg font-black text-gray-800 mb-2">
+        {locationSet ? 'Nothing on the stove yet' : 'Where should we deliver?'}
+      </h3>
+      <p className="text-gray-400 text-sm max-w-[200px] mx-auto mb-6 leading-relaxed">
+        {locationSet ? 'Try a different category.' : 'Set your location to find kitchens near you.'}
+      </p>
+      {!locationSet && (
+        <button onClick={() => setShowModal(true)}
+          className="bg-gray-900 text-white px-6 py-3 rounded-2xl font-black shadow-lg">
+          Set Location
+        </button>
+      )}
     </div>
   );
 }

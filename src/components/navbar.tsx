@@ -1,30 +1,41 @@
 'use client';
 
 import Link from 'next/link';
-import { Home, CreditCard, Calendar, History } from 'lucide-react';
+import { Home, CalendarDays, Wallet, RefreshCw } from 'lucide-react';
 import { usePathname } from 'next/navigation';
+
+const navItems = [
+  { href: '/home',          label: 'HOME',         icon: Home },
+  { href: '/schedule',      label: 'SCHEDULE',     icon: CalendarDays },
+  { href: '/subscriptions', label: 'SUBSCRIPTION', icon: Wallet },
+  { href: '/reorder',       label: 'REORDER',      icon: RefreshCw },
+];
 
 export default function Navbar() {
   const pathname = usePathname();
 
-  const navItems = [
-    { href: '/', label: 'Home', icon: Home },
-    { href: '/schedule', label: 'Schedule', icon: Calendar },
-    { href: '/reorder', label: 'Reorder', icon: History },
-    { href: '/subscriptions', label: 'Subscriptions', icon: CreditCard },
-  ];
-
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-white shadow-t-md border-t border-gray-200 md:relative md:bottom-auto md:border-none md:shadow-none">
-      <div className="max-w-4xl mx-auto flex justify-around md:justify-center md:space-x-8 p-2 md:p-4">
-        {navItems.map((item) => {
-          const isActive = pathname === item.href;
+    <nav
+      style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+      className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-100 shadow-[0_-4px_24px_rgba(0,0,0,0.07)]"
+    >
+      <div className="flex items-stretch justify-around h-16">
+        {navItems.map(({ href, label, icon: Icon }) => {
+          const isActive = pathname?.startsWith(href);
           return (
-            <Link key={item.href} href={item.href}>
-              <div className={`flex flex-col items-center justify-center w-16 h-16 rounded-lg transition-colors ${isActive ? 'text-orange-500 bg-orange-100' : 'text-gray-600 hover:bg-gray-100'}`}>
-                <item.icon className="w-6 h-6" />
-                <span className="text-xs mt-1">{item.label}</span>
-              </div>
+            <Link
+              key={href}
+              href={href}
+              className="flex flex-col items-center justify-center flex-1 gap-1"
+            >
+              <Icon
+                size={22}
+                className={isActive ? 'text-orange-500' : 'text-gray-400'}
+                strokeWidth={isActive ? 2.5 : 1.8}
+              />
+              <span className={`text-[9px] font-bold tracking-wide leading-none ${isActive ? 'text-orange-500' : 'text-gray-400'}`}>
+                {label}
+              </span>
             </Link>
           );
         })}
