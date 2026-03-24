@@ -3,8 +3,22 @@
 import { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 
-export default function AddressSelector({ visible, onClose, onSelectAddress }) {
-  const [addresses, setAddresses] = useState([]);
+interface Address {
+  id: string;
+  fullAddress: string;
+  street: string;
+  city: string;
+  isDefault?: boolean;
+}
+
+interface AddressSelectorProps {
+  visible: boolean;
+  onClose: () => void;
+  onSelectAddress: (address: Address) => void;
+}
+
+export default function AddressSelector({ visible, onClose, onSelectAddress }: AddressSelectorProps) {
+  const [addresses, setAddresses] = useState<Address[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

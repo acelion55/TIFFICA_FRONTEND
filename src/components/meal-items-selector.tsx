@@ -3,8 +3,23 @@
 import { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 
-export default function MealItemsSelector({ visible, onClose, mealType, date, onAddToCart }) {
-  const [menuItems, setMenuItems] = useState([]);
+interface MealItem {
+  id: string;
+  name: string;
+  price: number;
+  category: string;
+}
+
+interface MealItemsSelectorProps {
+  visible: boolean;
+  onClose: () => void;
+  mealType: string;
+  date: string;
+  onAddToCart: (item: MealItem) => void;
+}
+
+export default function MealItemsSelector({ visible, onClose, mealType, date, onAddToCart }: MealItemsSelectorProps) {
+  const [menuItems, setMenuItems] = useState<MealItem[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -15,7 +30,7 @@ export default function MealItemsSelector({ visible, onClose, mealType, date, on
           const response = await fetch('/api/menu-items');
           if (response.ok) {
             const data = await response.json();
-            setMenuItems(data.items.filter(item => item.category === mealType));
+            setMenuItems(data.items.filter((item: MealItem) => item.category === mealType));
           } else {
             console.error('Failed to fetch menu items');
           }

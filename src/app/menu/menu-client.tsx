@@ -8,17 +8,27 @@ import { useLocation } from '@/context/LocationContext';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
+interface MenuItem {
+  id: string;
+  name: string;
+  price: number;
+  mealType: string;
+  quantity: number;
+}
+
+type Cart = Record<string, Record<string, MenuItem[]>>;
+
 export default function MenuClient() {
-  const [menuItems, setMenuItems] = useState([]);
+  const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [cart, setCart] = useState({});
+  const [cart, setCart] = useState<Cart>({});
   const searchParams = useSearchParams();
   const router = useRouter();
   const { token } = useAuth();
   const { locationSet } = useLocation();
 
-  const date = searchParams.get('date');
-  const mealType = searchParams.get('mealType');
+  const date = searchParams.get('date') ?? '';
+  const mealType = searchParams.get('mealType') ?? '';
 
   useEffect(() => {
     const storedCart = localStorage.getItem('scheduleCart');
@@ -43,7 +53,7 @@ export default function MenuClient() {
           const data = await res.json();
           const all = data.items || [];
           // Filter by mealType client-side when using by-location
-          setMenuItems(locationSet ? all.filter(i => i.mealType === mealType) : all);
+          setMenuItems(locationSet ? all.filter((i: MenuItem) => i.mealType === mealType) : all);
         }
       } catch {}
       finally { setLoading(false); }
@@ -51,7 +61,7 @@ export default function MenuClient() {
     fetchMenuItems();
   }, [mealType, token, locationSet]);
 
-  const handleAddToCart = (item) => {
+  const handleAddToCart = (item: MenuItem) => {
     setCart(prevCart => {
         const newCart = {...prevCart};
         if (!newCart[date]) {
@@ -61,7 +71,7 @@ export default function MenuClient() {
             newCart[date][mealType] = [];
         }
 
-        const existingItem = newCart[date][mealType].find(cartItem => cartItem.id === item.id);
+        const existingItem = newCart[date][mealType].find((cartItem: MenuItem) => cartItem.id === item.id);
 
         if (existingItem) {
             existingItem.quantity += 1;
