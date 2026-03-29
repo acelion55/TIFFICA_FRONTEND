@@ -39,7 +39,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = async (t: string) => {
-    setToken(t);
     localStorage.setItem('token', t);
     try {
       const res = await fetch(`${API_URL}/auth/profile`, {
@@ -47,9 +46,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
       if (res.ok) {
         const data = await res.json();
+        setToken(t);
         setUser(data);
-        // Start pinging admin to track live users
         startPing(t);
+      } else {
+        localStorage.removeItem('token');
       }
     } catch (e) {
       console.error('Failed to fetch profile', e);

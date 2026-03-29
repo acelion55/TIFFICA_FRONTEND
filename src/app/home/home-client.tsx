@@ -11,7 +11,6 @@ import {
 import { useAuth } from '@/context/AuthContext';
 import { useLocation } from '@/context/LocationContext';
 import { useCart } from '@/context/CartContext';
-import { useToast } from '@/context/ToastContext';
 import { openRazorpay } from '@/hooks/useRazorpay';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
@@ -233,26 +232,9 @@ export default function HomeClient() {
 
 function SpecialCard({ item }: { item: MenuItem }) {
   const { addToCart } = useCart();
-  const { addToast } = useToast();
-  const router = useRouter();
 
   const handleAdd = () => {
-    addToCart({
-      _id: item._id,
-      name: item.name,
-      price: item.price,
-      image: item.image,
-    });
-
-    addToast(
-      `✅ ${item.name} added!`,
-      'success',
-      {
-        label: 'View Cart',
-        onClick: () => router.push('/checkout'),
-      },
-      5000
-    );
+    addToCart({ _id: item._id, name: item.name, price: item.price, image: item.image });
   };
 
   return (
@@ -283,28 +265,10 @@ function SpecialCard({ item }: { item: MenuItem }) {
 
 function MenuCard({ item, token, user }: { item: MenuItem; token: string | null; user: any }) {
   const { addToCart } = useCart();
-  const { addToast } = useToast();
-  const router = useRouter();
 
   const handleAdd = () => {
     if (!token) return;
-    
-    addToCart({
-      _id: item._id,
-      name: item.name,
-      price: item.price,
-      image: item.image,
-    });
-
-    addToast(
-      `✅ ${item.name} added to cart!`,
-      'success',
-      {
-        label: 'Checkout',
-        onClick: () => router.push('/checkout'),
-      },
-      5000
-    );
+    addToCart({ _id: item._id, name: item.name, price: item.price, image: item.image });
   };
 
   return (
