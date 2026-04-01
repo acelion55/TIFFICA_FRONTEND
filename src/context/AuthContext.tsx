@@ -9,6 +9,7 @@ interface User {
   name: string;
   email: string;
   phone: string;
+  role?: string;
   walletBalance?: number;
   addresses?: any[];
 }
@@ -29,15 +30,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const stored = localStorage.getItem('token');
-    if (stored) {
-      login(stored);
-    } else {
-      setLoading(false);
-    }
-  }, []);
-
   const login = async (t: string) => {
     localStorage.setItem('token', t);
     try {
@@ -51,13 +43,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         startPing(t);
       } else {
         localStorage.removeItem('token');
+        setToken(null);
+        setUser(null);
       }
     } catch (e) {
       console.error('Failed to fetch profile', e);
+      localStorage.removeItem('token');
+      setToken(null);
+      setUser(null);
     } finally {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    const stored = localStorage.getItem('token');
+    if (stored) {
+      login(stored);
+    } else {
+      setLoading(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const logout = () => {
     setToken(null);

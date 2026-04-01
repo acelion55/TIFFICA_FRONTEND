@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { Home, Calendar, RefreshCw, Star, User } from "lucide-react";
+import CouponPopup from "@/components/CouponPopup";
 
 export default function MainApp({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -16,6 +17,7 @@ export default function MainApp({ children }: { children: React.ReactNode }) {
   return (
     <div className="h-screen flex flex-col">
       <div className="flex-grow overflow-y-auto">{children}</div>
+      <CouponPopup />
       <div className="fixed bottom-0 left-0 right-0 bg-white shadow-lg">
         <div className="flex justify-around py-2">
           <Tab

@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import { usePWAInstall } from '@/hooks/usePWAInstall';
-import { Eye, EyeOff, Mail, Lock, User, Phone, ArrowRight, Download, Loader2 } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, User, Phone, ArrowRight, Download, Loader2, X } from 'lucide-react';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
@@ -17,6 +17,9 @@ export default function SignUpPage() {
   const [showPass, setShowPass] = useState(false);
   const [error, setError]       = useState('');
   const [loading, setLoading]   = useState(false);
+  const [legalTab, setLegalTab] = useState<'terms' | 'privacy'>('terms');
+  const [showLegal, setShowLegal] = useState(false);
+  const [legalContent, setLegalContent] = useState<{ terms: string; privacy: string }>({ terms: '', privacy: '' });
   const router = useRouter();
   const { login } = useAuth();
   const { canInstall, install } = usePWAInstall();
@@ -132,9 +135,56 @@ export default function SignUpPage() {
         </div>
 
         <p className="text-center text-xs text-white/30 mt-4 pb-6">
-          By signing up you agree to our Terms & Privacy Policy
+          By signing up you agree to our{' '}
+          <button onClick={async () => {
+            if (!legalContent.terms) {
+              const res = await fetch(`${API_URL}/legalpages`).catch(() => null);
+              const d = res?.ok ? await res.json() : null;
+              if (d?.success) {
+                const t = d.data.find((p: any) => p.pageType === 'terms');
+                const pr = d.data.find((p: any) => p.pageType === 'privacy');
+                setLegalContent({ terms: t?.content || '', privacy: pr?.content || '' });
+              }
+            }
+            setShowLegal(true);
+          }} className="text-white/50 underline">Terms &amp; Privacy Policy</button>
         </p>
       </div>
+
+      {/* Legal Modal */}
+      {showLegal && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center p-4" onClick={() => setShowLegal(false)}>
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+          <div
+            className="relative w-full max-w-lg bg-white/10 backdrop-blur-2xl border border-white/20 rounded-3xl p-5 shadow-2xl max-h-[75vh] flex flex-col"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex bg-white/10 rounded-2xl p-1 gap-1">
+                {(['terms', 'privacy'] as const).map(t => (
+                  <button key={t} onClick={() => setLegalTab(t)}
+                    className={`px-4 py-1.5 rounded-xl text-xs font-bold transition ${
+                      legalTab === t ? 'bg-white text-orange-600 shadow' : 'text-white/70'
+                    }`}>
+                    {t === 'terms' ? 'Terms' : 'Privacy'}
+                  </button>
+                ))}
+              </div>
+              <button onClick={() => setShowLegal(false)} className="p-1.5 bg-white/10 rounded-xl">
+                <X size={16} className="text-white" />
+              </button>
+            </div>
+            <div className="overflow-y-auto flex-1 pr-1">
+              <p className="text-white/80 text-xs leading-relaxed whitespace-pre-wrap">
+                {legalTab === 'terms'
+                  ? (legalContent.terms || `By using Tiffica, you agree to these terms. We provide home-cooked meal delivery services. Orders once placed cannot be cancelled after preparation begins. Payments are non-refundable except in case of delivery failure.`)
+                  : (legalContent.privacy || `We collect your name, email, phone, and location to deliver meals. Your data is never sold to third parties. You may request deletion of your account at any time.`)
+                }
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

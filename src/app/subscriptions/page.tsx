@@ -1,9 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
-import { Wallet, Plus, CheckCircle, Zap, Shield, Loader2 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { gsap } from 'gsap';
+import { Wallet, Plus, CheckCircle, Zap, Shield, Loader2, TrendingUp } from 'lucide-react';
 import { openRazorpay } from '@/hooks/useRazorpay';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
@@ -25,6 +27,9 @@ export default function SubscriptionsPage() {
   const [success, setSuccess]       = useState<number | null>(null);
   const [error, setError]           = useState('');
 
+  const balanceRef = useRef<HTMLDivElement>(null);
+  const plansRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     if (!token) { router.push('/login'); return; }
     fetch(`${API_URL}/auth/profile`, { headers: { Authorization: `Bearer ${token}` } })
@@ -32,6 +37,25 @@ export default function SubscriptionsPage() {
       .then(d => setBalance(d.walletBalance ?? 0))
       .catch(() => {});
   }, [token, router]);
+
+  useEffect(() => {
+    if (balanceRef.current) {
+      gsap.fromTo(balanceRef.current,
+        { scale: 0.9, opacity: 0 },
+        { scale: 1, opacity: 1, duration: 0.5, ease: 'back.out(1.5)' }
+      );
+    }
+  }, []);
+
+  useEffect(() => {
+    if (plansRef.current) {
+      const cards = plansRef.current.querySelectorAll('.plan-card');
+      gsap.fromTo(cards,
+        { opacity: 0, y: 20 },
+        { opacity: 1, y: 0, duration: 0.3, stagger: 0.08, ease: 'power2.out' }
+      );
+    }
+  }, []);
 
   const handleRecharge = async (amount: number) => {
     if (!token || recharging !== null) return;
@@ -81,135 +105,212 @@ export default function SubscriptionsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FAF7F5] pb-24">
+    <div className="min-h-screen bg-gradient-to-b from-[#FAF7F5] to-orange-50/30 pb-24">
 
-      {/* Header */}
-      <div className="bg-gradient-to-br from-orange-500 to-amber-500 px-5 pt-16 pb-10 relative overflow-hidden">
-        <div className="absolute -top-8 -right-8 w-40 h-40 bg-white/10 rounded-full" />
-        <div className="absolute -bottom-6 -left-6 w-28 h-28 bg-white/10 rounded-full" />
-        <div className="relative z-10">
-          <p className="text-white/80 text-sm font-semibold mb-1">Wallet Balance</p>
-          <div className="flex items-end gap-1 mb-4">
-            <span className="text-4xl font-extrabold text-white">₹{Math.floor(balance)}</span>
-            <span className="text-white/70 text-lg mb-0.5">.{String(balance.toFixed(2)).split('.')[1]}</span>
-          </div>
-          <div className="flex items-center gap-2 bg-white/20 rounded-2xl px-4 py-2 w-fit">
-            <Wallet className="w-4 h-4 text-white" />
-            <span className="text-white text-sm font-bold">Tiffica Wallet</span>
-          </div>
-        </div>
-      </div>
+      <div className="px-6 pt-20 space-y-5">
 
-      <div className="px-5 -mt-4 space-y-5">
+        <AnimatePresence>
+          {success && (
+            <motion.div 
+              initial={{ opacity: 0, y: -20, scale: 0.9 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -20, scale: 0.9 }}
+              transition={{ duration: 0.3 }}
+              className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-3xl px-5 py-4 flex items-center gap-3 shadow-lg"
+            >
+              <motion.div
+                animate={{ rotate: [0, 360] }}
+                transition={{ duration: 0.5 }}
+              >
+                <CheckCircle className="w-6 h-6 text-green-500 flex-shrink-0" />
+              </motion.div>
+              <p className="text-green-700 font-bold text-sm">₹{success} added to your wallet!</p>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-        {success && (
-          <div className="bg-green-50 border border-green-200 rounded-2xl px-4 py-3 flex items-center gap-3">
-            <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
-            <p className="text-green-700 font-bold text-sm">₹{success} added to your wallet!</p>
-          </div>
-        )}
-
-        {error && (
-          <div className="bg-red-50 border border-red-200 rounded-2xl px-4 py-3">
-            <p className="text-red-600 text-sm font-medium">{error}</p>
-          </div>
-        )}
+        <AnimatePresence>
+          {error && (
+            <motion.div 
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="bg-red-50 border-2 border-red-200 rounded-3xl px-5 py-4 shadow-md"
+            >
+              <p className="text-red-600 text-sm font-bold">{error}</p>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Quick recharge */}
-        <div className="bg-white rounded-3xl p-5 shadow-sm">
-          <h3 className="font-extrabold text-gray-900 mb-4 flex items-center gap-2">
-            <Zap className="w-5 h-5 text-orange-500" /> Quick Recharge
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="bg-white rounded-3xl p-6 shadow-lg border border-orange-100"
+        >
+          <h3 className="font-extrabold text-gray-900 text-lg mb-5 flex items-center gap-2">
+            <motion.div
+              animate={{ rotate: [0, 15, -15, 0] }}
+              transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
+            >
+              <Zap className="w-5 h-5 text-orange-500" />
+            </motion.div>
+            Quick Recharge
           </h3>
-          <div className="grid grid-cols-4 gap-2 mb-4">
-            {QUICK.map(amt => (
-              <button key={amt} onClick={() => handleRecharge(amt)}
+          <div className="grid grid-cols-4 gap-3 mb-5">
+            {QUICK.map((amt, i) => (
+              <motion.button 
+                key={amt} 
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.1 + i * 0.05 }}
+                whileHover={{ scale: 1.05, y: -2 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => handleRecharge(amt)}
                 disabled={recharging !== null}
-                className="py-3 rounded-2xl border-2 border-orange-200 text-orange-600 font-extrabold text-sm active:scale-95 transition disabled:opacity-50">
+                className="py-3.5 rounded-2xl border-2 border-orange-200 bg-orange-50 text-orange-600 font-extrabold text-sm transition disabled:opacity-50 shadow-sm"
+              >
                 ₹{amt}
-              </button>
+              </motion.button>
             ))}
           </div>
-          <div className="flex gap-2">
-            <div className="flex-1 flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-2xl px-4 py-3">
-              <span className="text-gray-500 font-bold">₹</span>
+          <div className="flex gap-3">
+            <motion.div 
+              whileFocus={{ scale: 1.02 }}
+              className="flex-1 flex items-center gap-2 bg-gray-50 border-2 border-gray-200 rounded-2xl px-4 py-3.5 focus-within:border-orange-300 transition-colors"
+            >
+              <span className="text-gray-500 font-bold text-lg">₹</span>
               <input type="number" placeholder="Enter amount" value={customAmt}
                 onChange={e => setCustomAmt(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && handleCustom()}
                 className="flex-1 bg-transparent text-sm font-bold text-gray-800 focus:outline-none placeholder:text-gray-400"
                 min={10} />
-            </div>
-            <button onClick={handleCustom} disabled={!customAmt || recharging !== null}
-              className="px-5 py-3 bg-orange-500 text-white font-extrabold rounded-2xl disabled:opacity-50 active:scale-95 transition">
+            </motion.div>
+            <motion.button 
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={handleCustom} 
+              disabled={!customAmt || recharging !== null}
+              className="px-6 py-3.5 bg-gradient-to-r from-orange-500 to-orange-600 text-white font-extrabold rounded-2xl disabled:opacity-50 shadow-lg shadow-orange-200"
+            >
               <Plus className="w-5 h-5" />
-            </button>
+            </motion.button>
           </div>
-        </div>
+        </motion.div>
 
         {/* Plans */}
         <div>
-          <h3 className="font-extrabold text-gray-900 mb-3">Recharge Plans</h3>
-          <div className="space-y-3">
-            {PLANS.map(plan => {
+          <motion.h3 
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.2 }}
+            className="font-extrabold text-gray-900 text-lg mb-4 flex items-center gap-2"
+          >
+            <TrendingUp className="w-5 h-5 text-orange-500" />
+            Recharge Plans
+          </motion.h3>
+          <div ref={plansRef} className="space-y-4">
+            {PLANS.map((plan, index) => {
               const total = plan.amount + plan.bonus;
               const isLoading = recharging === total;
               return (
-                <div key={plan.amount}
-                  className={`bg-white rounded-3xl p-4 shadow-sm border-2 relative overflow-hidden ${plan.popular ? 'border-orange-500' : 'border-transparent'}`}>
+                <motion.div 
+                  key={plan.amount}
+                  whileHover={{ y: -4, boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)' }}
+                  transition={{ duration: 0.2 }}
+                  className={`plan-card bg-white rounded-3xl p-5 shadow-lg border-2 relative overflow-hidden ${
+                    plan.popular ? 'border-orange-500 bg-gradient-to-br from-white to-orange-50/30' : 'border-gray-100'
+                  }`}
+                >
                   {plan.popular && (
-                    <div className="absolute top-0 right-0 bg-orange-500 text-white text-[10px] font-extrabold px-3 py-1 rounded-bl-2xl">
-                      BEST VALUE
-                    </div>
+                    <motion.div 
+                      initial={{ x: 100, opacity: 0 }}
+                      animate={{ x: 0, opacity: 1 }}
+                      transition={{ delay: 0.3 + index * 0.1 }}
+                      className="absolute top-0 right-0 bg-gradient-to-r from-orange-500 to-orange-600 text-white text-[10px] font-extrabold px-4 py-1.5 rounded-bl-2xl shadow-lg"
+                    >
+                      ⭐ BEST VALUE
+                    </motion.div>
                   )}
                   <div className="flex items-center justify-between">
                     <div>
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="text-xl font-extrabold text-gray-900">₹{plan.amount}</span>
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-2xl font-extrabold text-gray-900">₹{plan.amount}</span>
                         {plan.bonus > 0 && (
-                          <span className="bg-green-100 text-green-700 text-xs font-extrabold px-2 py-0.5 rounded-full">
+                          <motion.span 
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            transition={{ delay: 0.4 + index * 0.1, type: 'spring' }}
+                            className="bg-gradient-to-r from-green-100 to-emerald-100 text-green-700 text-xs font-extrabold px-3 py-1 rounded-full border border-green-200"
+                          >
                             +₹{plan.bonus} bonus
-                          </span>
+                          </motion.span>
                         )}
                       </div>
-                      <p className="text-xs text-gray-400">
+                      <p className="text-xs text-gray-500 font-medium">
                         {plan.bonus > 0 ? `Get ₹${total} total in wallet` : 'Added directly to wallet'}
                       </p>
                     </div>
-                    <button onClick={() => handleRecharge(total)}
+                    <motion.button 
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => handleRecharge(total)}
                       disabled={recharging !== null}
-                      className={`px-5 py-3 rounded-2xl font-extrabold text-sm transition active:scale-95 disabled:opacity-50 flex items-center gap-2 ${
-                        plan.popular ? 'bg-orange-500 text-white shadow-lg shadow-orange-200' : 'bg-gray-100 text-gray-800'
-                      }`}>
+                      className={`px-6 py-3.5 rounded-2xl font-extrabold text-sm transition disabled:opacity-50 flex items-center gap-2 shadow-md ${
+                        plan.popular 
+                          ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-orange-200' 
+                          : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+                      }`}
+                    >
                       {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Recharge'}
-                    </button>
+                    </motion.button>
                   </div>
-                </div>
+                </motion.div>
               );
             })}
           </div>
         </div>
 
         {/* How it works */}
-        <div className="bg-white rounded-3xl p-5 shadow-sm">
-          <h3 className="font-extrabold text-gray-900 mb-4">How it works</h3>
-          <div className="space-y-3">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="bg-gradient-to-br from-white to-blue-50/30 rounded-3xl p-6 shadow-lg border border-blue-100"
+        >
+          <h3 className="font-extrabold text-gray-900 text-lg mb-5">How it works</h3>
+          <div className="space-y-4">
             {[
               { icon: '💳', text: 'Recharge your wallet with any amount' },
               { icon: '🍱', text: 'Use wallet balance to schedule & lock meals' },
               { icon: '🔒', text: 'Locked meals are deducted from wallet instantly' },
               { icon: '↩️', text: 'Cancelled meals are refunded to wallet' },
-            ].map(({ icon, text }) => (
-              <div key={text} className="flex items-center gap-3">
-                <span className="text-xl w-8 text-center">{icon}</span>
-                <p className="text-sm text-gray-600 font-medium">{text}</p>
-              </div>
+            ].map(({ icon, text }, i) => (
+              <motion.div 
+                key={text}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.4 + i * 0.1 }}
+                whileHover={{ x: 4 }}
+                className="flex items-center gap-3 p-3 rounded-2xl hover:bg-white/50 transition-colors"
+              >
+                <span className="text-2xl w-10 text-center">{icon}</span>
+                <p className="text-sm text-gray-700 font-semibold">{text}</p>
+              </motion.div>
             ))}
           </div>
-        </div>
+        </motion.div>
 
-        <div className="flex items-center gap-3 bg-gray-50 rounded-2xl px-4 py-3">
-          <Shield className="w-5 h-5 text-gray-400 flex-shrink-0" />
-          <p className="text-xs text-gray-500">Payments secured by Razorpay. Wallet balance never expires.</p>
-        </div>
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.5 }}
+          className="flex items-center gap-3 bg-gradient-to-r from-gray-50 to-gray-100 rounded-2xl px-5 py-4 border border-gray-200"
+        >
+          <Shield className="w-5 h-5 text-gray-500 flex-shrink-0" />
+          <p className="text-xs text-gray-600 font-medium">Payments secured by Razorpay. Wallet balance never expires.</p>
+        </motion.div>
       </div>
     </div>
   );

@@ -1,9 +1,11 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/context/ToastContext';
+import { motion, AnimatePresence } from 'framer-motion';
+import { gsap } from 'gsap';
 import {
   ChevronLeft, ChevronRight, MapPin, ChevronDown,
   Lock, CheckCircle2, Pencil, Trash2, Loader2, Clock, Wallet
@@ -40,6 +42,9 @@ export default function ScheduleClient() {
   const router = useRouter();
   const { addToast } = useToast();
 
+  const calendarRef = useRef<HTMLDivElement>(null);
+  const mealCardsRef = useRef<HTMLDivElement>(null);
+
   const [currentMonth, setCurrentMonth]   = useState(new Date());
   const [selectedDate, setSelectedDate]   = useState(new Date());
   const [monthSchedules, setMonthSchedules] = useState<Record<string, DaySchedule>>({});
@@ -60,6 +65,26 @@ export default function ScheduleClient() {
 
   const dateKey  = format(selectedDate, 'yyyy-MM-dd');
   const monthKey = format(currentMonth, 'yyyy-MM');
+
+  /* ── GSAP animations ── */
+  useEffect(() => {
+    if (calendarRef.current) {
+      gsap.fromTo(calendarRef.current, 
+        { opacity: 0, y: -15 },
+        { opacity: 1, y: 0, duration: 0.3, ease: 'power2.out' }
+      );
+    }
+  }, [currentMonth]);
+
+  useEffect(() => {
+    if (mealCardsRef.current && !loadingDay && daySchedule) {
+      const cards = mealCardsRef.current.querySelectorAll('.meal-card');
+      gsap.fromTo(cards,
+        { opacity: 0, y: 15 },
+        { opacity: 1, y: 0, duration: 0.3, stagger: 0.06, ease: 'power2.out', clearProps: 'all' }
+      );
+    }
+  }, [selectedDate]);
 
   /* ── fetch addresses ── */
   useEffect(() => {
@@ -180,31 +205,44 @@ export default function ScheduleClient() {
   return (
     <div className="min-h-screen bg-[#FAF7F5] pb-24">
 
-      <div className="px-4 pt-16 space-y-5">
+      <div className="px-5 sm:px-6 md:px-8 pt-20 pb-6 space-y-6">
 
         {/* Month Header */}
-        <div className="flex items-center justify-between">
-          <h2 className="text-xl font-extrabold text-gray-900">{format(currentMonth, 'MMMM yyyy')}</h2>
+        <motion.div 
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.5 }}
+          className="flex items-center justify-between"
+        >
+          <h2 className="text-2xl font-extrabold text-gray-900">{format(currentMonth, 'MMMM yyyy')}</h2>
           <div className="flex items-center gap-2">
-            <button onClick={() => setCurrentMonth(m => subMonths(m, 1))}
-              className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center active:scale-95">
-              <ChevronLeft className="w-4 h-4 text-gray-600" />
-            </button>
-            <button onClick={() => setCurrentMonth(m => addMonths(m, 1))}
-              className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center active:scale-95">
-              <ChevronRight className="w-4 h-4 text-gray-600" />
-            </button>
+            <motion.button 
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setCurrentMonth(m => subMonths(m, 1))}
+              className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center"
+            >
+              <ChevronLeft className="w-5 h-5 text-gray-600" />
+            </motion.button>
+            <motion.button 
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setCurrentMonth(m => addMonths(m, 1))}
+              className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center"
+            >
+              <ChevronRight className="w-5 h-5 text-gray-600" />
+            </motion.button>
           </div>
-        </div>
+        </motion.div>
 
         {/* Calendar */}
-        <div className="bg-white rounded-3xl shadow-sm p-3">
-          <div className="grid grid-cols-7 mb-2">
+        <div ref={calendarRef} className="bg-white rounded-3xl shadow-md p-4 sm:p-5">
+          <div className="grid grid-cols-7 mb-3">
             {DAYS.map(d => (
-              <div key={d} className="text-center text-[10px] font-bold text-gray-400 py-1">{d}</div>
+              <div key={d} className="text-center text-[11px] font-bold text-gray-400 py-2">{d}</div>
             ))}
           </div>
-          <div className="grid grid-cols-7">
+          <div className="grid grid-cols-7 gap-1">
             {Array.from({ length: startPad }).map((_, i) => <div key={`p${i}`} />)}
             {days.map(day => {
               const key        = format(day, 'yyyy-MM-dd');
@@ -214,19 +252,39 @@ export default function ScheduleClient() {
               const hasSched   = !!monthSchedules[key]?.meals?.length;
               const disabled   = past && !hasSched;
               return (
-                <button key={key} onClick={() => handleSelectDate(day)} disabled={disabled}
-                  className="flex flex-col items-center justify-center py-0.5 relative">
-                  <span className={`w-8 h-8 flex items-center justify-center rounded-full text-sm font-bold transition-all
-                    ${isSelected  ? 'bg-orange-500 text-white shadow-md shadow-orange-200'
+                <motion.button 
+                  key={key} 
+                  onClick={() => handleSelectDate(day)} 
+                  disabled={disabled}
+                  whileHover={!disabled ? { scale: 1.1 } : {}}
+                  whileTap={!disabled ? { scale: 0.95 } : {}}
+                  className="flex flex-col items-center justify-center py-1 relative"
+                >
+                  <motion.span 
+                    animate={{
+                      scale: isSelected ? 1 : 1,
+                      backgroundColor: isSelected ? '#f97316' : 'transparent'
+                    }}
+                    transition={{ duration: 0.3 }}
+                    className={`w-10 h-10 flex items-center justify-center rounded-full text-sm font-bold
+                    ${isSelected  ? 'text-white shadow-lg shadow-orange-200'
                     : isCurrent   ? 'text-orange-500 font-extrabold'
                     : disabled    ? 'text-gray-300'
-                    : 'text-gray-800'}`}>
+                    : 'text-gray-800'}`}
+                  >
                     {format(day, 'd')}
-                  </span>
-                  {hasSched && !isSelected && (
-                    <span className="absolute bottom-0 w-1 h-1 rounded-full bg-orange-400" />
-                  )}
-                </button>
+                  </motion.span>
+                  <AnimatePresence>
+                    {hasSched && !isSelected && (
+                      <motion.span 
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        exit={{ scale: 0 }}
+                        className="absolute bottom-1 w-1.5 h-1.5 rounded-full bg-orange-400" 
+                      />
+                    )}
+                  </AnimatePresence>
+                </motion.button>
               );
             })}
           </div>
@@ -234,22 +292,42 @@ export default function ScheduleClient() {
 
         {/* Daily Schedule */}
         <div>
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="text-lg font-extrabold text-gray-900">Daily Schedule</h3>
-            <span className="text-xs text-gray-400 font-medium">{format(selectedDate, 'dd MMM yyyy')}</span>
-          </div>
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.2 }}
+            className="flex items-center justify-between mb-4"
+          >
+            <h3 className="text-xl font-extrabold text-gray-900">Daily Schedule</h3>
+            <span className="text-xs text-gray-500 font-semibold bg-white px-3 py-1.5 rounded-full shadow-sm">
+              {format(selectedDate, 'dd MMM yyyy')}
+            </span>
+          </motion.div>
 
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-600 text-sm rounded-2xl px-4 py-3 mb-3">{error}</div>
-          )}
+          <AnimatePresence mode="wait">
+            {error && (
+              <motion.div 
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="bg-red-50 border border-red-200 text-red-600 text-sm rounded-2xl px-5 py-3 mb-4"
+              >
+                {error}
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {loadingDay ? (
-            <div className="flex justify-center py-8">
-              <Loader2 className="w-7 h-7 text-orange-400 animate-spin" />
-            </div>
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="flex justify-center py-12"
+            >
+              <Loader2 className="w-8 h-8 text-orange-400 animate-spin" />
+            </motion.div>
           ) : (
-            <div className="space-y-3">
-              {MEAL_SLOTS.map(slot => {
+            <div ref={mealCardsRef} className="space-y-4">
+              {MEAL_SLOTS.map((slot, index) => {
                 const meal       = getMeal(slot.label);
                 const locked     = isLocked(meal);
                 const isRemoving = removingMeal === slot.label;
@@ -259,58 +337,98 @@ export default function ScheduleClient() {
                 const dark       = slot.dark;
 
                 return (
-                  <div key={slot.label}
-                    className={`rounded-3xl shadow-sm overflow-hidden ${dark ? 'bg-gray-900' : 'bg-white'}`}>
+                  <motion.div 
+                    key={slot.label}
+                    className={`meal-card rounded-3xl shadow-lg overflow-hidden ${dark ? 'bg-gray-900' : 'bg-white'}`}
+                    whileHover={{ y: -2 }}
+                    transition={{ duration: 0.2, ease: 'easeOut' }}
+                  >
 
                     {/* ── Top row: icon + label + action ── */}
-                    <div className="px-4 pt-4 pb-2 flex items-center gap-3">
-                      <div className={`w-11 h-11 rounded-2xl flex items-center justify-center flex-shrink-0 ${dark ? 'bg-gray-700' : slot.iconBg}`}>
-                        <span className="text-lg">{slot.icon}</span>
-                      </div>
+                    <div className="px-5 pt-5 pb-3 flex items-center gap-3">
+                      <motion.div 
+                        whileHover={{ scale: 1.05 }}
+                        transition={{ duration: 0.2 }}
+                        className={`w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 ${dark ? 'bg-gray-700' : slot.iconBg}`}
+                      >
+                        <span className="text-xl">{slot.icon}</span>
+                      </motion.div>
                       <div className="flex-1 min-w-0">
-                        <p className={`font-extrabold text-base leading-tight ${dark ? 'text-white' : 'text-gray-900'}`}>{slot.label}</p>
+                        <p className={`font-extrabold text-lg leading-tight ${dark ? 'text-white' : 'text-gray-900'}`}>{slot.label}</p>
                         {meal && (
-                          <p className={`text-xs truncate mt-0.5 ${dark ? 'text-gray-400' : 'text-gray-500'}`}>
+                          <motion.p 
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            className={`text-xs truncate mt-1 ${dark ? 'text-gray-400' : 'text-gray-500'}`}
+                          >
                             {meal.menuItem?.name} · ₹{meal.menuItem?.price}
-                          </p>
+                          </motion.p>
                         )}
                       </div>
 
                       {/* Action */}
                       {isPastDate ? (
                         meal
-                          ? <span className="text-xs bg-green-100 text-green-700 font-bold px-3 py-1.5 rounded-2xl">✓ Saved</span>
+                          ? <motion.span 
+                              initial={{ scale: 0 }}
+                              animate={{ scale: 1 }}
+                              className="text-xs bg-green-100 text-green-700 font-bold px-3 py-2 rounded-2xl"
+                            >
+                              ✓ Saved
+                            </motion.span>
                           : <span className={`text-xs font-bold ${dark ? 'text-gray-500' : 'text-gray-400'}`}>No meal</span>
                       ) : locked ? (
-                        <div className="flex items-center gap-1 bg-gray-100 px-3 py-1.5 rounded-2xl">
-                          <Lock className="w-3 h-3 text-gray-500" />
+                        <motion.div 
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          className="flex items-center gap-1 bg-gray-100 px-3 py-2 rounded-2xl"
+                        >
+                          <Lock className="w-3.5 h-3.5 text-gray-500" />
                           <span className="text-xs text-gray-500 font-bold">Locked</span>
-                        </div>
+                        </motion.div>
                       ) : meal ? (
                         <div className="flex items-center gap-2">
-                          <button onClick={() => handleAddMeal(slot.label)}
-                            className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center active:scale-95">
-                            <Pencil className="w-3.5 h-3.5 text-orange-600" />
-                          </button>
-                          <button onClick={() => handleRemove(slot.label)} disabled={isRemoving}
-                            className="w-8 h-8 rounded-full bg-red-50 flex items-center justify-center active:scale-95">
+                          <motion.button 
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.9 }}
+                            onClick={() => handleAddMeal(slot.label)}
+                            className="w-9 h-9 rounded-full bg-orange-100 flex items-center justify-center"
+                          >
+                            <Pencil className="w-4 h-4 text-orange-600" />
+                          </motion.button>
+                          <motion.button 
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.9 }}
+                            onClick={() => handleRemove(slot.label)} 
+                            disabled={isRemoving}
+                            className="w-9 h-9 rounded-full bg-red-50 flex items-center justify-center"
+                          >
                             {isRemoving
-                              ? <Loader2 className="w-3.5 h-3.5 text-red-400 animate-spin" />
-                              : <Trash2 className="w-3.5 h-3.5 text-red-500" />}
-                          </button>
+                              ? <Loader2 className="w-4 h-4 text-red-400 animate-spin" />
+                              : <Trash2 className="w-4 h-4 text-red-500" />}
+                          </motion.button>
                         </div>
                       ) : (
-                        <button onClick={() => handleAddMeal(slot.label)}
-                          className="border-2 border-orange-500 text-orange-500 text-xs font-extrabold px-3 py-2 rounded-2xl active:scale-95 transition">
+                        <motion.button 
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          onClick={() => handleAddMeal(slot.label)}
+                          className="border-2 border-orange-500 text-orange-500 text-xs font-extrabold px-4 py-2.5 rounded-2xl transition"
+                        >
                           ADD MEAL
-                        </button>
+                        </motion.button>
                       )}
                     </div>
 
                     {/* ── Time input ── */}
                     {!isPastDate && !locked && (
-                      <div className="px-4 pb-2">
-                        <div className={`flex items-center gap-2 rounded-2xl px-3 py-2.5 ${dark ? 'bg-gray-800' : 'bg-gray-50'}`}>
+                      <motion.div 
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="px-5 pb-3"
+                      >
+                        <div className={`flex items-center gap-2 rounded-2xl px-4 py-3 ${dark ? 'bg-gray-800' : 'bg-gray-50'}`}>
                           <Clock className={`w-4 h-4 flex-shrink-0 ${dark ? 'text-orange-400' : 'text-orange-500'}`} />
                           <span className={`text-xs font-semibold mr-1 ${dark ? 'text-gray-400' : 'text-gray-500'}`}>Delivery time</span>
                           <input
@@ -319,68 +437,93 @@ export default function ScheduleClient() {
                             onChange={e => setSlotTime(prev => ({ ...prev, [slot.label]: e.target.value }))}
                             className={`flex-1 text-sm font-bold bg-transparent focus:outline-none ${dark ? 'text-white' : 'text-gray-900'}`}
                           />
-                          <button onClick={() => handleSaveTime(slot.label)} disabled={savingTime === slot.label}
-                            className="flex-shrink-0 w-7 h-7 rounded-full bg-orange-500 text-white flex items-center justify-center active:scale-95 transition disabled:opacity-50">
+                          <motion.button 
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            transition={{ duration: 0.15 }}
+                            onClick={() => handleSaveTime(slot.label)} 
+                            disabled={savingTime === slot.label}
+                            className="flex-shrink-0 w-8 h-8 rounded-full bg-orange-500 text-white flex items-center justify-center disabled:opacity-50"
+                          >
                             {savingTime === slot.label
-                              ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                              : <CheckCircle2 className="w-3.5 h-3.5" />}
-                          </button>
+                              ? <Loader2 className="w-4 h-4 animate-spin" />
+                              : <CheckCircle2 className="w-4 h-4" />}
+                          </motion.button>
                         </div>
-                      </div>
+                      </motion.div>
                     )}
 
                     {/* ── Address picker ── */}
                     {!isPastDate && !locked && (
-                      <div className="px-4 pb-3">
+                      <div className="px-5 pb-4">
                         {/* Trigger */}
-                        <button
+                        <motion.button
+                          whileTap={{ scale: 0.98 }}
                           onClick={() => setAddrOpen(addrPickerOpen ? null : slot.label)}
-                          className={`w-full flex items-center gap-2 rounded-2xl px-3 py-2.5 ${dark ? 'bg-gray-800' : 'bg-gray-50'}`}>
+                          className={`w-full flex items-center gap-2 rounded-2xl px-4 py-3 ${dark ? 'bg-gray-800' : 'bg-gray-50'}`}
+                        >
                           <MapPin className={`w-4 h-4 flex-shrink-0 ${dark ? 'text-orange-400' : 'text-orange-500'}`} />
                           <span className={`flex-1 text-xs text-left truncate ${dark ? 'text-gray-300' : 'text-gray-600'}`}>
                             {chosenAddr?.fullAddress || chosenAddr?.area || 'Select delivery address'}
                           </span>
-                          <ChevronDown className={`w-4 h-4 transition-transform ${addrPickerOpen ? 'rotate-180' : ''} ${dark ? 'text-gray-500' : 'text-gray-400'}`} />
-                        </button>
+                          <motion.div
+                            animate={{ rotate: addrPickerOpen ? 180 : 0 }}
+                            transition={{ duration: 0.3 }}
+                          >
+                            <ChevronDown className={`w-4 h-4 ${dark ? 'text-gray-500' : 'text-gray-400'}`} />
+                          </motion.div>
+                        </motion.button>
 
                         {/* Dropdown */}
-                        {addrPickerOpen && (
-                          <div className={`mt-2 rounded-2xl overflow-hidden border ${dark ? 'border-gray-700' : 'border-gray-100'}`}>
-                            {addresses.length === 0 ? (
-                              <p className={`text-xs text-center py-3 ${dark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                No saved addresses. Add one in Profile.
-                              </p>
-                            ) : (
-                              addresses.map((addr: any, i: number) => (
-                                <button key={i}
-                                  onClick={() => {
-                                    setSlotAddress(prev => ({ ...prev, [slot.label]: addr }));
-                                    setAddrOpen(null);
-                                  }}
-                                  className={`w-full flex items-start gap-3 px-3 py-3 text-left border-b last:border-0 transition active:scale-95
-                                    ${dark ? 'bg-gray-800 border-gray-700 hover:bg-gray-700' : 'bg-white border-gray-50 hover:bg-orange-50'}
-                                    ${chosenAddr === addr ? (dark ? 'bg-gray-700' : 'bg-orange-50') : ''}`}>
-                                  <MapPin className="w-4 h-4 text-orange-500 mt-0.5 flex-shrink-0" />
-                                  <div className="flex-1 min-w-0">
-                                    <p className={`text-xs font-bold ${dark ? 'text-white' : 'text-gray-800'}`}>
-                                      {addr.addressType || 'Address'} {addr.isDefault ? '· Default' : ''}
-                                    </p>
-                                    <p className={`text-xs truncate ${dark ? 'text-gray-400' : 'text-gray-500'}`}>
-                                      {addr.fullAddress || [addr.houseNo, addr.area].filter(Boolean).join(', ')}
-                                    </p>
-                                  </div>
-                                  {chosenAddr === addr && <CheckCircle2 className="w-4 h-4 text-orange-500 flex-shrink-0 mt-0.5" />}
-                                </button>
-                              ))
-                            )}
-                          </div>
-                        )}
+                        <AnimatePresence>
+                          {addrPickerOpen && (
+                            <motion.div 
+                              initial={{ opacity: 0, height: 0 }}
+                              animate={{ opacity: 1, height: 'auto' }}
+                              exit={{ opacity: 0, height: 0 }}
+                              transition={{ duration: 0.2, ease: 'easeOut' }}
+                              className={`mt-2 rounded-2xl overflow-hidden border ${dark ? 'border-gray-700' : 'border-gray-100'}`}
+                            >
+                              {addresses.length === 0 ? (
+                                <p className={`text-xs text-center py-4 ${dark ? 'text-gray-500' : 'text-gray-400'}`}>
+                                  No saved addresses. Add one in Profile.
+                                </p>
+                              ) : (
+                                addresses.map((addr: any, i: number) => (
+                                  <motion.button 
+                                    key={i}
+                                    whileHover={{ backgroundColor: dark ? '#374151' : '#FFF7ED' }}
+                                    transition={{ duration: 0.15 }}
+                                    onClick={() => {
+                                      setSlotAddress(prev => ({ ...prev, [slot.label]: addr }));
+                                      setAddrOpen(null);
+                                    }}
+                                    className={`w-full flex items-start gap-3 px-4 py-3 text-left border-b last:border-0
+                                      ${dark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-50'}
+                                      ${chosenAddr === addr ? (dark ? 'bg-gray-700' : 'bg-orange-50') : ''}`}
+                                  >
+                                    <MapPin className="w-4 h-4 text-orange-500 mt-0.5 flex-shrink-0" />
+                                    <div className="flex-1 min-w-0">
+                                      <p className={`text-xs font-bold ${dark ? 'text-white' : 'text-gray-800'}`}>
+                                        {addr.addressType || 'Address'} {addr.isDefault ? '· Default' : ''}
+                                      </p>
+                                      <p className={`text-xs truncate ${dark ? 'text-gray-400' : 'text-gray-500'}`}>
+                                        {addr.fullAddress || [addr.houseNo, addr.area].filter(Boolean).join(', ')}
+                                      </p>
+                                    </div>
+                                    {chosenAddr === addr && <CheckCircle2 className="w-4 h-4 text-orange-500 flex-shrink-0 mt-0.5" />}
+                                  </motion.button>
+                                ))
+                              )}
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
                       </div>
                     )}
 
                     {/* ── Locked address display ── */}
                     {(isPastDate || locked) && meal?.deliveryAddress?.fullAddress && (
-                      <div className={`px-4 pb-3 flex items-center gap-2 ${dark ? 'text-gray-400' : 'text-gray-500'}`}>
+                      <div className={`px-5 pb-3 flex items-center gap-2 ${dark ? 'text-gray-400' : 'text-gray-500'}`}>
                         <MapPin className="w-3.5 h-3.5 text-orange-400 flex-shrink-0" />
                         <span className="text-xs truncate">{meal.deliveryAddress.fullAddress}</span>
                       </div>
@@ -392,7 +535,7 @@ export default function ScheduleClient() {
                         ⏱ Editable for {Math.max(0, hoursLeft(meal.lockedAt)).toFixed(1)} more hrs
                       </p>
                     )}
-                  </div>
+                  </motion.div>
                 );
               })}
             </div>

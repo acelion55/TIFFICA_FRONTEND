@@ -243,7 +243,7 @@ export default function AddressesPage() {
       {/* ── Add / Edit Form Sheet ── */}
       {showForm && (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 backdrop-blur-sm">
-          <div className="w-full max-w-lg bg-white rounded-t-3xl px-5 pt-5 pb-10 shadow-2xl max-h-[90vh] overflow-y-auto">
+          <div className="w-full max-w-lg bg-white rounded-t-3xl px-5 pt-5 pb-10 mb-6 shadow-2xl max-h-[90vh] overflow-y-auto">
 
             {/* Handle */}
             <div className="w-10 h-1 bg-gray-200 rounded-full mx-auto mb-5" />

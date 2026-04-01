@@ -50,9 +50,15 @@ export function LocationProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  // Always ask on login/app open — once per session
+  // Always ask on login/app open — once per session (skip for admin and kitchen-owner)
   useEffect(() => {
     if (token && user && !askedRef.current) {
+      // Skip location modal for admin and kitchen-owner
+      if (user.role === 'admin' || user.role === 'kitchen-owner') {
+        askedRef.current = true;
+        return;
+      }
+      
       askedRef.current = true;
       const t = setTimeout(() => setShowModal(true), 600);
       return () => clearTimeout(t);

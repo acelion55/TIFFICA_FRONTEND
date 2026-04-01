@@ -7,6 +7,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import { Wallet, MapPin, ChevronDown, X, Bell } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ProfileClient from '@/app/profile/profile-client';
+import NotificationPanel from './NotificationPanel';
 
 const HERO_PAGES = ['/home'];
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
@@ -21,10 +22,9 @@ export default function WalletBar() {
   const [scrolled, setScrolled]    = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [notifOpen, setNotifOpen]   = useState(false);
-  const [notifs, setNotifs]         = useState<any[]>([]);
-  const [notifLoaded, setNotifLoaded] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
 
-  const unreadCount = notifs.filter(n => !n.isRead).length;
+  const { token } = useAuth();
 
   const isHeroPage = HERO_PAGES.some(p => pathname?.startsWith(p));
 
@@ -37,6 +37,39 @@ export default function WalletBar() {
 
   // Close profile on route change
   useEffect(() => { setProfileOpen(false); }, [pathname]);
+
+  // Fetch unread notification count
+  useEffect(() => {
+    if (!token) return;
+
+    const fetchUnreadCount = async () => {
+      try {
+        const [notifRes, couponRes] = await Promise.all([
+          fetch(`${API_URL}/notifications`, { headers: { Authorization: `Bearer ${token}` } }),
+          fetch(`${API_URL}/coupons/user/popup`, { headers: { Authorization: `Bearer ${token}` } })
+        ]);
+        
+        const notifData = await notifRes.json();
+        const couponData = await couponRes.json();
+        
+        let count = 0;
+        if (notifData.success) {
+          count += (notifData.notifications || []).filter((n: any) => !n.isRead).length;
+        }
+        if (couponData.success && couponData.coupon) {
+          count += 1;
+        }
+        
+        setUnreadCount(count);
+      } catch (error) {
+        console.error('Failed to fetch unread count:', error);
+      }
+    };
+
+    fetchUnreadCount();
+    const interval = setInterval(fetchUnreadCount, 10000);
+    return () => clearInterval(interval);
+  }, [token]);
 
   if (!user) return null;
 
@@ -79,6 +112,21 @@ export default function WalletBar() {
           {/* Right side: wallet + profile (profile only on home) */}
           <div className="flex items-center gap-2">
 
+            {/* Notification bell */}
+            <button
+              onClick={() => setNotifOpen(true)}
+              className={`relative w-9 h-9 rounded-full flex items-center justify-center active:scale-95 transition-all duration-300 ${
+                showBg ? 'bg-gray-100 border border-gray-200' : 'bg-white/15 border border-white/25 backdrop-blur-md'
+              }`}
+            >
+              <Bell size={18} className={showBg ? 'text-gray-700' : 'text-white'} />
+              {unreadCount > 0 && (
+                <div className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-black w-5 h-5 rounded-full flex items-center justify-center shadow-lg">
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </div>
+              )}
+            </button>
+
             {/* Wallet pill */}
             <button
               onClick={() => router.push('/subscriptions')}
@@ -111,6 +159,15 @@ export default function WalletBar() {
           </div>
         </div>
       </div>
+
+      {/* Notification panel */}
+      <NotificationPanel 
+        isOpen={notifOpen} 
+        onClose={() => {
+          setNotifOpen(false);
+          setUnreadCount(0);
+        }} 
+      />
 
       {/* Profile slide-in panel */}
       <AnimatePresence>

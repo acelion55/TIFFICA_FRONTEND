@@ -7,6 +7,7 @@ import { CartProvider } from "@/context/CartContext";
 import { ToastProvider } from "@/context/ToastContext";
 import LocationModal from "@/components/location-modal";
 import AppShell from "@/components/app-shell";
+import CouponPopup from "@/components/CouponPopup";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -38,6 +39,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <LocationProvider>
                 <AppShell>{children}</AppShell>
                 <LocationModal />
+                <CouponPopup />
               </LocationProvider>
             </CartProvider>
           </AuthProvider>
