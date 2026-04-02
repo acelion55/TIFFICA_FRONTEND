@@ -280,7 +280,7 @@ export default function AdminDashboard() {
             <div className="flex-1 min-w-0">
               <p className="text-stone-300 text-xs font-semibold">{isKitchenOwner ? 'Kitchen Owner' : 'Admin'}</p>
               <p className="text-[10px] truncate" style={{ color: '#78716c' }}>{user?.email}</p>
-              {isKitchenOwner && user?.assignedKitchen && (
+              {isKitchenOwner && (user as any)?.assignedKitchen && (
                 <p className="text-[9px] text-orange-400 mt-0.5">🏠 Kitchen Assigned</p>
               )}
             </div>

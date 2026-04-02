@@ -47,7 +47,7 @@ export function CouponModal({ couponModal, setCouponModal, userPerformance, fetc
   const toggleArea = (area: string) => {
     const currentAreas = formData.availableForAreas;
     if (currentAreas.includes(area)) {
-      setFormData({ ...formData, availableForAreas: currentAreas.filter(a => a !== area) });
+      setFormData({ ...formData, availableForAreas: currentAreas.filter((a: string) => a !== area) });
     } else {
       setFormData({ ...formData, availableForAreas: [...currentAreas, area] });
     }
@@ -254,7 +254,7 @@ export function CouponModal({ couponModal, setCouponModal, userPerformance, fetc
             </div>
             {formData.availableForAreas.length > 0 && (
               <div className="mt-2 flex flex-wrap gap-1">
-                {formData.availableForAreas.map(area => (
+                {formData.availableForAreas.map((area: string) => (
                   <span key={area} className="inline-flex items-center gap-1 bg-purple-100 text-purple-700 text-xs font-semibold px-2 py-1 rounded-full">
                     {area}
                     <button
