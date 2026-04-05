@@ -12,6 +12,7 @@ interface MenuItem {
   id: string;
   name: string;
   price: number;
+  discount?: number;
   mealType: string;
   quantity: number;
 }
@@ -111,7 +112,15 @@ export default function MenuClient() {
                 <div key={item.id} className="flex justify-between items-center bg-white p-4 rounded-lg shadow-sm border border-gray-200">
                     <div>
                         <h4 className="font-semibold text-lg">{item.name}</h4>
-                        <p className="text-sm text-gray-600">₹{item.price.toFixed(2)}</p>
+                        {item.discount && item.discount > 0 ? (
+                          <div className="flex items-center gap-2">
+                            <p className="text-sm text-gray-400 line-through">₹{item.price.toFixed(2)}</p>
+                            <p className="text-base font-bold text-orange-600">₹{(item.price - item.discount).toFixed(2)}</p>
+                            <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-semibold">₹{item.discount} OFF</span>
+                          </div>
+                        ) : (
+                          <p className="text-sm text-gray-600">₹{item.price.toFixed(2)}</p>
+                        )}
                     </div>
                     <button 
                         onClick={() => handleAddToCart(item)}

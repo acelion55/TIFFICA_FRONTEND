@@ -31,6 +31,8 @@ interface MenuItem {
   name: string;
   description?: string;
   price: number;
+  originalPrice?: number;
+  discount?: number;
   image?: string;
   category?: string;
   mealType?: string;
@@ -251,7 +253,12 @@ function SpecialCard({ item }: { item: MenuItem }) {
       </div>
       <h3 className="font-bold text-gray-900 text-sm truncate">{item.name}</h3>
       <div className="flex items-center justify-between mt-2">
-        <span className="text-base font-black text-orange-600">₹{item.price}</span>
+        <div className="flex flex-col">
+          <span className="text-base font-black text-orange-600">₹{item.price}</span>
+          {item.originalPrice && item.originalPrice > item.price && (
+            <span className="text-xs text-gray-400 line-through">₹{item.originalPrice}</span>
+          )}
+        </div>
         <button 
           onClick={handleAdd} 
           className="bg-gray-900 text-white p-2 rounded-xl hover:bg-gray-800 transition active:scale-90"
@@ -297,7 +304,12 @@ function MenuCard({ item, token, user }: { item: MenuItem; token: string | null;
         </div>
         <h3 className="text-sm font-black text-gray-900 line-clamp-1 mb-3">{item.name}</h3>
         <div className="flex items-center justify-between">
-          <span className="text-lg font-black text-gray-900">₹{item.price}</span>
+          <div className="flex flex-col">
+            <span className="text-lg font-black text-gray-900">₹{item.price}</span>
+            {item.originalPrice && item.originalPrice > item.price && (
+              <span className="text-xs text-gray-400 line-through">₹{item.originalPrice}</span>
+            )}
+          </div>
           <motion.button
             whileTap={{ scale: 0.9 }}
             onClick={handleAdd}

@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
+import { useSwipe } from '@/hooks/useSwipe';
 import { Users, ShoppingBag, UtensilsCrossed, CreditCard, Store, BarChart2, LogOut, RefreshCw, Home, Bell, FileText } from 'lucide-react';
 import {
   OverviewTab, UsersTab, OrdersTab, MenuTab, KitchensTab,
@@ -182,19 +183,54 @@ export default function AdminDashboard() {
   const saveMenu = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault(); setSaving(true);
     const fd = new FormData(e.currentTarget);
+    
+    const availableUntilDate = fd.get('availableUntilDate') as string;
+    const availableUntil = availableUntilDate ? new Date(availableUntilDate).toISOString() : null;
+    
+    const discountValue = fd.get('discount') as string;
+    const discount = discountValue ? Number(discountValue) : 0;
+    
+    const originalPriceValue = fd.get('originalPrice') as string;
+    const originalPrice = originalPriceValue ? Number(originalPriceValue) : null;
+    
+    const isVegValue = fd.get('isVeg') as string;
+    const isVeg = isVegValue === 'true';
+    
     const body: any = {
-      name: fd.get('name'), description: fd.get('description'), price: Number(fd.get('price')),
-      image: imgPreview || fd.get('imageUrl'), category: fd.get('category'), mealType: fd.get('mealType'),
+      name: fd.get('name'), 
+      description: fd.get('description'), 
+      price: Number(fd.get('price')),
+      originalPrice: originalPrice,
+      discount: discount,
+      image: imgPreview || fd.get('imageUrl'), 
+      category: fd.get('category'), 
+      mealType: fd.get('mealType'),
+      isVeg: isVeg,
       cloudKitchen: fd.get('cloudKitchen') || null,
-      isSpecial: fd.get('isSpecial') === 'on', isTodaySpecial: fd.get('isTodaySpecial') === 'on',
-      isAvailable: fd.get('isAvailable') === 'on',
+      isSpecial: fd.get('isSpecial') === 'on', 
+      isTodaySpecial: fd.get('isTodaySpecial') === 'on',
       ingredients: (fd.get('ingredients') as string)?.split(',').map(s => s.trim()).filter(Boolean),
+      availableQuantity: Number(fd.get('availableQuantity')) || null,
+      availableUntil: availableUntil,
     };
+    
+    console.log('Saving menu with data:', body);
+    
     const isEdit = !!menuModal.data?._id;
     const url = isEdit ? `${API_URL}/admin/menu/${menuModal.data._id}` : `${API_URL}/admin/menu`;
     const res = await fetch(url, { method: isEdit ? 'PUT' : 'POST', headers: { ...headers, 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-    const data = await res.json(); setSaving(false);
-    if (data.success) { setMenuModal({ open: false, data: null }); setImgPreview(''); fetchAll(); } else alert(data.error || 'Failed');
+    const data = await res.json(); 
+    
+    console.log('Server response:', data);
+    
+    setSaving(false);
+    if (data.success) { 
+      setMenuModal({ open: false, data: null }); 
+      setImgPreview(''); 
+      fetchAll(); 
+    } else {
+      alert(data.error || 'Failed to save menu item');
+    }
   };
 
   const isKitchenOwner = user?.role === 'kitchen-owner';
@@ -224,6 +260,22 @@ export default function AdminDashboard() {
     setDateFilter('');
     setExpandedRow(null);
   };
+
+  // Swipe navigation for mobile
+  useSwipe({
+    onSwipeLeft: () => {
+      const currentIndex = tabs.findIndex(t => t.id === tab);
+      if (currentIndex >= 0 && currentIndex < tabs.length - 1) {
+        handleTabChange(tabs[currentIndex + 1].id);
+      }
+    },
+    onSwipeRight: () => {
+      const currentIndex = tabs.findIndex(t => t.id === tab);
+      if (currentIndex > 0) {
+        handleTabChange(tabs[currentIndex - 1].id);
+      }
+    },
+  }, 80);
 
   const inputCls = 'w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition';
 
@@ -348,7 +400,7 @@ export default function AdminDashboard() {
             <OrdersTab orders={orders} expandedRow={expandedRow} setExpandedRow={setExpandedRow} search={orderSearch} setSearch={setOrderSearch} dateFilter={dateFilter} setDateFilter={setDateFilter} {...commonProps} />
           )}
           {!loading && tab === 'menu' && (
-            <MenuTab menuItems={menuItems} search={search} setSearch={setSearch} expandedRow={expandedRow} setExpandedRow={setExpandedRow} setMenuModal={setMenuModal} setImgPreview={setImgPreview} />
+            <MenuTab menuItems={menuItems} search={search} setSearch={setSearch} expandedRow={expandedRow} setExpandedRow={setExpandedRow} setMenuModal={setMenuModal} setImgPreview={setImgPreview} kitchens={kitchens} />
           )}
           {!loading && tab === 'kitchens' && isAdmin && (
             <KitchensTab kitchens={kitchens} menuItems={menuItems} setKitchenModal={setKitchenModal} {...commonProps} />
@@ -469,15 +521,23 @@ export default function AdminDashboard() {
               </div>
               <input name="name" defaultValue={menuModal.data?.name || ''} required placeholder="Item Name" className={inputCls} />
               <textarea name="description" defaultValue={menuModal.data?.description || ''} placeholder="Description" rows={2} className={`${inputCls} resize-none`} />
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-3 gap-3">
                 <input name="price" defaultValue={menuModal.data?.price || ''} required placeholder="Price (₹)" type="number" className={inputCls} />
+                <input name="originalPrice" defaultValue={menuModal.data?.originalPrice || ''} placeholder="Original (₹)" type="number" min="0" className={inputCls} />
+                <input name="discount" defaultValue={menuModal.data?.discount || ''} placeholder="Discount %" type="number" min="0" max="100" className={inputCls} />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
                 <select name="mealType" defaultValue={menuModal.data?.mealType || 'Lunch'} className={inputCls}>
                   <option>Breakfast</option><option>Lunch</option><option>Dinner</option><option>Snack</option>
                 </select>
+                <select name="category" defaultValue={menuModal.data?.category || 'dal'} className={inputCls}>
+                  <option value="dal">Dal</option><option value="sabji">Sabji</option><option value="raita">Raita</option><option value="roti">Roti</option><option value="Veg">Veg</option><option value="Non-Veg">Non-Veg</option>
+                </select>
               </div>
               <div className="grid grid-cols-2 gap-3">
-                <select name="category" defaultValue={menuModal.data?.category || 'dal'} className={inputCls}>
-                  <option value="dal">Dal</option><option value="sabji">Sabji</option><option value="raita">Raita</option><option value="roti">Roti</option>
+                <select name="isVeg" defaultValue={menuModal.data?.isVeg !== undefined ? String(menuModal.data.isVeg) : 'true'} className={inputCls}>
+                  <option value="true">🟢 Veg</option>
+                  <option value="false">🔴 Non-Veg</option>
                 </select>
                 <select name="cloudKitchen" defaultValue={menuModal.data?.cloudKitchen?._id || menuModal.data?.cloudKitchen || ''} className={inputCls}>
                   <option value="">No Kitchen</option>
@@ -485,9 +545,29 @@ export default function AdminDashboard() {
                 </select>
               </div>
               <input name="ingredients" defaultValue={menuModal.data?.ingredients?.join(', ') || ''} placeholder="Ingredients (comma separated)" className={inputCls} />
+              
+              <div>
+                <label className="block text-xs font-bold text-slate-500 mb-2 uppercase tracking-wide">Availability</label>
+                <div className="grid grid-cols-2 gap-3">
+                  <input 
+                    name="availableQuantity" 
+                    defaultValue={menuModal.data?.availableQuantity || ''} 
+                    placeholder="Quantity" 
+                    type="number" 
+                    min="0"
+                    className={inputCls} 
+                  />
+                  <input 
+                    name="availableUntilDate" 
+                    defaultValue={menuModal.data?.availableUntil ? new Date(menuModal.data.availableUntil).toISOString().slice(0, 16) : ''} 
+                    type="datetime-local" 
+                    className={inputCls} 
+                  />
+                </div>
+              </div>
+              
               <div className="flex gap-5 text-sm py-1">
                 {[
-                  { name: 'isAvailable', label: 'Available', checked: menuModal.data?.isAvailable !== false },
                   { name: 'isSpecial', label: 'Special', checked: !!menuModal.data?.isSpecial },
                   { name: 'isTodaySpecial', label: "Today's Special", checked: !!menuModal.data?.isTodaySpecial },
                 ].map(opt => (

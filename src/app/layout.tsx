@@ -8,6 +8,7 @@ import { ToastProvider } from "@/context/ToastContext";
 import LocationModal from "@/components/location-modal";
 import AppShell from "@/components/app-shell";
 import CouponPopup from "@/components/CouponPopup";
+import RoleRedirect from "@/components/role-redirect";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -37,6 +38,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <AuthProvider>
             <CartProvider>
               <LocationProvider>
+                <RoleRedirect />
                 <AppShell>{children}</AppShell>
                 <LocationModal />
                 <CouponPopup />

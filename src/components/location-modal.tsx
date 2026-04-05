@@ -17,8 +17,11 @@ const TYPE_ICONS: Record<string, any> = {
 
 export default function LocationModal() {
   const { showModal, setShowModal, saveLocation, location, locationSet, previousLocation } = useLocation();
-  const { token } = useAuth();
+  const { token, user } = useAuth();
   const router = useRouter();
+
+  // Only show for regular users, not admin or kitchen-owner
+  const isRegularUser = !user?.role || user.role === 'user';
 
   const [addresses, setAddresses]     = useState<any[]>([]);
   const [detecting, setDetecting]     = useState(false);
@@ -30,14 +33,14 @@ export default function LocationModal() {
 
   // Load saved addresses
   useEffect(() => {
-    if (!token || !showModal) return;
+    if (!token || !showModal || !isRegularUser) return;
     fetch(`${API_URL}/auth/profile`, { headers: { Authorization: `Bearer ${token}` } })
       .then(r => r.json())
       .then(d => setAddresses(d.addresses || []))
       .catch(() => {});
-  }, [token, showModal]);
+  }, [token, showModal, isRegularUser]);
 
-  if (!showModal) return null;
+  if (!showModal || !isRegularUser) return null;
 
   // Select a saved address as delivery location
   const handleSelectAddress = async (addr: any) => {

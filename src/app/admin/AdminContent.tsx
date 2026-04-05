@@ -1,4 +1,5 @@
 'use client';
+import React from 'react';
 import { ChevronDown, ChevronUp, Search, Trash2, Plus, Activity, Tag, TrendingUp, Award } from 'lucide-react';
 
 const SC: Record<string, string> = {
@@ -313,48 +314,217 @@ export function OrdersTab({ orders, expandedRow, setExpandedRow, fetchAll, heade
   );
 }
 
-export function MenuTab({ menuItems, search, setSearch, expandedRow, setExpandedRow, setMenuModal, setImgPreview }: any) {
+export function MenuTab({ menuItems, search, setSearch, expandedRow, setExpandedRow, setMenuModal, setImgPreview, kitchens }: any) {
+  const [kitchenFilter, setKitchenFilter] = React.useState('');
+  const [nameFilter, setNameFilter] = React.useState('');
+  const [showFilters, setShowFilters] = React.useState(false);
+
+  const filteredItems = menuItems.filter((m: any) => {
+    const matchesSearch = !search || m.name?.toLowerCase().includes(search.toLowerCase());
+    const matchesKitchen = !kitchenFilter || 
+      (kitchenFilter === 'no-kitchen' ? !m.cloudKitchen : m.cloudKitchen?._id === kitchenFilter || m.cloudKitchen === kitchenFilter);
+    const matchesName = !nameFilter || m.name?.toLowerCase().includes(nameFilter.toLowerCase());
+    return matchesSearch && matchesKitchen && matchesName;
+  });
+
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-3">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
         <div className="flex-1 flex items-center gap-3 bg-white rounded-xl border border-slate-200 px-4 py-2.5 shadow-sm">
           <Search className="w-4 h-4 text-slate-400 shrink-0" />
           <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search menu items…" className="flex-1 text-sm focus:outline-none placeholder:text-slate-400" />
+        </div>
+        <div className="relative">
+          <button 
+            onClick={() => setShowFilters(!showFilters)}
+            className="flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-semibold hover:bg-slate-50 transition"
+          >
+            <span>🔍 Filters</span>
+            {(nameFilter || kitchenFilter) && (
+              <span className="w-2 h-2 rounded-full bg-orange-500"></span>
+            )}
+            <ChevronDown className={`w-4 h-4 transition-transform ${showFilters ? 'rotate-180' : ''}`} />
+          </button>
+          {showFilters && (
+            <div className="absolute right-0 top-full mt-2 bg-white rounded-xl shadow-lg border border-slate-200 p-4 z-10 min-w-[280px]">
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 mb-2 uppercase tracking-wide">Filter by Name</label>
+                  <select 
+                    value={nameFilter} 
+                    onChange={e => setNameFilter(e.target.value)}
+                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-orange-400"
+                  >
+                    <option value="">All Items</option>
+                    <option value="dal">Dal Items</option>
+                    <option value="sabji">Sabji Items</option>
+                    <option value="roti">Roti Items</option>
+                    <option value="raita">Raita Items</option>
+                    <option value="rice">Rice Items</option>
+                    <option value="paneer">Paneer Items</option>
+                    <option value="chicken">Chicken Items</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 mb-2 uppercase tracking-wide">Kitchen</label>
+                  <select 
+                    value={kitchenFilter} 
+                    onChange={e => setKitchenFilter(e.target.value)}
+                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-orange-400"
+                  >
+                    <option value="">All Kitchens</option>
+                    {kitchens?.map((k: any) => (
+                      <option key={k._id} value={k._id}>{k.name}</option>
+                    ))}
+                    <option value="no-kitchen">No Kitchen</option>
+                  </select>
+                </div>
+                <button 
+                  onClick={() => { setNameFilter(''); setKitchenFilter(''); }}
+                  className="w-full py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold transition"
+                >
+                  Clear All Filters
+                </button>
+              </div>
+            </div>
+          )}
         </div>
         <button onClick={() => { setMenuModal({ open: true, data: null }); setImgPreview(''); }} className="flex items-center gap-2 px-4 py-2.5 bg-orange-500 hover:bg-orange-600 text-white rounded-xl text-sm font-bold shadow-sm transition shrink-0">
           <Plus className="w-4 h-4" /> Add Item
         </button>
       </div>
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {menuItems.filter((m: any) => !search || m.name?.toLowerCase().includes(search.toLowerCase())).map((m: any) => (
-          <div key={m._id} className="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-shadow">
-            <div className="relative">
-              <img src={m.image?.startsWith('http') ? m.image : 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&h=200&fit=crop'} alt={m.name} className="w-full h-36 object-cover" onError={e => { (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&h=200&fit=crop'; }} />
-              <div className="absolute top-2 right-2 flex gap-1">
-                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${m.isAvailable ? 'bg-green-500 text-white' : 'bg-red-500 text-white'}`}>{m.isAvailable ? 'Live' : 'Off'}</span>
-                {m.isTodaySpecial && <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500 text-white">⭐ Special</span>}
-              </div>
+
+      <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+        <div className="px-5 py-3 border-b border-slate-100 flex items-center justify-between">
+          <p className="text-xs font-bold text-slate-500 uppercase tracking-wide">Menu Items</p>
+          <span className="text-xs text-slate-400">{filteredItems.length} of {menuItems.length} items</span>
+        </div>
+        <div className="divide-y divide-slate-50">
+          {filteredItems.length === 0 ? (
+            <div className="text-center py-12 text-slate-400">
+              <p className="text-4xl mb-2">🍽️</p>
+              <p className="font-semibold">No menu items found</p>
+              <p className="text-xs mt-1">Try adjusting your filters</p>
             </div>
-            <div className="p-4">
-              <div className="flex items-start justify-between gap-2 mb-1">
-                <p className="font-bold text-slate-900 text-sm leading-tight">{m.name}</p>
-                <p className="font-black text-orange-600 shrink-0">₹{m.price}</p>
-              </div>
-              <p className="text-[11px] text-slate-400 mb-3">{m.mealType} · {m.category}{m.cloudKitchen ? ` · ${m.cloudKitchen.name}` : ''}</p>
-              <div className="flex gap-2">
-                <button onClick={() => { setImgPreview(''); setMenuModal({ open: true, data: m }); }} className="flex-1 py-1.5 text-xs font-bold bg-orange-50 text-orange-600 rounded-lg hover:bg-orange-100 transition">Edit</button>
-                <button onClick={() => setExpandedRow(expandedRow === m._id ? null : m._id)} className="flex-1 py-1.5 text-xs font-bold bg-slate-50 text-slate-600 rounded-lg hover:bg-slate-100 transition">Details</button>
-              </div>
-              {expandedRow === m._id && (
-                <div className="mt-3 pt-3 border-t border-slate-100 text-xs text-slate-500 space-y-1">
-                  <p>⭐ {m.rating || 0}/5 · Added {fmt(m.createdAt)}</p>
-                  {m.description && <p className="text-slate-400 leading-relaxed">{m.description}</p>}
-                  {m.ingredients?.length > 0 && <p>🧂 {m.ingredients.join(', ')}</p>}
+          ) : (
+            filteredItems.map((m: any) => (
+              <div key={m._id}>
+                <div className="flex items-center gap-4 px-5 py-3 hover:bg-slate-50 transition cursor-pointer" onClick={() => setExpandedRow(expandedRow === m._id ? null : m._id)}>
+                  <img 
+                    src={m.image?.startsWith('http') ? m.image : 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=80&h=80&fit=crop'} 
+                    alt={m.name} 
+                    className="w-16 h-16 rounded-xl object-cover shrink-0 shadow-sm" 
+                    onError={e => { (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=80&h=80&fit=crop'; }} 
+                  />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <p className="font-bold text-slate-900 text-sm">{m.name}</p>
+                      {m.isTodaySpecial && <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">⭐ Today's Special</span>}
+                      {m.isSpecial && !m.isTodaySpecial && <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-100 text-purple-700">✨ Special</span>}
+                    </div>
+                    <p className="text-xs text-slate-400">{m.cloudKitchen?.name || 'No Kitchen'}</p>
+                    {m.cloudKitchen?.location?.coordinates && (
+                      <p className="text-[10px] text-slate-400 mt-0.5">
+                        📍 {m.cloudKitchen.location.coordinates[1].toFixed(4)}°N, {m.cloudKitchen.location.coordinates[0].toFixed(4)}°E
+                      </p>
+                    )}
+                  </div>
+                  <div className="text-right shrink-0">
+                    {m.discount > 0 ? (
+                      <div>
+                        <p className="text-xs text-slate-400 line-through">₹{m.price}</p>
+                        <p className="font-black text-orange-600 text-lg">₹{m.price - m.discount}</p>
+                        <p className="text-[10px] text-green-600 font-bold">₹{m.discount} OFF</p>
+                      </div>
+                    ) : (
+                      <p className="font-black text-orange-600 text-lg">₹{m.price}</p>
+                    )}
+                  </div>
+                  <button onClick={(e) => { e.stopPropagation(); setImgPreview(''); setMenuModal({ open: true, data: m }); }} className="px-3 py-1.5 text-xs font-bold bg-orange-50 text-orange-600 rounded-lg hover:bg-orange-100 transition shrink-0">
+                    Edit
+                  </button>
                 </div>
-              )}
-            </div>
-          </div>
-        ))}
+                {expandedRow === m._id && (
+                  <div className="px-5 pb-4 pt-2 bg-slate-50 border-t border-slate-100">
+                    <div className="grid grid-cols-2 gap-2 mb-3">
+                      <div className="bg-white rounded-lg p-2.5">
+                        <p className="text-slate-400 text-[10px] uppercase">Category</p>
+                        <p className="font-semibold text-slate-800 mt-0.5 text-xs">{m.category}</p>
+                      </div>
+                      <div className="bg-white rounded-lg p-2.5">
+                        <p className="text-slate-400 text-[10px] uppercase">Meal Type</p>
+                        <p className="font-semibold text-slate-800 mt-0.5 text-xs">{m.mealType}</p>
+                      </div>
+                      <div className="bg-white rounded-lg p-2.5">
+                        <p className="text-slate-400 text-[10px] uppercase">Discount Price</p>
+                        <p className="font-semibold text-green-600 mt-0.5 text-xs">₹{m.discount || 0}</p>
+                      </div>
+                      <div className="bg-white rounded-lg p-2.5">
+                        <p className="text-slate-400 text-[10px] uppercase">Final Price</p>
+                        <p className="font-semibold text-orange-600 mt-0.5 text-xs">₹{m.price - (m.discount || 0)}</p>
+                      </div>
+                      <div className="bg-white rounded-lg p-2.5">
+                        <p className="text-slate-400 text-[10px] uppercase">Rating</p>
+                        <p className="font-semibold text-slate-800 mt-0.5 text-xs">⭐ {m.rating || 0}/5</p>
+                      </div>
+                      <div className="bg-white rounded-lg p-2.5">
+                        <p className="text-slate-400 text-[10px] uppercase">Kitchen</p>
+                        <p className="font-semibold text-slate-800 mt-0.5 text-xs truncate">{m.cloudKitchen?.name || 'No Kitchen'}</p>
+                        {m.cloudKitchen?.location?.coordinates && (
+                          <p className="text-[10px] text-slate-400 mt-0.5">
+                            📍 {m.cloudKitchen.location.coordinates[1].toFixed(4)}°N, {m.cloudKitchen.location.coordinates[0].toFixed(4)}°E
+                          </p>
+                        )}
+                      </div>
+                      <div className="bg-white rounded-lg p-2.5">
+                        <p className="text-slate-400 text-[10px] uppercase">Available Quantity</p>
+                        <p className="font-semibold text-slate-800 mt-0.5 text-xs">{m.availableQuantity || 'N/A'}</p>
+                      </div>
+                      <div className="bg-white rounded-lg p-2.5">
+                        <p className="text-slate-400 text-[10px] uppercase">Available Until</p>
+                        <p className="font-semibold text-slate-800 mt-0.5 text-xs">
+                          {m.availableUntil ? new Date(m.availableUntil).toLocaleString('en-IN', { 
+                            day: '2-digit', 
+                            month: 'short', 
+                            year: 'numeric',
+                            hour: '2-digit', 
+                            minute: '2-digit',
+                            hour12: true 
+                          }) : 'N/A'}
+                        </p>
+                      </div>
+                      <div className="bg-white rounded-lg p-2.5 col-span-2">
+                        <p className="text-slate-400 text-[10px] uppercase">Special Tags</p>
+                        <div className="flex gap-1.5 mt-1 flex-wrap">
+                          {m.isTodaySpecial && <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">⭐ Today's Special</span>}
+                          {m.isSpecial && <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-100 text-purple-700">✨ Special Item</span>}
+                          {!m.isTodaySpecial && !m.isSpecial && <span className="text-xs text-slate-400">No special tags</span>}
+                        </div>
+                      </div>
+                    </div>
+                    {m.description && (
+                      <div className="bg-white rounded-lg p-2.5 mb-2">
+                        <p className="text-slate-400 text-[10px] uppercase mb-1">Description</p>
+                        <p className="text-xs text-slate-600">{m.description}</p>
+                      </div>
+                    )}
+                    {m.ingredients && m.ingredients.length > 0 && (
+                      <div className="bg-white rounded-lg p-2.5">
+                        <p className="text-slate-400 text-[10px] uppercase mb-1">Ingredients</p>
+                        <div className="flex flex-wrap gap-1">
+                          {m.ingredients.map((ing: string, i: number) => (
+                            <span key={i} className="text-[10px] bg-green-50 text-green-700 px-2 py-0.5 rounded-full">{ing}</span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    <p className="text-slate-400 font-mono text-[10px] px-1 mt-2">ID: {m._id}</p>
+                  </div>
+                )}
+              </div>
+            ))
+          )}
+        </div>
       </div>
     </div>
   );

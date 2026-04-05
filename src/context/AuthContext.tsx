@@ -40,15 +40,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const data = await res.json();
         setToken(t);
         setUser(data);
+        localStorage.setItem('user', JSON.stringify(data));
         startPing(t);
       } else {
         localStorage.removeItem('token');
+        localStorage.removeItem('user');
         setToken(null);
         setUser(null);
       }
     } catch (e) {
       console.error('Failed to fetch profile', e);
       localStorage.removeItem('token');
+      localStorage.removeItem('user');
       setToken(null);
       setUser(null);
     } finally {
@@ -58,7 +61,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const stored = localStorage.getItem('token');
-    if (stored) {
+    const storedUser = localStorage.getItem('user');
+    
+    if (stored && storedUser) {
+      try {
+        const parsedUser = JSON.parse(storedUser);
+        setToken(stored);
+        setUser(parsedUser);
+        setLoading(false);
+        startPing(stored);
+        
+        // Verify token in background
+        fetch(`${API_URL}/auth/profile`, {
+          headers: { 'Authorization': `Bearer ${stored}` },
+        }).then(res => {
+          if (!res.ok) {
+            // Token invalid, logout
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            setToken(null);
+            setUser(null);
+            stopPing();
+          }
+        }).catch(() => {});
+      } catch {
+        login(stored);
+      }
+    } else if (stored) {
       login(stored);
     } else {
       setLoading(false);
@@ -70,6 +99,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setToken(null);
     setUser(null);
     localStorage.removeItem('token');
+    localStorage.removeItem('user');
     stopPing();
   };
 

@@ -3,6 +3,7 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
+import { useLocation } from '@/context/LocationContext';
 import { useToast } from '@/context/ToastContext';
 import { ArrowLeft, Search, Star, CheckCircle2, Loader2 } from 'lucide-react';
 
@@ -14,15 +15,19 @@ interface MenuItem {
   name: string;
   description: string;
   price: number;
+  originalPrice?: number;
+  discount?: number;
   image: string;
   category: string;
   mealType: string;
   rating: number;
   isAvailable: boolean;
+  isVeg?: boolean;
 }
 
 function ScheduleMenuContent() {
   const { token, user, updateUser } = useAuth();
+  const { locationSet } = useLocation();
   const { addToast } = useToast();
   const router = useRouter();
   const params = useSearchParams();
@@ -43,8 +48,14 @@ function ScheduleMenuContent() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    if (!mealType) return;
-    fetch(`${API_URL}/menu/mealtype/${mealType}`)
+    if (!mealType || !token) return;
+    const apiUrl = locationSet 
+      ? `${API_URL}/menu/mealtype/${mealType}/by-location`
+      : `${API_URL}/menu/mealtype/${mealType}`;
+    
+    fetch(apiUrl, {
+      headers: { Authorization: `Bearer ${token}` }
+    })
       .then(r => r.json())
       .then(d => {
         setItems(d.items || []);
@@ -55,7 +66,7 @@ function ScheduleMenuContent() {
       })
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, [mealType, existingMealId]);
+  }, [mealType, existingMealId, token, locationSet]);
 
   const filtered = items.filter(item => {
     const matchSearch = item.name.toLowerCase().includes(search.toLowerCase());
@@ -183,7 +194,12 @@ function ScheduleMenuContent() {
                     }`}>{item.category}</span>
                     <h3 className="font-extrabold text-sm text-gray-900 mt-1.5 line-clamp-1">{item.name}</h3>
                     <p className="text-xs text-gray-400 line-clamp-1 mt-0.5">{item.description}</p>
-                    <p className="text-orange-600 font-extrabold text-base mt-2">₹{item.price}</p>
+                    <div className="flex items-center gap-2 mt-2">
+                      <p className="text-orange-600 font-extrabold text-base">₹{item.price}</p>
+                      {item.originalPrice && item.originalPrice > item.price && (
+                        <p className="text-gray-400 text-xs line-through">₹{item.originalPrice}</p>
+                      )}
+                    </div>
                   </div>
                 </button>
               );
