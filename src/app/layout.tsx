@@ -21,6 +21,9 @@ export const metadata: Metadata = {
     statusBarStyle: 'default',
     title: 'Tiffica',
   },
+  verification: {
+    google: 'M3G7DutCabpv_Z7J0SU969bNVe3zw2tOuTuw-0UH9gM',
+  },
 };
 
 export const viewport: Viewport = {
