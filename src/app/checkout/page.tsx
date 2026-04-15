@@ -43,29 +43,40 @@ export default function CheckoutPage() {
           
           // Send order to backend
           try {
-            await fetch(`${API_URL}/orders`, {
+            const orderData = {
+              items: cart.map(item => ({
+                menuItemId: item._id,
+                quantity: item.quantity
+              })),
+              deliveryAddress: user.addresses?.find(a => a.isDefault) || {},
+              deliveryFee: 0,
+              discount: 0,
+              paymentMethod: 'razorpay',
+              paymentId: paymentId,
+            };
+
+            const response = await fetch(`${API_URL}/orders`, {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${token}`,
               },
-              body: JSON.stringify({
-                items: cart,
-                totalAmount: total,
-                paymentId,
-                userDetails: {
-                  name: user.name,
-                  email: user.email,
-                  phone: user.phone,
-                },
-              }),
+              body: JSON.stringify(orderData),
             });
+
+            const result = await response.json();
+            
+            if (!response.ok) {
+              console.error('Order creation failed:', result);
+              addToast('⚠️ Payment successful but order save failed', 'error');
+            }
           } catch (e) {
             console.error('Order save failed:', e);
+            addToast('⚠️ Payment successful but order save failed', 'error');
           }
 
           clearCart();
-          setTimeout(() => router.push('/home'), 1500);
+          setTimeout(() => router.push('/orders'), 1500);
         },
         onFailure: () => {
           addToast('❌ Payment failed. Please try again.', 'error');
