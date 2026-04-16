@@ -9,6 +9,7 @@ import LocationModal from "@/components/location-modal";
 import AppShell from "@/components/app-shell";
 import CouponPopup from "@/components/CouponPopup";
 import RoleRedirect from "@/components/role-redirect";
+import PWAUpdater from "@/components/pwa-updater";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -92,6 +93,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <AppShell>{children}</AppShell>
                 <LocationModal />
                 <CouponPopup />
+                <PWAUpdater />
               </LocationProvider>
             </CartProvider>
           </AuthProvider>

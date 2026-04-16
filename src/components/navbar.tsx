@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { Home, CalendarDays, Wallet, RefreshCw } from 'lucide-react';
 import { usePathname } from 'next/navigation';
+import { useAuth } from '@/context/AuthContext';
 
 const navItems = [
   { href: '/home',          label: 'HOME',         icon: Home },
@@ -13,6 +14,10 @@ const navItems = [
 
 export default function Navbar() {
   const pathname = usePathname();
+  const { token } = useAuth();
+
+  // Don't show navbar if user is not logged in
+  if (!token) return null;
 
   return (
     <nav

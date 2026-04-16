@@ -1,3 +1,17 @@
+const CACHE_VERSION = 'v1';
+
+self.addEventListener('install', event => {
+  self.skipWaiting();
+});
+
+self.addEventListener('activate', event => {
+  event.waitUntil(
+    caches.keys().then(keys => 
+      Promise.all(keys.filter(k => k !== CACHE_VERSION).map(k => caches.delete(k)))
+    ).then(() => self.clients.claim())
+  );
+});
+
 self.addEventListener('push', event => {
   let data = { title: 'Tiffica', body: 'You have a new notification' };
   try { data = JSON.parse(event.data.text()); } catch {}
@@ -27,4 +41,8 @@ self.addEventListener('notificationclick', event => {
       return clients.openWindow(url);
     })
   );
+});
+
+self.addEventListener('message', event => {
+  if (event.data?.type === 'SKIP_WAITING') self.skipWaiting();
 });
