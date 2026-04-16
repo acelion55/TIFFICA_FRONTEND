@@ -13,7 +13,7 @@ import { CouponModal } from './CouponModal';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 type Tab = 'stats' | 'users' | 'orders' | 'menu' | 'kitchens' | 'subscriptions' | 'homestyles' | 'notifications' | 'legal' | 'coupons';
-interface Stats { users: number; orders: number; menuItems: number; subscriptions: number; }
+interface Stats { users: number; orders: number; menuItems: number; subscriptions: number; totalWalletBalance?: number; }
 
 export default function AdminDashboard() {
   const { token, user, logout } = useAuth();

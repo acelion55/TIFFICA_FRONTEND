@@ -21,12 +21,13 @@ const fmtTime = (d: string) => new Date(d).toLocaleString('en-IN', { day: '2-dig
 export function OverviewTab({ stats, today, liveUsers, kitchens, menuItems, orders }: any) {
   return (
     <div className="space-y-5">
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
         {[
           { label: 'Total Users', value: stats.users, color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-500', icon: '👤' },
           { label: 'Total Orders', value: stats.orders, color: 'text-orange-600', bg: 'bg-orange-50', border: 'border-orange-500', icon: '📦' },
           { label: 'Menu Items', value: stats.menuItems, color: 'text-green-600', bg: 'bg-green-50', border: 'border-green-500', icon: '🍽️' },
           { label: 'Subscriptions', value: stats.subscriptions, color: 'text-purple-600', bg: 'bg-purple-50', border: 'border-purple-500', icon: '💳' },
+          { label: 'Wallet Balance', value: `₹${(stats.totalWalletBalance || 0).toLocaleString('en-IN')}`, color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-500', icon: '💰' },
         ].map(s => (
           <div key={s.label} className={`bg-white rounded-xl p-5 border-l-4 ${s.border} shadow-sm hover:shadow-md transition-shadow`}>
             <div className="flex items-start justify-between">
