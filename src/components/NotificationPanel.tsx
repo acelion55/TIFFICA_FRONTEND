@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Tag, Bell, Package, Info, AlertCircle } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
+import { useNotifications } from '@/context/NotificationContext';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
@@ -16,6 +17,7 @@ const TYPE_ICON: Record<string, any> = {
 
 export default function NotificationPanel({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   const { token } = useAuth();
+  const { refreshUnreadCount } = useNotifications();
   const [notifications, setNotifications] = useState<any[]>([]);
   const [coupons, setCoupons] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -50,10 +52,11 @@ export default function NotificationPanel({ isOpen, onClose }: { isOpen: boolean
   const markAsRead = async (id: string) => {
     try {
       await fetch(`${API_URL}/notifications/${id}/read`, {
-        method: 'PATCH',
+        method: 'PUT',
         headers: { Authorization: `Bearer ${token}` }
       });
       setNotifications(prev => prev.map(n => n._id === id ? { ...n, isRead: true } : n));
+      refreshUnreadCount();
     } catch (error) {
       console.error('Failed to mark as read:', error);
     }

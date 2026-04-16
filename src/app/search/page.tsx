@@ -3,7 +3,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
-import { ArrowLeft, Search, X, Star, Clock, Leaf, SlidersHorizontal, Loader2 } from 'lucide-react';
+import { useLocation } from '@/context/LocationContext';
+import { useNotifications } from '@/context/NotificationContext';
+import { ArrowLeft, Search, X, Star, Clock, Leaf, SlidersHorizontal, Loader2, Bell } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
@@ -37,6 +39,8 @@ function saveRecent(q: string) {
 
 export default function SearchPage() {
   const { token } = useAuth();
+  const { locationSet = false } = useLocation();
+  const { unreadCount } = useNotifications();
   const router    = useRouter();
   const inputRef  = useRef<HTMLInputElement>(null);
 
@@ -53,12 +57,13 @@ export default function SearchPage() {
   useEffect(() => {
     setRecent(getRecent());
     inputRef.current?.focus();
-    // Pre-load all menu items
-    fetch(`${API_URL}/menu`, { headers: { Authorization: `Bearer ${token}` } })
+    // Pre-load menu items based on location
+    const apiUrl = locationSet ? `${API_URL}/menu/by-location` : `${API_URL}/menu`;
+    fetch(apiUrl, { headers: { Authorization: `Bearer ${token}` } })
       .then(r => r.json())
       .then(d => setAllItems(d.items || []))
       .catch(() => {});
-  }, [token]);
+  }, [token, locationSet]);
 
   // Live search with debounce
   useEffect(() => {
@@ -66,7 +71,10 @@ export default function SearchPage() {
     const t = setTimeout(async () => {
       setLoading(true);
       try {
-        const res = await fetch(`${API_URL}/menu/search/${encodeURIComponent(query.trim())}`, {
+        const searchUrl = locationSet 
+          ? `${API_URL}/menu/search/${encodeURIComponent(query.trim())}/by-location`
+          : `${API_URL}/menu/search/${encodeURIComponent(query.trim())}`;
+        const res = await fetch(searchUrl, {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (res.ok) {
@@ -78,7 +86,7 @@ export default function SearchPage() {
       setSearched(true);
     }, 350);
     return () => clearTimeout(t);
-  }, [query, token]);
+  }, [query, token, locationSet]);
 
   const handleSearch = (q: string) => {
     setQuery(q);
@@ -123,6 +131,16 @@ export default function SearchPage() {
               </button>
             )}
           </div>
+
+          <button onClick={() => router.push('/notifications')}
+            className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0 relative active:scale-95">
+            <Bell className="w-4 h-4 text-gray-600" />
+            {unreadCount > 0 && (
+              <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] bg-red-500 text-white text-[10px] font-black rounded-full flex items-center justify-center px-1">
+                {unreadCount > 99 ? '99+' : unreadCount}
+              </span>
+            )}
+          </button>
 
           <button onClick={() => setShowFilters(v => !v)}
             className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 relative active:scale-95 ${showFilters ? 'bg-orange-500' : 'bg-gray-100'}`}>

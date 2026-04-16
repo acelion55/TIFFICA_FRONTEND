@@ -12,16 +12,50 @@ export default function ReorderClient() {
   const { token } = useAuth();
   const router = useRouter();
   const [orders, setOrders] = useState<any[]>([]);
+  const [schedules, setSchedules] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState<string | null>(null);
 
   useEffect(() => {
     if (!token) return;
-    fetch(`${API_URL}/orders`, { headers: { Authorization: `Bearer ${token}` } })
-      .then(r => r.json())
-      .then(d => setOrders((d.orders || []).filter((o: any) => o.status === 'delivered')))
-      .catch(() => {})
-      .finally(() => setLoading(false));
+    
+    const fetchData = async () => {
+      try {
+        // Fetch regular orders
+        const ordersRes = await fetch(`${API_URL}/orders/my-orders`, { 
+          headers: { Authorization: `Bearer ${token}` } 
+        });
+        const ordersData = await ordersRes.json();
+        console.log('📦 My orders response:', ordersData);
+        const deliveredOrders = (ordersData.orders || []).filter((o: any) => o.status === 'delivered');
+        console.log('✅ Delivered orders:', deliveredOrders);
+        setOrders(deliveredOrders);
+
+        // Fetch scheduled meals (past dates with meals)
+        console.log('🔍 Fetching schedule history...');
+        const schedulesRes = await fetch(`${API_URL}/schedule/history`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        console.log('📅 Schedule response status:', schedulesRes.status);
+        
+        if (schedulesRes.ok) {
+          const schedulesData = await schedulesRes.json();
+          console.log('📅 Scheduled meals response:', schedulesData);
+          console.log('📅 Number of schedules:', schedulesData.schedules?.length || 0);
+          setSchedules(schedulesData.schedules || []);
+        } else {
+          const errorText = await schedulesRes.text();
+          console.error('❌ Schedule fetch failed:', errorText);
+        }
+      } catch (err) {
+        console.error('❌ Error fetching data:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
   }, [token]);
 
   const fmt = (d: string) => new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
@@ -38,7 +72,7 @@ export default function ReorderClient() {
           <div key={i} className="h-24 bg-white rounded-2xl animate-pulse" />
         ))}
 
-        {!loading && orders.length === 0 && (
+        {!loading && orders.length === 0 && schedules.length === 0 && (
           <div className="text-center py-20">
             <RefreshCw className="w-16 h-16 text-gray-200 mx-auto mb-4" />
             <h3 className="text-lg font-bold text-gray-700">No past orders</h3>
@@ -52,24 +86,36 @@ export default function ReorderClient() {
           </div>
         )}
 
-        {!loading && orders.map(order => {
-          const isOpen = expanded === order._id;
+        {!loading && [...orders, ...schedules].map(item => {
+          const isSchedule = !item.status; // Schedules don't have status field
+          const isOpen = expanded === (isSchedule ? `schedule-${item._id}` : item._id);
+          
           return (
-            <div key={order._id} className="bg-white rounded-2xl shadow-sm overflow-hidden">
+            <div key={isSchedule ? `schedule-${item._id}` : item._id} className="bg-white rounded-2xl shadow-sm overflow-hidden">
               <button
                 className="w-full p-4 flex items-center gap-3 text-left"
-                onClick={() => setExpanded(isOpen ? null : order._id)}
+                onClick={() => setExpanded(isOpen ? null : (isSchedule ? `schedule-${item._id}` : item._id))}
               >
                 <div className="w-12 h-12 rounded-2xl bg-green-50 flex items-center justify-center flex-shrink-0">
                   <ShoppingBag className="w-6 h-6 text-green-500" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-bold text-gray-900">{order.items?.length} item(s)</p>
-                  <p className="text-xs text-gray-400">{fmt(order.createdAt)}</p>
-                  <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-bold">Delivered</span>
+                  <p className="text-sm font-bold text-gray-900">
+                    {isSchedule ? `${item.meals?.length} meal(s)` : `${item.items?.length} item(s)`}
+                  </p>
+                  <p className="text-xs text-gray-400">
+                    {fmt(isSchedule ? item.date : item.createdAt)}
+                  </p>
+                  <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-bold">
+                    {isSchedule ? 'Scheduled' : 'Delivered'}
+                  </span>
                 </div>
                 <div className="text-right flex-shrink-0">
-                  <p className="font-extrabold text-gray-900">₹{order.totalAmount}</p>
+                  <p className="font-extrabold text-gray-900">
+                    ₹{isSchedule 
+                      ? item.meals?.reduce((sum: number, m: any) => sum + (m.menuItem?.price || 0), 0) 
+                      : item.totalAmount}
+                  </p>
                   {isOpen ? <ChevronUp className="w-4 h-4 text-gray-400 ml-auto mt-1" /> : <ChevronDown className="w-4 h-4 text-gray-400 ml-auto mt-1" />}
                 </div>
               </button>
@@ -77,19 +123,43 @@ export default function ReorderClient() {
               {isOpen && (
                 <div className="px-4 pb-4 border-t border-gray-50 pt-3">
                   <div className="space-y-2 mb-4">
-                    {order.items?.map((item: any, i: number) => (
-                      <div key={i} className="flex items-center gap-3">
-                        <img
-                          src={item.menuItem?.image || FALLBACK}
-                          className="w-10 h-10 rounded-xl object-cover flex-shrink-0"
-                          alt=""
-                        />
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-semibold text-gray-800 truncate">{item.menuItem?.name || 'Item'}</p>
-                          <p className="text-xs text-gray-400">×{item.quantity} · ₹{item.price}</p>
+                    {isSchedule ? (
+                      item.meals?.map((meal: any, i: number) => (
+                        <div key={i} className="flex items-center gap-3">
+                          <img
+                            src={meal.menuItem?.image || FALLBACK}
+                            className="w-10 h-10 rounded-xl object-cover flex-shrink-0"
+                            alt=""
+                          />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-semibold text-gray-800 truncate">
+                              {meal.menuItem?.name || 'Item'}
+                            </p>
+                            <p className="text-xs text-gray-400">
+                              {meal.mealType} · ₹{meal.menuItem?.price}
+                            </p>
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      ))
+                    ) : (
+                      item.items?.map((orderItem: any, i: number) => (
+                        <div key={i} className="flex items-center gap-3">
+                          <img
+                            src={orderItem.menuItem?.image || FALLBACK}
+                            className="w-10 h-10 rounded-xl object-cover flex-shrink-0"
+                            alt=""
+                          />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-semibold text-gray-800 truncate">
+                              {orderItem.menuItem?.name || 'Item'}
+                            </p>
+                            <p className="text-xs text-gray-400">
+                              ×{orderItem.quantity} · ₹{orderItem.price}
+                            </p>
+                          </div>
+                        </div>
+                      ))
+                    )}
                   </div>
                   <button
                     onClick={() => router.push('/home')}

@@ -1,9 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { User, Mail, Phone, MapPin, Edit, Loader2, LogOut, ChevronRight, Home, Briefcase, Hotel, MoreHorizontal, Plus } from 'lucide-react';
+import { User, Mail, Phone, MapPin, Edit, Loader2, LogOut, ChevronRight, Home, Briefcase, Hotel, MoreHorizontal, Plus, Bell } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
+import { useNotifications } from '@/context/NotificationContext';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
@@ -13,6 +14,7 @@ const TYPE_ICONS: Record<string, any> = {
 
 export default function ProfileClient() {
   const { user: ctxUser, token, logout, updateUser } = useAuth();
+  const { unreadCount } = useNotifications();
   const [isEditing, setIsEditing] = useState(false);
   const [userData, setUserData]   = useState<any>(null);
   const [initial, setInitial]     = useState<any>(null);
@@ -88,6 +90,28 @@ export default function ProfileClient() {
 
       {/* Fields */}
       <div className="bg-white rounded-3xl shadow-sm overflow-hidden">
+        {/* Notifications */}
+        <button
+          onClick={() => router.push('/notifications')}
+          className="w-full flex items-center gap-3 px-4 py-3.5 border-b border-gray-50 hover:bg-gray-50 transition active:scale-98"
+        >
+          <div className="w-9 h-9 bg-orange-100 rounded-xl flex items-center justify-center flex-shrink-0 relative">
+            <Bell className="w-4 h-4 text-orange-500" />
+            {unreadCount > 0 && (
+              <span className="absolute -top-1 -right-1 min-w-[16px] h-[16px] bg-red-500 text-white text-[9px] font-black rounded-full flex items-center justify-center px-1">
+                {unreadCount > 99 ? '99+' : unreadCount}
+              </span>
+            )}
+          </div>
+          <div className="flex-1 text-left">
+            <p className="text-sm font-semibold text-gray-900">Notifications</p>
+            {unreadCount > 0 && (
+              <p className="text-xs text-orange-500 font-bold">{unreadCount} unread</p>
+            )}
+          </div>
+          <ChevronRight className="w-4 h-4 text-gray-400" />
+        </button>
+        
         {[
           { icon: User,  label: 'Name',  key: 'name',  type: 'text',  editable: true },
           { icon: Mail,  label: 'Email', key: 'email', type: 'email', editable: false },

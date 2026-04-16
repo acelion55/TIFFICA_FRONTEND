@@ -122,7 +122,7 @@ function ScheduleMenuContent() {
     <div className="min-h-screen bg-[#FAF7F5] pb-32">
 
       {/* Header */}
-      <div className="bg-white px-4 pt-12 pb-4 sticky top-0 z-30 shadow-sm">
+      <div className="bg-white px-4 pt-16 pb-4 sticky top-0 z-30 shadow-sm">
         <div className="flex items-center gap-3 mb-4">
           <button onClick={() => router.back()}
             className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center active:scale-95">

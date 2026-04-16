@@ -6,11 +6,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Search, Flame,
   SlidersHorizontal, Plus, Star, Clock, Leaf,
-  Sunrise, Sun, Sunset, Moon, MapPin
+  Sunrise, Sun, Sunset, Moon, MapPin, Bell
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useLocation } from '@/context/LocationContext';
 import { useCart } from '@/context/CartContext';
+import { useNotifications } from '@/context/NotificationContext';
 import { openRazorpay } from '@/hooks/useRazorpay';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
@@ -55,6 +56,7 @@ function getGreeting(name?: string) {
 export default function HomeClient() {
   const { user, token } = useAuth();
   const { location, kitchens, locationSet } = useLocation();
+  const { unreadCount } = useNotifications();
 
   const router = useRouter();
   const [items, setItems]             = useState<MenuItem[]>([]);
@@ -136,13 +138,13 @@ export default function HomeClient() {
               className="mb-4"
             >
               <div className="flex items-center gap-2 mb-1">
-                <greeting.Icon size={28} className={`${greeting.color} drop-shadow-lg flex-shrink-0`} strokeWidth={1.8} />
+                <greeting.Icon size={28} className={`${greeting.color} drop-shadow-lg shrink-0`} strokeWidth={1.8} />
                 <p className="text-white/80 text-base font-bold tracking-wide">
                   {greeting.greeting}{greeting.firstName ? `, ${greeting.firstName}!` : '!'}
                 </p>
               </div>
               <h1 className="text-3xl font-black text-white leading-tight tracking-tight drop-shadow-md">
-                What&apos;s cooking today? 🍱
+                What&apos;s cooking today? 
               </h1>
               {locationSet && (
                 <div className="flex items-center gap-1 mt-2">
@@ -155,14 +157,28 @@ export default function HomeClient() {
             </motion.div>
 
             {/* Search bar — tap to go to search page */}
-            <button
-              onClick={() => router.push('/search')}
-              className="mt-4 w-full flex items-center gap-3 bg-white rounded-2xl px-4 py-3 shadow-xl active:scale-95 transition"
-            >
-              <Search className="text-gray-400 flex-shrink-0" size={18} />
-              <span className="flex-1 text-left text-sm font-medium text-gray-400">Search homemade dishes...</span>
-              <SlidersHorizontal className="text-orange-500 flex-shrink-0" size={18} />
-            </button>
+            <div className="mt-4 flex items-center gap-2">
+              <button
+                onClick={() => router.push('/search')}
+                className="flex-1 flex items-center gap-3 bg-white rounded-2xl px-4 py-3 shadow-xl active:scale-95 transition"
+              >
+                <Search className="text-gray-400 flex-shrink-0" size={18} />
+                <span className="flex-1 text-left text-sm font-medium text-gray-400">Search homemade dishes...</span>
+                <SlidersHorizontal className="text-orange-500 shrink-0" size={18} />
+              </button>
+              
+              <button
+                onClick={() => router.push('/notifications')}
+                className="w-12 h-12 bg-white rounded-2xl shadow-xl flex items-center justify-center relative active:scale-95 transition"
+              >
+                <Bell className="text-gray-700" size={20} />
+                {unreadCount > 0 && (
+                  <span className="absolute -top-1 -right-1 min-w-[20px] h-[20px] bg-red-500 text-white text-[10px] font-black rounded-full flex items-center justify-center px-1">
+                    {unreadCount > 99 ? '99+' : unreadCount}
+                  </span>
+                )}
+              </button>
+            </div>
           </div>
         </div>
       </header>
