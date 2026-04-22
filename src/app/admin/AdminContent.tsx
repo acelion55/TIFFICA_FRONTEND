@@ -18,9 +18,10 @@ const SC: Record<string, string> = {
 const fmt = (d: string) => new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
 const fmtTime = (d: string) => new Date(d).toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
 
-export function OverviewTab({ stats, today, liveUsers, kitchens, menuItems, orders }: any) {
+export function OverviewTab({ stats, today, liveUsers, kitchens, menuItems, orders, performanceDateFrom, setPerformanceDateFrom, performanceDateTo, setPerformanceDateTo }: any) {
   return (
     <div className="space-y-5">
+      {/* Stats Boxes - Top Priority */}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
         {[
           { label: 'Total Users', value: stats.users, color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-500', icon: '👤' },
@@ -41,6 +42,89 @@ export function OverviewTab({ stats, today, liveUsers, kitchens, menuItems, orde
         ))}
       </div>
 
+      {/* Performance Analytics with Date Filter - Orange Tab Design */}
+      <div className="bg-gradient-to-r from-orange-500 to-amber-500 rounded-2xl shadow-lg overflow-hidden">
+        <div className="px-6 py-5 md:py-6 lg:px-8">
+          {/* Header */}
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center">
+                <span className="text-lg">📊</span>
+              </div>
+              <div>
+                <h3 className="font-extrabold text-white text-lg">Performance Analytics</h3>
+                <p className="text-orange-100 text-xs mt-0.5">Filter by date to view detailed insights</p>
+              </div>
+            </div>
+            {(performanceDateFrom || performanceDateTo) && (
+              <button
+                onClick={() => {
+                  setPerformanceDateFrom('');
+                  setPerformanceDateTo('');
+                }}
+                className="px-4 py-2 bg-white text-orange-600 rounded-lg hover:bg-orange-50 transition font-bold text-sm"
+              >
+                Reset
+              </button>
+            )}
+          </div>
+
+          {/* Date Inputs */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {/* From Date */}
+            <div>
+              <label className="block text-white text-xs font-bold uppercase tracking-wide mb-2.5">Start Date</label>
+              <div className="relative">
+                <input
+                  type="date"
+                  value={performanceDateFrom}
+                  onChange={(e) => setPerformanceDateFrom(e.target.value)}
+                  className="w-full px-4 py-3.5 rounded-xl border-2 border-white/30 bg-white/95 text-gray-900 font-semibold focus:outline-none focus:border-white focus:ring-4 focus:ring-white/30 transition placeholder:text-gray-400"
+                />
+              </div>
+            </div>
+
+            {/* To Date */}
+            <div>
+              <label className="block text-white text-xs font-bold uppercase tracking-wide mb-2.5">End Date</label>
+              <div className="relative">
+                <input
+                  type="date"
+                  value={performanceDateTo}
+                  onChange={(e) => setPerformanceDateTo(e.target.value)}
+                  className="w-full px-4 py-3.5 rounded-xl border-2 border-white/30 bg-white/95 text-gray-900 font-semibold focus:outline-none focus:border-white focus:ring-4 focus:ring-white/30 transition placeholder:text-gray-400"
+                />
+              </div>
+            </div>
+
+            {/* Status */}
+            <div className="flex flex-col justify-end">
+              <label className="block text-white text-xs font-bold uppercase tracking-wide mb-2.5">Status</label>
+              <div className="px-4 py-3.5 rounded-xl bg-white/20 border-2 border-white/50 backdrop-blur-sm flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-white animate-pulse" />
+                <span className="text-white font-bold text-sm">
+                  {performanceDateFrom || performanceDateTo ? '🎯 Active Filter' : '⏱️ All Time'}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Info Message */}
+          {(performanceDateFrom || performanceDateTo) && (
+            <div className="mt-5 p-4 bg-white/20 backdrop-blur-sm rounded-lg border border-white/30">
+              <p className="text-white font-semibold text-sm">
+                📈 <span className="font-bold">Filtered Period:</span> 
+                <span className="ml-2">
+                  {performanceDateFrom && new Date(performanceDateFrom).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                  {performanceDateFrom && performanceDateTo && ' → '}
+                  {performanceDateTo && new Date(performanceDateTo).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                </span>
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+
       {today && (
         <div className="bg-gradient-to-r from-orange-500 to-amber-500 rounded-xl p-5 text-white shadow-lg">
           <div className="flex items-center justify-between mb-4">
@@ -53,8 +137,8 @@ export function OverviewTab({ stats, today, liveUsers, kitchens, menuItems, orde
           <div className="grid grid-cols-3 gap-3 mb-3">
             {[
               { label: 'Revenue', value: `₹${today.summary.revenue.toLocaleString()}` },
-              { label: 'Orders', value: today.summary.totalOrders },
-              { label: 'Scheduled', value: today.summary.scheduledMeals },
+              { label: 'Instant Orders', value: today.summary.totalOrders },
+              { label: 'Scheduled Orders', value: today.summary.scheduledMeals },
             ].map(s => (
               <div key={s.label} className="bg-white/15 rounded-lg p-3 backdrop-blur-sm">
                 <p className="text-white font-black text-xl">{s.value}</p>
@@ -77,18 +161,19 @@ export function OverviewTab({ stats, today, liveUsers, kitchens, menuItems, orde
         </div>
       )}
 
+      {/* Instant Orders & Scheduled Orders based on Date Filter */}
       <div className="grid md:grid-cols-2 gap-4">
         {today?.scheduledOrders?.length > 0 && (
           <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-            <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
-              <h3 className="font-bold text-slate-900 text-sm">Scheduled Today</h3>
-              <span className="bg-blue-50 text-blue-600 text-xs font-bold px-2 py-1 rounded-full">{today.summary.scheduledMeals} meals</span>
+            <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-gradient-to-r from-indigo-50 to-blue-50">
+              <h3 className="font-bold text-slate-900 text-sm">📅 Scheduled Orders {performanceDateFrom || performanceDateTo ? '' : '(Today)'}</h3>
+              <span className="bg-blue-100 text-blue-700 text-xs font-bold px-2.5 py-1 rounded-full">{today.summary.scheduledMeals} meals</span>
             </div>
             <div className="divide-y divide-slate-50 max-h-72 overflow-y-auto">
               {today.scheduledOrders.map((s: any) => (
-                <div key={s._id} className="px-5 py-3">
+                <div key={s._id} className="px-5 py-3 hover:bg-slate-50 transition">
                   <p className="text-sm font-semibold text-slate-800">{s.user?.name}</p>
-                  <p className="text-xs text-slate-400 mb-2">{s.user?.phone}</p>
+                  <p className="text-xs text-slate-400 mb-2">📱 {s.user?.phone}</p>
                   <div className="flex flex-wrap gap-1.5">
                     {s.meals.map((m: any, i: number) => (
                       <span key={i} className={`text-[11px] font-medium px-2 py-0.5 rounded-full ${m.mealType === 'Breakfast' ? 'bg-amber-100 text-amber-700' : m.mealType === 'Lunch' ? 'bg-orange-100 text-orange-700' : 'bg-indigo-100 text-indigo-700'}`}>
@@ -103,9 +188,9 @@ export function OverviewTab({ stats, today, liveUsers, kitchens, menuItems, orde
         )}
         {today?.instantOrders?.length > 0 && (
           <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-            <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
-              <h3 className="font-bold text-slate-900 text-sm">Instant Orders</h3>
-              <span className="bg-orange-50 text-orange-600 text-xs font-bold px-2 py-1 rounded-full">{today.instantOrders.length}</span>
+            <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-gradient-to-r from-orange-50 to-amber-50">
+              <h3 className="font-bold text-slate-900 text-sm">⚡ Instant Orders {performanceDateFrom || performanceDateTo ? '' : '(Today)'}</h3>
+              <span className="bg-orange-100 text-orange-700 text-xs font-bold px-2.5 py-1 rounded-full">{today.instantOrders.length}</span>
             </div>
             <div className="divide-y divide-slate-50 max-h-72 overflow-y-auto">
               {today.instantOrders.map((o: any) => (
@@ -711,9 +796,52 @@ export function HomestyleTab({ hsVideos, setHsVideos, hsVideoUploading, hsSaving
   );
 }
 
-export function CouponsTab({ coupons, userPerformance, setCouponModal, fetchAll, headers, API_URL }: any) {
+export function CouponsTab({ coupons, userPerformance, setCouponModal, fetchAll, headers, API_URL, performanceDateFrom, setPerformanceDateFrom, performanceDateTo, setPerformanceDateTo }: any) {
   return (
     <div className="space-y-5">
+      {/* Performance Date Filter */}
+      <div className="bg-white rounded-xl shadow-sm p-5 border border-gray-100">
+        <h3 className="font-bold text-gray-900 mb-4 text-sm">Filter by Date</h3>
+        <div className="flex gap-3 flex-wrap">
+          <div className="flex-1 min-w-[150px]">
+            <label className="block text-xs font-semibold text-gray-600 mb-2">From Date</label>
+            <input
+              type="date"
+              value={performanceDateFrom}
+              onChange={(e) => setPerformanceDateFrom(e.target.value)}
+              className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+            />
+          </div>
+          <div className="flex-1 min-w-[150px]">
+            <label className="block text-xs font-semibold text-gray-600 mb-2">To Date</label>
+            <input
+              type="date"
+              value={performanceDateTo}
+              onChange={(e) => setPerformanceDateTo(e.target.value)}
+              className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+            />
+          </div>
+          {(performanceDateFrom || performanceDateTo) && (
+            <div className="flex items-end">
+              <button
+                onClick={() => {
+                  setPerformanceDateFrom('');
+                  setPerformanceDateTo('');
+                }}
+                className="px-4 py-2.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition text-sm font-semibold"
+              >
+                Clear
+              </button>
+            </div>
+          )}
+        </div>
+        {(performanceDateFrom || performanceDateTo) && (
+          <p className="text-xs text-gray-500 mt-3">
+            📊 Showing performance {performanceDateFrom && `from ${new Date(performanceDateFrom).toLocaleDateString('en-IN')}`} {performanceDateFrom && performanceDateTo && 'to'} {performanceDateTo && new Date(performanceDateTo).toLocaleDateString('en-IN')}
+          </p>
+        )}
+      </div>
+
       {/* Top Performance Users */}
       <div className="bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl p-5 text-white shadow-lg">
         <div className="flex items-center justify-between mb-4">

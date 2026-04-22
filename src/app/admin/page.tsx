@@ -49,6 +49,8 @@ export default function AdminDashboard() {
   const [imgPreview, setImgPreview] = useState<string>('');
   const [orderSearch, setOrderSearch] = useState('');
   const [dateFilter, setDateFilter] = useState('');
+  const [performanceDateFrom, setPerformanceDateFrom] = useState('');
+  const [performanceDateTo, setPerformanceDateTo] = useState('');
   const [coupons, setCoupons] = useState<any[]>([]);
   const [userPerformance, setUserPerformance] = useState<any[]>([]);
   const [couponModal, setCouponModal] = useState<{ open: boolean; data: any }>({ open: false, data: null });
@@ -83,8 +85,17 @@ export default function AdminDashboard() {
     try { const r = await fetch(`${API_URL}/notifications/admin`, { headers }); const d = await r.json(); if (d.success) setNotifications(d.notifications || []); } catch {}
     try { const r = await fetch(`${API_URL}/legalpages`); const d = await r.json(); if (d.success && d.data) { const te = d.data.find((p: any) => p.pageType === 'terms'); const pr = d.data.find((p: any) => p.pageType === 'privacy'); setLegal({ terms: te?.content || '', privacy: pr?.content || '' }); } } catch {}
     try { const r = await fetch(`${API_URL}/coupons`, { headers }); const d = await r.json(); if (d.success) setCoupons(d.coupons || []); } catch {}
-    try { const r = await fetch(`${API_URL}/coupons/user-performance`, { headers }); const d = await r.json(); if (d.success) setUserPerformance(d.users || []); } catch {}
-  }, [token]);
+    try { 
+      let perfUrl = `${API_URL}/coupons/user-performance`;
+      const params = new URLSearchParams();
+      if (performanceDateFrom) params.append('startDate', performanceDateFrom);
+      if (performanceDateTo) params.append('endDate', performanceDateTo);
+      if (params.toString()) perfUrl += '?' + params.toString();
+      const r = await fetch(perfUrl, { headers }); 
+      const d = await r.json(); 
+      if (d.success) setUserPerformance(d.users || []); 
+    } catch {}
+  }, [token, performanceDateFrom, performanceDateTo]);
 
   useEffect(() => { 
     if (!token) { 
@@ -379,7 +390,7 @@ export default function AdminDashboard() {
           )}
 
           {!loading && tab === 'stats' && stats && (
-            <OverviewTab stats={stats} today={today} liveUsers={liveUsers} kitchens={kitchens} menuItems={menuItems} orders={orders} />
+            <OverviewTab stats={stats} today={today} liveUsers={liveUsers} kitchens={kitchens} menuItems={menuItems} orders={orders} performanceDateFrom={performanceDateFrom} setPerformanceDateFrom={setPerformanceDateFrom} performanceDateTo={performanceDateTo} setPerformanceDateTo={setPerformanceDateTo} />
           )}
           {!loading && tab === 'users' && isAdmin && (
             <UsersTab 
@@ -418,7 +429,7 @@ export default function AdminDashboard() {
             <HomestyleTab hsVideos={hsVideos} setHsVideos={setHsVideos} hsVideoUploading={hsVideoUploading} hsSaving={hsSaving} saveHomestyle={saveHomestyle} uploadVideo={uploadVideo} />
           )}
           {!loading && tab === 'coupons' && isAdmin && (
-            <CouponsTab coupons={coupons} userPerformance={userPerformance} setCouponModal={setCouponModal} {...commonProps} />
+            <CouponsTab coupons={coupons} userPerformance={userPerformance} setCouponModal={setCouponModal} performanceDateFrom={performanceDateFrom} setPerformanceDateFrom={setPerformanceDateFrom} performanceDateTo={performanceDateTo} setPerformanceDateTo={setPerformanceDateTo} {...commonProps} />
           )}
         </main>
       </div>
