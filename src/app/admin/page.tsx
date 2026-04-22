@@ -54,6 +54,7 @@ export default function AdminDashboard() {
   const [coupons, setCoupons] = useState<any[]>([]);
   const [userPerformance, setUserPerformance] = useState<any[]>([]);
   const [couponModal, setCouponModal] = useState<{ open: boolean; data: any }>({ open: false, data: null });
+  const [deliveryPartners, setDeliveryPartners] = useState<any[]>([]);
 
   const headers = { Authorization: `Bearer ${token}` };
 
@@ -61,7 +62,7 @@ export default function AdminDashboard() {
     if (!token) return;
     setLoading(true); setError('');
     try {
-      const [sRes, uRes, oRes, mRes, kRes, subRes, todayRes] = await Promise.all([
+      const [sRes, uRes, oRes, mRes, kRes, subRes, todayRes, dpRes] = await Promise.all([
         fetch(`${API_URL}/admin/stats`, { headers }),
         fetch(`${API_URL}/admin/users`, { headers }),
         fetch(`${API_URL}/admin/orders`, { headers }),
@@ -69,9 +70,10 @@ export default function AdminDashboard() {
         fetch(`${API_URL}/admin/cloudkitchens`, { headers }),
         fetch(`${API_URL}/admin/subscriptions`, { headers }),
         fetch(`${API_URL}/admin/today`, { headers }),
+        fetch(`${API_URL}/admin/delivery-partners`, { headers }),
       ]);
       if (sRes.status === 403) { setError('Access denied. Admin only.'); setLoading(false); return; }
-      const [s, u, o, m, k, sub, t] = await Promise.all([sRes.json(), uRes.json(), oRes.json(), mRes.json(), kRes.json(), subRes.json(), todayRes.json()]);
+      const [s, u, o, m, k, sub, t, dp] = await Promise.all([sRes.json(), uRes.json(), oRes.json(), mRes.json(), kRes.json(), subRes.json(), todayRes.json(), dpRes.json()]);
       if (s.stats) setStats(s.stats);
       if (u.users) setUsers(u.users);
       if (o.orders) setOrders(o.orders);
@@ -79,6 +81,7 @@ export default function AdminDashboard() {
       if (k.kitchens) setKitchens(k.kitchens);
       if (sub.subscriptions) setSubscriptions(sub.subscriptions);
       if (t.success) { setToday(t); setLiveUsers(t.liveUsers || 0); }
+      if (dp.success) setDeliveryPartners(dp.partners || []);
     } catch { setError('Failed to load data. Check server connection.'); }
     setLoading(false);
     try { const r = await fetch(`${API_URL}/homestyles`); const d = await r.json(); if (d.success && d.data) { setHomestyle(d.data); setHsVideos(d.data.videoLinks || []); } } catch {}
@@ -169,12 +172,17 @@ export default function AdminDashboard() {
     
     const body: any = { 
       name: fd.get('name'), 
-      email: fd.get('email'), 
       phone, 
       password: fd.get('password'), 
       walletBalance: Number(fd.get('walletBalance')), 
       role: fd.get('role') 
     };
+    
+    // Add email only if provided
+    const email = fd.get('email') as string;
+    if (email && email.trim()) {
+      body.email = email;
+    }
     
     // Add assignedKitchen if role is kitchen-owner
     if (body.role === 'kitchen-owner') {
@@ -204,8 +212,8 @@ export default function AdminDashboard() {
     const originalPriceValue = fd.get('originalPrice') as string;
     const originalPrice = originalPriceValue ? Number(originalPriceValue) : null;
     
-    const isVegValue = fd.get('isVeg') as string;
-    const isVeg = isVegValue === 'true';
+    const ratingValue = fd.get('rating') as string;
+    const rating = ratingValue ? Number(ratingValue) : 0;
     
     const body: any = {
       name: fd.get('name'), 
@@ -216,13 +224,14 @@ export default function AdminDashboard() {
       image: imgPreview || fd.get('imageUrl'), 
       category: fd.get('category'), 
       mealType: fd.get('mealType'),
-      isVeg: isVeg,
+      isVeg: true,
       cloudKitchen: fd.get('cloudKitchen') || null,
       isSpecial: fd.get('isSpecial') === 'on', 
       isTodaySpecial: fd.get('isTodaySpecial') === 'on',
       ingredients: (fd.get('ingredients') as string)?.split(',').map(s => s.trim()).filter(Boolean),
       availableQuantity: Number(fd.get('availableQuantity')) || null,
       availableUntil: availableUntil,
+      rating: rating
     };
     
     console.log('Saving menu with data:', body);
@@ -408,7 +417,7 @@ export default function AdminDashboard() {
             />
           )}
           {!loading && tab === 'orders' && (
-            <OrdersTab orders={orders} expandedRow={expandedRow} setExpandedRow={setExpandedRow} search={orderSearch} setSearch={setOrderSearch} dateFilter={dateFilter} setDateFilter={setDateFilter} {...commonProps} />
+            <OrdersTab orders={orders} expandedRow={expandedRow} setExpandedRow={setExpandedRow} search={orderSearch} setSearch={setOrderSearch} dateFilter={dateFilter} setDateFilter={setDateFilter} deliveryPartners={deliveryPartners} {...commonProps} />
           )}
           {!loading && tab === 'menu' && (
             <MenuTab menuItems={menuItems} search={search} setSearch={setSearch} expandedRow={expandedRow} setExpandedRow={setExpandedRow} setMenuModal={setMenuModal} setImgPreview={setImgPreview} kitchens={kitchens} />
@@ -431,7 +440,7 @@ export default function AdminDashboard() {
           {!loading && tab === 'coupons' && isAdmin && (
             <CouponsTab coupons={coupons} userPerformance={userPerformance} setCouponModal={setCouponModal} performanceDateFrom={performanceDateFrom} setPerformanceDateFrom={setPerformanceDateFrom} performanceDateTo={performanceDateTo} setPerformanceDateTo={setPerformanceDateTo} {...commonProps} />
           )}
-        </main>
+        </main> 
       </div>
 
       {/* ── MOBILE BOTTOM BAR ── */}
@@ -458,8 +467,8 @@ export default function AdminDashboard() {
             <h2 className="font-bold text-slate-900 text-lg mb-5">{userModal.data ? 'Edit User' : 'Add User'}</h2>
             <form onSubmit={saveUser} className="space-y-3">
               <input name="name" defaultValue={userModal.data?.name || ''} required placeholder="Full Name" className={inputCls} />
-              <input name="email" defaultValue={userModal.data?.email || ''} required placeholder="Email Address" type="email" className={inputCls} />
               <input name="phone" defaultValue={userModal.data?.phone || ''} required placeholder="Mobile Number (10 digits)" type="tel" pattern="[0-9]{10}" maxLength={10} className={inputCls} />
+              <input name="email" defaultValue={userModal.data?.email || ''} placeholder="Email Address (Optional)" type="email" className={inputCls} />
               <input name="password" placeholder={userModal.data ? 'Password (leave blank to keep current)' : 'Password (default: 123456)'} type="password" className={inputCls} />
               <input name="walletBalance" defaultValue={userModal.data?.walletBalance || '0'} placeholder="Wallet Balance (₹)" type="number" className={inputCls} />
               <select 
@@ -537,24 +546,31 @@ export default function AdminDashboard() {
                 <input name="originalPrice" defaultValue={menuModal.data?.originalPrice || ''} placeholder="Original (₹)" type="number" min="0" className={inputCls} />
                 <input name="discount" defaultValue={menuModal.data?.discount || ''} placeholder="Discount %" type="number" min="0" max="100" className={inputCls} />
               </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-500 mb-2 uppercase tracking-wide">Rating</label>
+                <input 
+                  name="rating" 
+                  defaultValue={menuModal.data?.rating || '0'} 
+                  placeholder="Rating (0-5)" 
+                  type="number" 
+                  min="0" 
+                  max="5" 
+                  step="0.1"
+                  className={inputCls} 
+                />
+              </div>
               <div className="grid grid-cols-2 gap-3">
                 <select name="mealType" defaultValue={menuModal.data?.mealType || 'Lunch'} className={inputCls}>
                   <option>Breakfast</option><option>Lunch</option><option>Dinner</option><option>Snack</option>
                 </select>
                 <select name="category" defaultValue={menuModal.data?.category || 'dal'} className={inputCls}>
-                  <option value="dal">Dal</option><option value="sabji">Sabji</option><option value="raita">Raita</option><option value="roti">Roti</option><option value="Veg">Veg</option><option value="Non-Veg">Non-Veg</option>
+                  <option value="dal">Dal</option><option value="sabji">Sabji</option><option value="raita">Raita</option><option value="roti">Roti</option><option value="Veg">Veg</option>
                 </select>
               </div>
-              <div className="grid grid-cols-2 gap-3">
-                <select name="isVeg" defaultValue={menuModal.data?.isVeg !== undefined ? String(menuModal.data.isVeg) : 'true'} className={inputCls}>
-                  <option value="true">🟢 Veg</option>
-                  <option value="false">🔴 Non-Veg</option>
-                </select>
-                <select name="cloudKitchen" defaultValue={menuModal.data?.cloudKitchen?._id || menuModal.data?.cloudKitchen || ''} className={inputCls}>
-                  <option value="">No Kitchen</option>
-                  {kitchens.map(k => <option key={k._id} value={k._id}>{k.name}</option>)}
-                </select>
-              </div>
+              <select name="cloudKitchen" defaultValue={menuModal.data?.cloudKitchen?._id || menuModal.data?.cloudKitchen || ''} className={inputCls}>
+                <option value="">No Kitchen</option>
+                {kitchens.map(k => <option key={k._id} value={k._id}>{k.name}</option>)}
+              </select>
               <input name="ingredients" defaultValue={menuModal.data?.ingredients?.join(', ') || ''} placeholder="Ingredients (comma separated)" className={inputCls} />
               
               <div>

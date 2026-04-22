@@ -46,25 +46,39 @@ function ScheduleMenuContent() {
   const [selected, setSelected] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [showWarning, setShowWarning] = useState(false);
+  const [warningData, setWarningData] = useState<any>(null);
 
   useEffect(() => {
     if (!mealType || !token) return;
+    console.log('🍽️ Fetching menu for:', mealType);
+    console.log('🍽️ Location set:', locationSet);
+    
     const apiUrl = locationSet 
       ? `${API_URL}/menu/mealtype/${mealType}/by-location`
       : `${API_URL}/menu/mealtype/${mealType}`;
     
+    console.log('🍽️ API URL:', apiUrl);
+    
     fetch(apiUrl, {
       headers: { Authorization: `Bearer ${token}` }
     })
-      .then(r => r.json())
+      .then(r => {
+        console.log('🍽️ Response status:', r.status);
+        return r.json();
+      })
       .then(d => {
+        console.log('🍽️ Response data:', d);
+        console.log('🍽️ Items count:', d.items?.length || 0);
         setItems(d.items || []);
         // Pre-select existing meal if editing
         if (existingMealId) {
           setSelected(existingMealId);
         }
       })
-      .catch(() => {})
+      .catch(err => {
+        console.error('❌ Error fetching menu:', err);
+      })
       .finally(() => setLoading(false));
   }, [mealType, existingMealId, token, locationSet]);
 
@@ -75,6 +89,31 @@ function ScheduleMenuContent() {
 
   const handleSave = async () => {
     if (!selected || !token) return;
+    
+    // If editing existing meal, check if within 3 hours
+    if (isEdit && existingMealId) {
+      try {
+        const checkRes = await fetch(`${API_URL}/schedule/check-lock?date=${date}&mealType=${mealType}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const checkData = await checkRes.json();
+        
+        if (checkData.withinThreeHours) {
+          // Show warning dialog
+          setWarningData(checkData);
+          setShowWarning(true);
+          return;
+        }
+      } catch (err) {
+        console.error('Error checking lock status:', err);
+      }
+    }
+    
+    // Proceed with save
+    await performSave();
+  };
+  
+  const performSave = async () => {
     setSaving(true);
     setError('');
     
@@ -84,20 +123,27 @@ function ScheduleMenuContent() {
     // Only deduct wallet if it's a new meal (not an edit)
     const deductAmount = isEdit ? 0 : mealPrice;
     
+    const payload = { 
+      date, 
+      mealType, 
+      menuItemId: selected, 
+      deliveryAddress,
+      deliveryTime: timeParam || (mealType === 'Breakfast' ? '08:00' : mealType === 'Lunch' ? '13:00' : '19:30'),
+      mealPrice: mealPrice,
+      deductAmount,
+    };
+    
+    console.log('📤 Sending save request:', payload);
+    
     const res = await fetch(`${API_URL}/schedule/save`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ 
-        date, 
-        mealType, 
-        menuItemId: selected, 
-        deliveryAddress,
-        deliveryTime: timeParam || (mealType === 'Breakfast' ? '08:00' : mealType === 'Lunch' ? '13:00' : '19:30'),
-        mealPrice: mealPrice,
-        deductAmount,
-      }),
+      body: JSON.stringify(payload),
     });
+    
+    console.log('📥 Response status:', res.status);
     const d = await res.json();
+    console.log('📥 Response data:', d);
     if (res.ok) {
       // Update user wallet balance in context
       if (user && d.walletBalance !== undefined) {
@@ -216,6 +262,57 @@ function ScheduleMenuContent() {
             {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : <CheckCircle2 className="w-5 h-5" />}
             {saving ? 'Saving…' : `Save ${mealType}`}
           </button>
+        </div>
+      )}
+      
+      {/* Warning Dialog */}
+      {showWarning && warningData && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setShowWarning(false)}>
+          <div className="bg-white rounded-3xl w-full max-w-sm p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <div className="text-center mb-4">
+              <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span className="text-3xl">⚠️</span>
+              </div>
+              <h3 className="text-xl font-extrabold text-gray-900 mb-2">Refund Warning</h3>
+              <p className="text-sm text-gray-600 leading-relaxed">
+                You are changing your meal within <span className="font-bold text-orange-600">{warningData.hoursUntilDelivery} hours</span> of delivery time.
+              </p>
+            </div>
+            
+            <div className="bg-orange-50 border border-orange-200 rounded-2xl p-4 mb-4">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs text-gray-600">Old Meal Price:</span>
+                <span className="font-bold text-gray-900">₹{warningData.oldPrice}</span>
+              </div>
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs text-gray-600">Refund Amount:</span>
+                <span className="font-bold text-orange-600">₹{warningData.refundAmount} ({warningData.refundPercentage}%)</span>
+              </div>
+              <div className="pt-2 border-t border-orange-200 mt-2">
+                <p className="text-xs text-orange-700 font-semibold">
+                  ⚠️ You will only get {warningData.refundPercentage}% refund
+                </p>
+              </div>
+            </div>
+            
+            <div className="flex gap-3">
+              <button 
+                onClick={() => setShowWarning(false)}
+                className="flex-1 py-3 bg-gray-100 text-gray-700 font-bold rounded-2xl active:scale-95 transition"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={() => {
+                  setShowWarning(false);
+                  performSave();
+                }}
+                className="flex-1 py-3 bg-orange-500 text-white font-bold rounded-2xl active:scale-95 transition"
+              >
+                Continue
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

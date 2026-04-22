@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Search, Flame,
-  SlidersHorizontal, Plus, Star, Clock, Leaf,
+  SlidersHorizontal, Plus, Star, Clock,
   Sunrise, Sun, Sunset, Moon, MapPin, Bell
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
@@ -146,14 +146,6 @@ export default function HomeClient() {
               <h1 className="text-3xl font-black text-white leading-tight tracking-tight drop-shadow-md">
                 What&apos;s cooking today? 
               </h1>
-              {locationSet && (
-                <div className="flex items-center gap-1 mt-2">
-                  <MapPin size={12} className="text-orange-300" />
-                  <p className="text-white/60 text-xs font-medium">
-                    {kitchens.length} kitchen{kitchens.length !== 1 ? 's' : ''} near you
-                  </p>
-                </div>
-              )}
             </motion.div>
 
             {/* Search bar — tap to go to search page */}
@@ -304,11 +296,6 @@ function MenuCard({ item, token, user }: { item: MenuItem; token: string | null;
     >
       <div className="relative h-40 rounded-2xl overflow-hidden mb-3">
         <img src={item.image || FALLBACK_IMG} className="w-full h-full object-cover" alt={item.name} />
-        <div className={`absolute top-2 left-2 px-2 py-1 rounded-full backdrop-blur-md flex items-center gap-1 text-[9px] font-black uppercase tracking-wide
-          ${item.isVeg ? 'bg-green-500/20 text-green-700' : 'bg-red-500/20 text-red-700'}`}>
-          {item.isVeg ? <Leaf size={9} className="fill-current" /> : null}
-          {item.isVeg ? 'Veg' : 'Non-Veg'}
-        </div>
       </div>
       <div className="px-1">
         <div className="flex items-center justify-between mb-1">

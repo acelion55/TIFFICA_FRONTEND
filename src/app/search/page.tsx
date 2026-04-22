@@ -12,7 +12,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 const FALLBACK = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&h=300&fit=crop';
 
 const MEAL_FILTERS  = ['All', 'Breakfast', 'Lunch', 'Dinner', 'Snack'];
-const CAT_FILTERS   = ['All', 'Veg', 'Non-Veg', 'Egg', 'Vegan'];
+const CAT_FILTERS   = ['All', 'Veg', 'Egg', 'Vegan'];
 
 interface MenuItem {
   _id: string;
@@ -177,7 +177,6 @@ export default function SearchPage() {
                       className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-bold transition ${
                         catFilter === f
                           ? f === 'Veg' ? 'bg-green-500 text-white'
-                          : f === 'Non-Veg' ? 'bg-red-500 text-white'
                           : 'bg-orange-500 text-white'
                           : 'bg-gray-100 text-gray-600'
                       }`}>{f}</button>
@@ -278,12 +277,6 @@ function MenuCard({ item }: { item: MenuItem }) {
     >
       <div className="relative h-36 rounded-2xl overflow-hidden mb-3">
         <img src={item.image || FALLBACK} className="w-full h-full object-cover" alt={item.name} />
-        <div className={`absolute top-2 left-2 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wide backdrop-blur-md
-          ${item.category === 'Veg' ? 'bg-green-500/20 text-green-700'
-          : item.category === 'Non-Veg' ? 'bg-red-500/20 text-red-700'
-          : 'bg-gray-500/20 text-gray-700'}`}>
-          {item.category === 'Veg' ? <span className="flex items-center gap-1"><Leaf size={8} className="fill-current" />Veg</span> : item.category}
-        </div>
         {item.rating && (
           <div className="absolute bottom-2 right-2 bg-white/90 backdrop-blur px-2 py-0.5 rounded-full flex items-center gap-1">
             <Star size={9} className="fill-orange-400 text-orange-400" />

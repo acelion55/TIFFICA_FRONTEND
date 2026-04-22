@@ -75,7 +75,9 @@ export default function LoginPage() {
       if (res.ok) { 
         await login(data.token);
         // Role-based redirect
-        if (data.role === 'admin') {
+        if (data.role === 'delivery') {
+          router.push('/delivery-partner/dashboard');
+        } else if (data.role === 'admin') {
           router.push('/admin');
         } else if (data.role === 'kitchen-owner') {
           router.push('/admin');
@@ -201,7 +203,9 @@ export default function LoginPage() {
                         if (res.ok) { 
                           await login(data.token);
                           // Role-based redirect
-                          if (data.role === 'admin') {
+                          if (data.role === 'delivery') {
+                            router.push('/delivery-partner/dashboard');
+                          } else if (data.role === 'admin') {
                             router.push('/admin');
                           } else if (data.role === 'kitchen-owner') {
                             router.push('/admin');

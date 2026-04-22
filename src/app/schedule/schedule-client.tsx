@@ -33,8 +33,14 @@ interface SavedMeal {
 }
 interface DaySchedule { date: string; meals: SavedMeal[]; }
 
-function hoursLeft(lockedAt: string) {
-  return 3 - (Date.now() - new Date(lockedAt).getTime()) / 3600000;
+function hoursLeft(lockedAt: string, deliveryTime: string, date: string) {
+  // Calculate hours until delivery time, not hours since lock
+  const [hours, minutes] = deliveryTime.split(':').map(Number);
+  const deliveryDateTime = new Date(date);
+  deliveryDateTime.setHours(hours, minutes, 0, 0);
+  
+  const hoursUntilDelivery = (deliveryDateTime.getTime() - Date.now()) / 3600000;
+  return hoursUntilDelivery;
 }
 
 export default function ScheduleClient() {
@@ -130,7 +136,13 @@ export default function ScheduleClient() {
 
   const isPastDate = isPast(startOfDay(selectedDate)) && !isToday(selectedDate);
   const getMeal    = (mt: string) => daySchedule?.meals?.find(m => m.mealType === mt) || null;
-  const isLocked   = (meal: SavedMeal | null) => !!meal?.lockedAt && hoursLeft(meal.lockedAt) <= 0;
+  const isLocked   = (meal: SavedMeal | null, mealType: string) => {
+    if (!meal?.lockedAt) return false;
+    const deliveryTime = meal.deliveryTime || (mealType === 'Breakfast' ? '08:00' : mealType === 'Lunch' ? '13:00' : '19:30');
+    const hoursUntil = hoursLeft(meal.lockedAt, deliveryTime, dateKey);
+    // Only lock if delivery time has passed
+    return hoursUntil < 0;
+  };
 
   const handleSelectDate = (day: Date) => {
     const past = isPast(startOfDay(day)) && !isToday(day);
@@ -329,12 +341,14 @@ export default function ScheduleClient() {
             <div ref={mealCardsRef} className="space-y-4">
               {MEAL_SLOTS.map((slot, index) => {
                 const meal       = getMeal(slot.label);
-                const locked     = isLocked(meal);
+                const locked     = isLocked(meal, slot.label);
                 const isRemoving = removingMeal === slot.label;
                 const addrPickerOpen = addrOpen === slot.label;
                 const chosenAddr = slotAddress[slot.label];
                 const chosenTime = slotTime[slot.label] || slot.defaultTime;
                 const dark       = slot.dark;
+                const deliveryTime = meal?.deliveryTime || chosenTime;
+                const hoursUntil = meal?.lockedAt ? hoursLeft(meal.lockedAt, deliveryTime, dateKey) : 999;
 
                 return (
                   <motion.div 
@@ -532,7 +546,10 @@ export default function ScheduleClient() {
                     {/* ── Edit countdown ── */}
                     {meal?.lockedAt && !locked && !isPastDate && (
                       <p className={`text-[10px] text-center pb-3 font-medium ${dark ? 'text-gray-600' : 'text-gray-400'}`}>
-                        ⏱ Editable for {Math.max(0, hoursLeft(meal.lockedAt)).toFixed(1)} more hrs
+                        {hoursUntil > 3 
+                          ? `⏱ Editable anytime (Full refund available)`
+                          : `⚠️ Within 3 hrs - Only 60% refund on change`
+                        }
                       </p>
                     )}
                   </motion.div>

@@ -253,10 +253,10 @@ export function UsersTab({ users, search, setSearch, expandedRow, setExpandedRow
                 <div className="w-9 h-9 rounded-full bg-gradient-to-br from-orange-400 to-amber-400 flex items-center justify-center text-white font-bold text-sm shrink-0">{u.name?.[0]?.toUpperCase() || '?'}</div>
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold text-slate-900 text-sm">{u.name}</p>
-                  <p className="text-xs text-slate-400 truncate">{u.email}</p>
+                  <p className="text-xs text-slate-400 truncate">📱 {u.phone}</p>
                 </div>
                 <div className="text-right shrink-0">
-                  <p className="text-xs text-slate-600">{u.phone}</p>
+                  <p className="text-xs text-slate-600">{u.email || 'No email'}</p>
                   <p className="text-[10px] font-bold text-slate-400 uppercase mt-0.5">{u.role || 'user'}</p>
                   {u.isPremium && <span className="text-[10px] bg-yellow-100 text-yellow-700 px-1.5 py-0.5 rounded-full font-bold">Premium</span>}
                 </div>
@@ -294,7 +294,7 @@ export function UsersTab({ users, search, setSearch, expandedRow, setExpandedRow
   );
 }
 
-export function OrdersTab({ orders, expandedRow, setExpandedRow, fetchAll, headers, API_URL, search, setSearch, dateFilter, setDateFilter }: any) {
+export function OrdersTab({ orders, expandedRow, setExpandedRow, fetchAll, headers, API_URL, search, setSearch, dateFilter, setDateFilter, deliveryPartners }: any) {
   const filteredOrders = orders.filter((o: any) => {
     const matchesSearch = !search || 
       o.user?.name?.toLowerCase().includes(search.toLowerCase()) ||
@@ -358,6 +358,11 @@ export function OrdersTab({ orders, expandedRow, setExpandedRow, fetchAll, heade
                 <div className="flex items-center gap-2 mb-1">
                   <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${SC[o.status] || 'bg-slate-100 text-slate-600'}`}>{o.status}</span>
                   <span className="text-slate-400 text-[11px]">{fmtTime(o.createdAt)}</span>
+                  {o.deliveryPartner && (
+                    <span className="text-[10px] bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full font-bold">
+                      🚚 {deliveryPartners?.find((p: any) => p._id === (o.deliveryPartner?._id || o.deliveryPartner))?.name || 'Assigned'}
+                    </span>
+                  )}
                 </div>
                 <p className="font-semibold text-slate-900 text-sm">{o.user?.name || 'Unknown'}</p>
                 <p className="text-xs text-slate-400">{o.user?.email}</p>
@@ -368,6 +373,40 @@ export function OrdersTab({ orders, expandedRow, setExpandedRow, fetchAll, heade
               </div>
               <select value={o.status} onChange={async e => { const res = await fetch(`${API_URL}/admin/orders/${o._id}/status`, { method: 'PATCH', headers: { ...headers, 'Content-Type': 'application/json' }, body: JSON.stringify({ status: e.target.value }) }); const d = await res.json(); if (d.success) fetchAll(); }} className="text-xs border border-slate-200 rounded-lg px-2 py-1.5 focus:outline-none focus:border-orange-400 bg-white shrink-0">
                 {['pending', 'confirmed', 'preparing', 'delivered', 'cancelled'].map(s => <option key={s}>{s}</option>)}
+              </select>
+              <select 
+                value={o.deliveryPartner?._id || o.deliveryPartner || ''} 
+                onChange={async e => { 
+                  const partnerId = e.target.value;
+                  if (!partnerId) return;
+                  console.log('Assigning delivery partner:', partnerId, 'to order:', o._id);
+                  try {
+                    const res = await fetch(`${API_URL}/admin/orders/${o._id}/assign-delivery`, { 
+                      method: 'PATCH', 
+                      headers: { ...headers, 'Content-Type': 'application/json' }, 
+                      body: JSON.stringify({ deliveryPartnerId: partnerId }) 
+                    }); 
+                    const d = await res.json();
+                    console.log('Assignment response:', d);
+                    if (d.success) {
+                      alert('Delivery partner assigned successfully!');
+                      fetchAll();
+                    } else {
+                      alert(d.error || 'Failed to assign');
+                    }
+                  } catch (err) {
+                    console.error('Assignment error:', err);
+                    alert('Failed to assign delivery partner');
+                  }
+                }} 
+                className="text-xs border border-slate-200 rounded-lg px-2 py-1.5 focus:outline-none focus:border-orange-400 bg-white shrink-0 min-w-[130px]"
+              >
+                <option value="">{o.deliveryPartner ? 'Change...' : 'Assign to...'}</option>
+                {deliveryPartners?.map((p: any) => (
+                  <option key={p._id} value={p._id}>
+                    {p.name} {p.isOnline ? '🟢' : '⚫'}
+                  </option>
+                ))}
               </select>
               <button onClick={async () => { if (!confirm('Delete order?')) return; const res = await fetch(`${API_URL}/admin/orders/${o._id}`, { method: 'DELETE', headers }); const d = await res.json(); if (d.success) fetchAll(); }} className="p-1.5 bg-red-50 text-red-400 rounded-lg hover:bg-red-100 transition shrink-0"><Trash2 className="w-3.5 h-3.5" /></button>
               <button onClick={() => setExpandedRow(expandedRow === o._id ? null : o._id)} className="shrink-0 text-slate-300">

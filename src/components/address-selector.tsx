@@ -47,7 +47,7 @@ export default function AddressSelector({ visible, onClose, onSelectAddress }: A
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-      <div className="bg-white rounded-lg shadow-lg w-full max-w-lg mx-4 mb-6">
+      <div className="bg-white rounded-lg shadow-lg w-full max-w-2xl mx-4 mb-6">
         <div className="flex justify-between items-center p-4 border-b">
           <h2 className="text-lg font-bold">Select Delivery Address</h2>
           <button onClick={onClose} className="text-gray-500 hover:text-gray-800">

@@ -8,9 +8,9 @@ import { useAuth } from '@/context/AuthContext';
 import { useCart } from '@/context/CartContext';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
 
-const HIDE_SHELL_ROUTES = ['/login', '/signup', '/forgot-password', '/onboarding', '/admin'];
+const HIDE_SHELL_ROUTES = ['/login', '/signup', '/forgot-password', '/onboarding', '/admin', '/delivery-partner'];
 const SHOW_WALLETBAR_ROUTES = ['/home', '/search', '/menu', '/orders', '/subscriptions', '/schedule', '/reorder', '/profile', '/plan', '/subscribe', '/addresses'];
-const HIDE_CARTBAR_ROUTES = ['/checkout'];
+const HIDE_CARTBAR_ROUTES = ['/checkout', '/schedule/menu'];
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname  = usePathname();

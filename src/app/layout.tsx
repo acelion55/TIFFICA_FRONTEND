@@ -6,6 +6,7 @@ import { LocationProvider } from "@/context/LocationContext";
 import { CartProvider } from "@/context/CartContext";
 import { ToastProvider } from "@/context/ToastContext";
 import { NotificationProvider } from "@/context/NotificationContext";
+import { DeliveryAuthProvider } from "@/context/DeliveryAuthContext";
 import LocationModal from "@/components/location-modal";
 import AppShell from "@/components/app-shell";
 import CouponPopup from "@/components/CouponPopup";
@@ -88,17 +89,19 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className={inter.className}>
         <ToastProvider>
           <AuthProvider>
-            <NotificationProvider>
-              <CartProvider>
-                <LocationProvider>
-                  <RoleRedirect />
-                  <AppShell>{children}</AppShell>
-                  <LocationModal />
-                  <CouponPopup />
-                  <PWAUpdater />
-                </LocationProvider>
-              </CartProvider>
-            </NotificationProvider>
+            <DeliveryAuthProvider>
+              <NotificationProvider>
+                <CartProvider>
+                  <LocationProvider>
+                    <RoleRedirect />
+                    <AppShell>{children}</AppShell>
+                    <LocationModal />
+                    <CouponPopup />
+                    <PWAUpdater />
+                  </LocationProvider>
+                </CartProvider>
+              </NotificationProvider>
+            </DeliveryAuthProvider>
           </AuthProvider>
         </ToastProvider>
       </body>
