@@ -338,42 +338,95 @@ export default function DeliveryDashboard() {
               <span className="text-lg font-extrabold text-gray-900">₹{activeDelivery.estimatedEarning || 30}</span>
             </div>
 
+            {/* Order Items */}
+            {activeDelivery.orderId?.items && activeDelivery.orderId.items.length > 0 && (
+              <div className="mb-4 bg-gray-50 rounded-xl p-3">
+                <p className="text-xs font-bold text-gray-500 uppercase mb-2">Order Items</p>
+                <div className="space-y-2">
+                  {activeDelivery.orderId.items.map((item: any, idx: number) => (
+                    <div key={idx} className="flex items-center gap-2">
+                      {item.menuItem?.image && (
+                        <img 
+                          src={item.menuItem.image} 
+                          alt={item.menuItem.name}
+                          className="w-10 h-10 rounded-lg object-cover"
+                          onError={(e) => { (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=80&h=80&fit=crop'; }}
+                        />
+                      )}
+                      <div className="flex-1">
+                        <p className="text-sm font-bold text-gray-800">{item.menuItem?.name || 'Item'}</p>
+                        <p className="text-xs text-gray-500">Qty: {item.quantity} × ₹{item.price}</p>
+                      </div>
+                      <p className="text-sm font-bold text-gray-900">₹{item.quantity * item.price}</p>
+                    </div>
+                  ))}
+                </div>
+                <div className="mt-2 pt-2 border-t border-gray-200 flex justify-between">
+                  <p className="text-sm font-bold text-gray-700">Total Amount</p>
+                  <p className="text-sm font-extrabold text-orange-600">₹{activeDelivery.orderId.totalAmount}</p>
+                </div>
+              </div>
+            )}
+
             <div className="space-y-3 mb-4">
               <div className="flex items-start gap-3">
                 <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
                   <Package className="w-4 h-4 text-blue-600" />
                 </div>
                 <div className="flex-1">
-                  <p className="text-xs text-gray-500">Pickup</p>
-                  <p className="text-sm font-bold text-gray-900">{activeDelivery.pickupLocation?.restaurantName || 'Restaurant'}</p>
-                  <p className="text-xs text-gray-600">{activeDelivery.pickupLocation?.address || 'Address not available'}</p>
+                  <p className="text-xs text-gray-500">Pickup from Kitchen</p>
+                  <p className="text-sm font-bold text-gray-900">{activeDelivery.pickupLocation?.restaurantName || 'Tiffica Kitchen'}</p>
+                  <p className="text-xs text-gray-600">{activeDelivery.pickupLocation?.address || 'Main Kitchen, Jaipur'}</p>
+                  {activeDelivery.pickupLocation?.contactPhone && (
+                    <p className="text-xs text-blue-600 mt-1">📞 {activeDelivery.pickupLocation.contactPhone}</p>
+                  )}
                 </div>
-                <button className="text-green-600">
+                <a 
+                  href={`tel:${activeDelivery.pickupLocation?.contactPhone || ''}`}
+                  className="text-green-600"
+                >
                   <Phone className="w-5 h-5" />
-                </button>
+                </a>
               </div>
+
+              <div className="h-px bg-gray-200 my-2"></div>
 
               <div className="flex items-start gap-3">
                 <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
                   <MapPin className="w-4 h-4 text-green-600" />
                 </div>
                 <div className="flex-1">
-                  <p className="text-xs text-gray-500">Drop</p>
+                  <p className="text-xs text-gray-500">Deliver to Customer</p>
                   <p className="text-sm font-bold text-gray-900">{activeDelivery.dropLocation?.customerName || 'Customer'}</p>
                   <p className="text-xs text-gray-600">{activeDelivery.dropLocation?.address || 'Address not available'}</p>
+                  {activeDelivery.dropLocation?.contactPhone && (
+                    <p className="text-xs text-blue-600 mt-1">📞 {activeDelivery.dropLocation.contactPhone}</p>
+                  )}
+                  {activeDelivery.dropLocation?.instructions && (
+                    <p className="text-xs text-orange-600 mt-1">📝 {activeDelivery.dropLocation.instructions}</p>
+                  )}
                 </div>
-                <button className="text-green-600">
+                <a 
+                  href={`tel:${activeDelivery.dropLocation?.contactPhone || ''}`}
+                  className="text-green-600"
+                >
                   <Phone className="w-5 h-5" />
-                </button>
+                </a>
               </div>
             </div>
 
             <div className="flex gap-2 mb-3">
               <button
                 onClick={() => {
-                  const coords = activeDelivery.dropLocation?.coordinates;
-                  if (coords && coords.length === 2) {
-                    window.open(`https://www.google.com/maps/dir/?api=1&destination=${coords[1]},${coords[0]}`);
+                  const pickupCoords = activeDelivery.pickupLocation?.coordinates;
+                  const dropCoords = activeDelivery.dropLocation?.coordinates;
+                  
+                  if (pickupCoords && pickupCoords.length === 2 && dropCoords && dropCoords.length === 2) {
+                    // Kitchen to Customer route
+                    window.open(`https://www.google.com/maps/dir/?api=1&origin=${pickupCoords[1]},${pickupCoords[0]}&destination=${dropCoords[1]},${dropCoords[0]}&travelmode=driving`);
+                  } else if (dropCoords && dropCoords.length === 2) {
+                    // Only customer location available
+                    window.open(`https://www.google.com/maps/dir/?api=1&destination=${dropCoords[1]},${dropCoords[0]}`);
                   } else {
                     alert('Location coordinates not available');
                   }
@@ -381,7 +434,7 @@ export default function DeliveryDashboard() {
                 className="flex-1 py-3 bg-blue-500 text-white font-bold rounded-xl flex items-center justify-center gap-2"
               >
                 <Navigation className="w-4 h-4" />
-                Navigate
+                Navigate (Kitchen → Customer)
               </button>
             </div>
 

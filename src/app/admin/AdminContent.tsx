@@ -673,7 +673,20 @@ export function KitchensTab({ kitchens, menuItems, setKitchenModal, fetchAll, he
                 <p className="text-xs text-slate-400 mt-0.5">{k.location?.coordinates ? `${k.location.coordinates[1].toFixed(4)}°N, ${k.location.coordinates[0].toFixed(4)}°E` : 'No location'}</p>
                 <p className="text-xs text-slate-400 mt-0.5">{menuItems.filter((m: any) => m.cloudKitchen?._id === k._id || m.cloudKitchen === k._id).length} menu items</p>
               </div>
-              <button onClick={() => setKitchenModal({ open: true, data: k })} className="px-3 py-1.5 bg-orange-50 text-orange-600 rounded-lg text-xs font-bold hover:bg-orange-100 transition shrink-0">Edit</button>
+              <div className="flex flex-col gap-2">
+                <button onClick={() => setKitchenModal({ open: true, data: k })} className="px-3 py-1.5 bg-orange-50 text-orange-600 rounded-lg text-xs font-bold hover:bg-orange-100 transition shrink-0">Edit</button>
+                {k.location?.coordinates && (
+                  <button 
+                    onClick={() => {
+                      const [lng, lat] = k.location.coordinates;
+                      window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`, '_blank');
+                    }}
+                    className="px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg text-xs font-bold hover:bg-blue-100 transition shrink-0 flex items-center gap-1"
+                  >
+                    <span>🧭</span> Navigate
+                  </button>
+                )}
+              </div>
             </div>
             <div className="border-t border-slate-100 px-5 py-2.5 flex items-center justify-between">
               <span className="text-xs text-slate-400">Added {fmt(k.createdAt)}</span>

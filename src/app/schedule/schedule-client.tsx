@@ -28,6 +28,7 @@ interface SavedMeal {
   mealType: string;
   menuItem: { _id: string; name: string; price: number; image?: string };
   deliveryAddress: { fullAddress?: string; houseNo?: string; area?: string; addressType?: string };
+  deliveryTime?: string;
   lockedAt: string;
   mealPrice?: number; // Store the price for refund calculation
 }
