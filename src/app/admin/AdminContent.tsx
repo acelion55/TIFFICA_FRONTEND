@@ -439,7 +439,7 @@ export function OrdersTab({ orders, expandedRow, setExpandedRow, fetchAll, heade
   );
 }
 
-export function MenuTab({ menuItems, search, setSearch, expandedRow, setExpandedRow, setMenuModal, setImgPreview, kitchens }: any) {
+export function MenuTab({ menuItems, search, setSearch, expandedRow, setExpandedRow, setMenuModal, setImgPreview, kitchens, fetchAll, headers, API_URL }: any) {
   const [kitchenFilter, setKitchenFilter] = React.useState('');
   const [nameFilter, setNameFilter] = React.useState('');
   const [showFilters, setShowFilters] = React.useState(false);
@@ -565,9 +565,37 @@ export function MenuTab({ menuItems, search, setSearch, expandedRow, setExpanded
                       <p className="font-black text-orange-600 text-lg">₹{m.price}</p>
                     )}
                   </div>
-                  <button onClick={(e) => { e.stopPropagation(); setImgPreview(''); setMenuModal({ open: true, data: m }); }} className="px-3 py-1.5 text-xs font-bold bg-orange-50 text-orange-600 rounded-lg hover:bg-orange-100 transition shrink-0">
-                    Edit
-                  </button>
+                  <div className="flex gap-2 shrink-0">
+                    <button onClick={(e) => { e.stopPropagation(); setImgPreview(''); setMenuModal({ open: true, data: m }); }} className="px-3 py-1.5 text-xs font-bold bg-orange-50 text-orange-600 rounded-lg hover:bg-orange-100 transition">
+                      Edit
+                    </button>
+                    <button 
+                      onClick={async (e) => { 
+                        e.stopPropagation(); 
+                        if (!confirm(`Delete "${m.name}"?\n\nThis will permanently remove this menu item.`)) return; 
+                        try {
+                          const res = await fetch(`${API_URL}/admin/menu/${m._id}`, { 
+                            method: 'DELETE',
+                            headers
+                          });
+                          const data = await res.json();
+                          if (data.success) {
+                            alert('✅ ' + data.message);
+                            fetchAll(); // Refresh data
+                          } else {
+                            alert('❌ ' + (data.error || 'Failed to delete'));
+                          }
+                        } catch (err) {
+                          console.error('Delete error:', err);
+                          alert('❌ Failed to delete menu item');
+                        }
+                      }} 
+                      className="p-1.5 bg-red-50 text-red-500 rounded-lg hover:bg-red-100 hover:text-red-600 transition"
+                      title="Delete menu item"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
                 {expandedRow === m._id && (
                   <div className="px-5 pb-4 pt-2 bg-slate-50 border-t border-slate-100">

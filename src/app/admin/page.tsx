@@ -420,7 +420,7 @@ export default function AdminDashboard() {
             <OrdersTab orders={orders} expandedRow={expandedRow} setExpandedRow={setExpandedRow} search={orderSearch} setSearch={setOrderSearch} dateFilter={dateFilter} setDateFilter={setDateFilter} deliveryPartners={deliveryPartners} {...commonProps} />
           )}
           {!loading && tab === 'menu' && (
-            <MenuTab menuItems={menuItems} search={search} setSearch={setSearch} expandedRow={expandedRow} setExpandedRow={setExpandedRow} setMenuModal={setMenuModal} setImgPreview={setImgPreview} kitchens={kitchens} />
+            <MenuTab menuItems={menuItems} search={search} setSearch={setSearch} expandedRow={expandedRow} setExpandedRow={setExpandedRow} setMenuModal={setMenuModal} setImgPreview={setImgPreview} kitchens={kitchens} {...commonProps} />
           )}
           {!loading && tab === 'kitchens' && isAdmin && (
             <KitchensTab kitchens={kitchens} menuItems={menuItems} setKitchenModal={setKitchenModal} {...commonProps} />
