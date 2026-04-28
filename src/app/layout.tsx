@@ -9,6 +9,8 @@ import { NotificationProvider } from "@/context/NotificationContext";
 import { DeliveryAuthProvider } from "@/context/DeliveryAuthContext";
 import LocationModal from "@/components/location-modal";
 import AppShell from "@/components/app-shell";
+import SiteHeader from "@/components/SiteHeader";
+import SiteFooter from "@/components/SiteFooter";
 import CouponPopup from "@/components/CouponPopup";
 import RoleRedirect from "@/components/role-redirect";
 import PWAUpdater from "@/components/pwa-updater";
@@ -94,7 +96,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <CartProvider>
                   <LocationProvider>
                     <RoleRedirect />
+                    <SiteHeader />
                     <AppShell>{children}</AppShell>
+                    <SiteFooter />
                     <LocationModal />
                     <CouponPopup />
                     <PWAUpdater />
