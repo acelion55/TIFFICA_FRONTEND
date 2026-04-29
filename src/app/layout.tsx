@@ -14,6 +14,7 @@ import SiteFooter from "@/components/SiteFooter";
 import CouponPopup from "@/components/CouponPopup";
 import RoleRedirect from "@/components/role-redirect";
 import PWAUpdater from "@/components/pwa-updater";
+import PWAGuard from "@/components/pwa-guard";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -96,9 +97,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <CartProvider>
                   <LocationProvider>
                     <RoleRedirect />
-                    <SiteHeader />
-                    <AppShell>{children}</AppShell>
-                    <SiteFooter />
+                    <PWAGuard>
+                      <SiteHeader />
+                      <AppShell>{children}</AppShell>
+                      <SiteFooter />
+                    </PWAGuard>
                     <LocationModal />
                     <CouponPopup />
                     <PWAUpdater />

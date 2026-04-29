@@ -1,9 +1,12 @@
 'use client';
 
 import Link from 'next/link';
-import { Mail, Phone, Instagram, Twitter, Facebook, ArrowRight, ArrowUpRight, Globe, ShieldCheck } from 'lucide-react';
+import { Mail, Phone, Instagram, Twitter, Facebook, ArrowRight, ArrowUpRight, Globe, ShieldCheck, Download, Loader2 } from 'lucide-react';
+import { useInstallApp } from '@/hooks/useInstallApp';
 
 export default function SiteFooter() {
+  const { handleInstall, isInstalling, isPWAMode } = useInstallApp();
+  
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -25,12 +28,27 @@ export default function SiteFooter() {
               REVOLUTION.
             </p>
           </div>
-          <Link 
-            href="/signup" 
-            className="group relative inline-flex items-center gap-4 bg-white text-black px-12 py-8 rounded-[32px] font-black text-xl hover:bg-primary hover:text-white transition-all duration-500 shadow-2xl"
+          <button
+            onClick={handleInstall}
+            disabled={isInstalling}
+            className="group relative inline-flex items-center gap-4 bg-white text-black px-12 py-8 rounded-[32px] font-black text-xl hover:bg-primary hover:text-white transition-all duration-500 shadow-2xl disabled:opacity-70 disabled:cursor-not-allowed"
           >
-            ORDER YOUR FIRST TIFFIN <ArrowUpRight className="group-hover:translate-x-2 group-hover:-translate-y-2 transition-transform" />
-          </Link>
+            {isInstalling ? (
+              <>
+                <Loader2 className="animate-spin" size={24} />
+                INSTALLING APP...
+              </>
+            ) : isPWAMode ? (
+              <>
+                ORDER YOUR FIRST TIFFIN <ArrowUpRight className="group-hover:translate-x-2 group-hover:-translate-y-2 transition-transform" />
+              </>
+            ) : (
+              <>
+                <Download size={24} />
+                 ORDER YOUR FIRST TIFFIN  
+              </>
+            )}
+          </button>
         </div>
 
         {/* Main Footer Content */}

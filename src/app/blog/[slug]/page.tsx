@@ -7,9 +7,19 @@ import { ArrowLeft, ArrowRight, Calendar, User, Share2, Tag } from 'lucide-react
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
+interface Blog {
+  title: string;
+  content: string;
+  image: string;
+  author: string;
+  category: string;
+  publishedAt: string;
+  slug: string;
+}
+
 export default function BlogDetail() {
   const { slug } = useParams();
-  const [blog, setBlog] = useState(null);
+  const [blog, setBlog] = useState<Blog | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

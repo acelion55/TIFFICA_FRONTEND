@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import { Menu, X, ArrowRight } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
+import { isPWA } from '@/lib/pwaDetect';
 
 const NAV_LINKS = [
   { name: 'Home', href: '/' },
@@ -17,6 +18,7 @@ const NAV_LINKS = [
 export default function SiteHeader() {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [isPWAMode, setIsPWAMode] = useState(false);
   const pathname = usePathname();
   const { token } = useAuth();
 
@@ -24,6 +26,10 @@ export default function SiteHeader() {
     const handleScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  useEffect(() => {
+    setIsPWAMode(isPWA());
   }, []);
 
   // Close mobile menu on route change
@@ -58,19 +64,25 @@ export default function SiteHeader() {
 
           {/* CTA / Login */}
           <div className="hidden md:flex items-center gap-4">
-            {!token ? (
-              <>
-                <Link href="/login" className="text-sm font-bold hover:text-primary transition-colors px-4 py-2">
-                  LOGIN
+            {isPWAMode ? (
+              !token ? (
+                <>
+                  <Link href="/login" className="text-sm font-bold hover:text-primary transition-colors px-4 py-2">
+                    LOGIN
+                  </Link>
+                  <Link href="/signup" className="bg-primary text-white px-6 py-2.5 rounded-pill font-bold text-sm shadow-xl hover:shadow-primary/20 hover:-translate-y-0.5 transition-all flex items-center gap-2">
+                    GET STARTED <ArrowRight size={16} />
+                  </Link>
+                </>
+              ) : (
+                <Link href="/home" className="bg-primary text-white px-6 py-2.5 rounded-pill font-bold text-sm shadow-xl hover:shadow-primary/20 hover:-translate-y-0.5 transition-all">
+                  DASHBOARD
                 </Link>
-                <Link href="/signup" className="bg-primary text-white px-6 py-2.5 rounded-pill font-bold text-sm shadow-xl hover:shadow-primary/20 hover:-translate-y-0.5 transition-all flex items-center gap-2">
-                  GET STARTED <ArrowRight size={16} />
-                </Link>
-              </>
+              )
             ) : (
-              <Link href="/home" className="bg-primary text-white px-6 py-2.5 rounded-pill font-bold text-sm shadow-xl hover:shadow-primary/20 hover:-translate-y-0.5 transition-all">
-                DASHBOARD
-              </Link>
+              <button className="bg-primary text-white px-6 py-2.5 rounded-pill font-bold text-sm shadow-xl hover:shadow-primary/20 hover:-translate-y-0.5 transition-all flex items-center gap-2">
+                DOWNLOAD APP <ArrowRight size={16} />
+              </button>
             )}
           </div>
 
@@ -95,19 +107,25 @@ export default function SiteHeader() {
               </Link>
             ))}
             <hr className="border-gray-100" />
-            {!token ? (
-              <div className="flex flex-col gap-4">
-                <Link href="/login" className="text-center font-bold text-gray-500 py-2">
-                  LOGIN
+            {isPWAMode ? (
+              !token ? (
+                <div className="flex flex-col gap-4">
+                  <Link href="/login" className="text-center font-bold text-gray-500 py-2">
+                    LOGIN
+                  </Link>
+                  <Link href="/signup" className="bg-primary text-white text-center py-4 rounded-pill font-black text-lg shadow-xl shadow-primary/20">
+                    GET STARTED NOW
+                  </Link>
+                </div>
+              ) : (
+                <Link href="/home" className="bg-primary text-white text-center py-4 rounded-pill font-black text-lg">
+                  GOTO DASHBOARD
                 </Link>
-                <Link href="/signup" className="bg-primary text-white text-center py-4 rounded-pill font-black text-lg shadow-xl shadow-primary/20">
-                  GET STARTED NOW
-                </Link>
-              </div>
+              )
             ) : (
-              <Link href="/home" className="bg-primary text-white text-center py-4 rounded-pill font-black text-lg">
-                GOTO DASHBOARD
-              </Link>
+              <button className="bg-primary text-white text-center py-4 rounded-pill font-black text-lg shadow-xl shadow-primary/20 w-full">
+                DOWNLOAD APP NOW
+              </button>
             )}
           </div>
         </div>

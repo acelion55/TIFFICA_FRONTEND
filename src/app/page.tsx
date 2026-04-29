@@ -4,11 +4,13 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import Link from 'next/link';
-import { ArrowRight, CheckCircle, Clock, Shield, Star, MapPin, Play, Utensils, Award, Smile, Coffee } from 'lucide-react';
+import { ArrowRight, CheckCircle, Clock, Shield, Star, MapPin, Play, Utensils, Award, Smile, Coffee, Download, Loader2 } from 'lucide-react';
+import { useInstallApp } from '@/hooks/useInstallApp';
 
 export default function LandingPage() {
   const { token, loading, user } = useAuth();
   const router = useRouter();
+  const { handleInstall, isInstalling, isPWAMode } = useInstallApp();
 
   useEffect(() => {
     if (!loading && token) {
@@ -56,9 +58,27 @@ export default function LandingPage() {
           </p>
 
           <div className="flex flex-col sm:flex-row gap-6 justify-center items-center animate-in slide-in-from-bottom duration-1000">
-            <Link href="/signup" className="group bg-primary text-white px-10 py-5 rounded-pill font-black text-xl shadow-2xl shadow-primary/40 hover:scale-105 hover:bg-black transition-all flex items-center gap-3">
-              START EATING HEALTHY <ArrowRight className="group-hover:translate-x-2 transition-transform" />
-            </Link>
+            <button 
+              onClick={handleInstall}
+              disabled={isInstalling}
+              className="group bg-primary text-white px-10 py-5 rounded-pill font-black text-xl shadow-2xl shadow-primary/40 hover:scale-105 hover:bg-black transition-all flex items-center gap-3 disabled:opacity-70 disabled:cursor-not-allowed"
+            >
+              {isInstalling ? (
+                <>
+                  <Loader2 className="animate-spin" size={24} />
+                  INSTALLING APP...
+                </>
+              ) : isPWAMode ? (
+                <>
+                  START EATING HEALTHY <ArrowRight className="group-hover:translate-x-2 transition-transform" />
+                </>
+              ) : (
+                <>
+                  <Download size={24} />
+                  START EATING HEALTHY
+                </>
+              )}
+            </button>
             <Link href="/menu" className="flex items-center gap-3 text-lg font-black hover:text-primary transition-colors">
               <div className="w-14 h-14 rounded-pill border-2 border-gray-200 flex items-center justify-center transition-colors">
                 <Play className="fill-current" size={20} />
