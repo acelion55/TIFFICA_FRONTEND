@@ -19,7 +19,8 @@ interface MenuItem {
   discount?: number;
   image: string;
   category: string;
-  mealType: string;
+  mealType?: string;
+  mealTypes?: string[];
   rating: number;
   isAvailable: boolean;
   isVeg?: boolean;

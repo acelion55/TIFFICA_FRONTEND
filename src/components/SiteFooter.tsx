@@ -11,6 +11,9 @@ export default function SiteFooter() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  // Hide footer in PWA mode
+  if (isPWAMode) return null;
+
   return (
     <footer className="bg-black text-white selection:bg-primary selection:text-white pt-24 pb-12 overflow-hidden relative">
       {/* Background Decorative Gradients */}

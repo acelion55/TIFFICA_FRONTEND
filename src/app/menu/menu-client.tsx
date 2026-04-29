@@ -13,7 +13,8 @@ interface MenuItem {
   name: string;
   price: number;
   discount?: number;
-  mealType: string;
+  mealType?: string;
+  mealTypes?: string[];
   quantity: number;
 }
 
@@ -54,7 +55,10 @@ export default function MenuClient() {
           const data = await res.json();
           const all = data.items || [];
           // Filter by mealType client-side when using by-location
-          setMenuItems(locationSet ? all.filter((i: MenuItem) => i.mealType === mealType) : all);
+          // Check both mealType (old) and mealTypes (new array)
+          setMenuItems(locationSet ? all.filter((i: MenuItem) => 
+            i.mealType === mealType || (i.mealTypes && i.mealTypes.includes(mealType))
+          ) : all);
         }
       } catch {}
       finally { setLoading(false); }

@@ -7,6 +7,8 @@ import WalletBar from '@/components/wallet-bar';
 import { useAuth } from '@/context/AuthContext';
 import { useCart } from '@/context/CartContext';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
+import { isPWA } from '@/lib/pwaDetect';
+import { useEffect, useState } from 'react';
 
 const HIDE_SHELL_ROUTES = ['/login', '/signup', '/forgot-password', '/onboarding', '/admin', '/delivery-partner'];
 const SHOW_WALLETBAR_ROUTES = ['/home', '/search', '/menu', '/orders', '/subscriptions', '/schedule', '/reorder', '/profile', '/plan', '/subscribe', '/addresses'];
@@ -17,11 +19,17 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const router    = useRouter();
   const { token } = useAuth();
   const { cart, total } = useCart();
+  const [isPWAMode, setIsPWAMode] = useState(false);
+  
   const hideShell   = HIDE_SHELL_ROUTES.some(r => pathname?.startsWith(r));
   const showWalletBar = SHOW_WALLETBAR_ROUTES.some(r => pathname?.startsWith(r));
   const hideCartBar = HIDE_CARTBAR_ROUTES.some(r => pathname?.startsWith(r));
 
   usePushNotifications(token);
+
+  useEffect(() => {
+    setIsPWAMode(isPWA());
+  }, []);
 
   const totalItems = cart.reduce((sum, i) => sum + i.quantity, 0);
 
@@ -55,7 +63,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         </div>
       )}
 
-      <Navbar />
+      {isPWAMode && <Navbar />}
     </div>
   );
 }

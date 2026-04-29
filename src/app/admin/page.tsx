@@ -7,12 +7,12 @@ import { useSwipe } from '@/hooks/useSwipe';
 import { Users, ShoppingBag, UtensilsCrossed, CreditCard, Store, BarChart2, LogOut, RefreshCw, Home, Bell, FileText } from 'lucide-react';
 import {
   OverviewTab, UsersTab, OrdersTab, MenuTab, KitchensTab,
-  SubscriptionsTab, NotificationsTab, LegalTab, HomestyleTab, CouponsTab,
+  SubscriptionsTab, NotificationsTab, LegalTab, HomestyleTab, CouponsTab, ScheduleOrdersTab,
 } from './AdminContent';
 import { CouponModal } from './CouponModal';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
-type Tab = 'stats' | 'users' | 'orders' | 'menu' | 'kitchens' | 'subscriptions' | 'homestyles' | 'notifications' | 'legal' | 'coupons';
+type Tab = 'stats' | 'users' | 'orders' | 'menu' | 'kitchens' | 'subscriptions' | 'schedules' | 'homestyles' | 'notifications' | 'legal' | 'coupons';
 interface Stats { users: number; orders: number; menuItems: number; subscriptions: number; totalWalletBalance?: number; }
 
 export default function AdminDashboard() {
@@ -25,6 +25,7 @@ export default function AdminDashboard() {
   const [menuItems, setMenuItems] = useState<any[]>([]);
   const [kitchens, setKitchens] = useState<any[]>([]);
   const [subscriptions, setSubscriptions] = useState<any[]>([]);
+  const [scheduleOrders, setScheduleOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState('');
   const [expandedRow, setExpandedRow] = useState<string | null>(null);
@@ -55,6 +56,7 @@ export default function AdminDashboard() {
   const [userPerformance, setUserPerformance] = useState<any[]>([]);
   const [couponModal, setCouponModal] = useState<{ open: boolean; data: any }>({ open: false, data: null });
   const [deliveryPartners, setDeliveryPartners] = useState<any[]>([]);
+  const [showMoreMenu, setShowMoreMenu] = useState(false);
 
   const headers = { Authorization: `Bearer ${token}` };
 
@@ -62,7 +64,7 @@ export default function AdminDashboard() {
     if (!token) return;
     setLoading(true); setError('');
     try {
-      const [sRes, uRes, oRes, mRes, kRes, subRes, todayRes, dpRes] = await Promise.all([
+      const [sRes, uRes, oRes, mRes, kRes, subRes, todayRes, dpRes, schedRes] = await Promise.all([
         fetch(`${API_URL}/admin/stats`, { headers }),
         fetch(`${API_URL}/admin/users`, { headers }),
         fetch(`${API_URL}/admin/orders`, { headers }),
@@ -71,9 +73,10 @@ export default function AdminDashboard() {
         fetch(`${API_URL}/admin/subscriptions`, { headers }),
         fetch(`${API_URL}/admin/today`, { headers }),
         fetch(`${API_URL}/admin/delivery-partners`, { headers }),
+        fetch(`${API_URL}/admin/schedules`, { headers }),
       ]);
       if (sRes.status === 403) { setError('Access denied. Admin only.'); setLoading(false); return; }
-      const [s, u, o, m, k, sub, t, dp] = await Promise.all([sRes.json(), uRes.json(), oRes.json(), mRes.json(), kRes.json(), subRes.json(), todayRes.json(), dpRes.json()]);
+      const [s, u, o, m, k, sub, t, dp, sched] = await Promise.all([sRes.json(), uRes.json(), oRes.json(), mRes.json(), kRes.json(), subRes.json(), todayRes.json(), dpRes.json(), schedRes.json()]);
       if (s.stats) setStats(s.stats);
       if (u.users) setUsers(u.users);
       if (o.orders) setOrders(o.orders);
@@ -82,6 +85,7 @@ export default function AdminDashboard() {
       if (sub.subscriptions) setSubscriptions(sub.subscriptions);
       if (t.success) { setToday(t); setLiveUsers(t.liveUsers || 0); }
       if (dp.success) setDeliveryPartners(dp.partners || []);
+      if (sched.success) setScheduleOrders(sched.schedules || []);
     } catch { setError('Failed to load data. Check server connection.'); }
     setLoading(false);
     try { const r = await fetch(`${API_URL}/homestyles`); const d = await r.json(); if (d.success && d.data) { setHomestyle(d.data); setHsVideos(d.data.videoLinks || []); } } catch {}
@@ -215,6 +219,20 @@ export default function AdminDashboard() {
     const ratingValue = fd.get('rating') as string;
     const rating = ratingValue ? Number(ratingValue) : 0;
     
+    // Get all selected meal types
+    const mealTypes: string[] = [];
+    ['Breakfast', 'Lunch', 'Dinner', 'Instant'].forEach(type => {
+      if (fd.get(`mealType_${type}`) === 'on') {
+        mealTypes.push(type);
+      }
+    });
+    
+    if (mealTypes.length === 0) {
+      alert('Please select at least one meal type');
+      setSaving(false);
+      return;
+    }
+    
     const body: any = {
       name: fd.get('name'), 
       description: fd.get('description'), 
@@ -223,7 +241,7 @@ export default function AdminDashboard() {
       discount: discount,
       image: imgPreview || fd.get('imageUrl'), 
       category: fd.get('category'), 
-      mealType: fd.get('mealType'),
+      mealTypes: mealTypes,
       isVeg: true,
       cloudKitchen: fd.get('cloudKitchen') || null,
       isSpecial: fd.get('isSpecial') === 'on', 
@@ -267,6 +285,7 @@ export default function AdminDashboard() {
     { id: 'menu', label: 'Menu', icon: UtensilsCrossed, count: menuItems.length },
     { id: 'kitchens', label: 'Kitchens', icon: Store, count: kitchens.length },
     { id: 'subscriptions', label: 'Subscriptions', icon: CreditCard, count: subscriptions.length },
+    { id: 'schedules', label: 'Schedules', icon: CreditCard, count: scheduleOrders.length },
     { id: 'coupons', label: 'Coupons', icon: CreditCard, count: coupons.length },
     { id: 'homestyles', label: 'Home Page', icon: Home },
     { id: 'notifications', label: 'Notifications', icon: Bell, count: notifications.length },
@@ -279,6 +298,7 @@ export default function AdminDashboard() {
     setOrderSearch('');
     setDateFilter('');
     setExpandedRow(null);
+    setShowMoreMenu(false);
   };
 
   // Swipe navigation for mobile
@@ -428,6 +448,9 @@ export default function AdminDashboard() {
           {!loading && tab === 'subscriptions' && isAdmin && (
             <SubscriptionsTab subscriptions={subscriptions} expandedRow={expandedRow} setExpandedRow={setExpandedRow} {...commonProps} />
           )}
+          {!loading && tab === 'schedules' && isAdmin && (
+            <ScheduleOrdersTab scheduleOrders={scheduleOrders} expandedRow={expandedRow} setExpandedRow={setExpandedRow} search={orderSearch} setSearch={setOrderSearch} dateFilter={dateFilter} setDateFilter={setDateFilter} {...commonProps} />
+          )}
           {!loading && tab === 'notifications' && isAdmin && (
             <NotificationsTab notifications={notifications} setNotifications={setNotifications} notifForm={notifForm} setNotifForm={setNotifForm} notifSaving={notifSaving} setNotifSaving={setNotifSaving} {...commonProps} />
           )}
@@ -445,20 +468,94 @@ export default function AdminDashboard() {
 
       {/* ── MOBILE BOTTOM BAR ── */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-lg border-t border-slate-200 z-30 shadow-[0_-4px_20px_rgba(0,0,0,0.08)]">
-        <div className="flex overflow-x-auto scrollbar-hide gap-0.5 px-1 py-1.5" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' }}>
-          {tabs.map(t => (
-            <button key={t.id} onClick={() => handleTabChange(t.id)} className={`flex flex-col items-center justify-center min-w-[60px] px-2 py-1.5 rounded-xl text-[10px] font-semibold transition-all gap-0.5 shrink-0 ${tab === t.id ? 'text-orange-600 bg-orange-50' : 'text-slate-400 active:bg-slate-100'}`}>
-              <t.icon className={`w-5 h-5 ${tab === t.id ? 'text-orange-500' : ''}`} />
-              <span className="truncate max-w-[56px]">{t.label}</span>
-              {tab === t.id && <span className="w-1 h-1 rounded-full bg-orange-500 mt-0.5" />}
-            </button>
-          ))}
-          <button onClick={() => { logout(); router.push('/login'); }} className="flex flex-col items-center justify-center min-w-[60px] px-2 py-1.5 rounded-xl text-[10px] font-semibold text-red-400 active:bg-red-50 transition-all gap-0.5 shrink-0">
-            <LogOut className="w-5 h-5" />
-            <span>Logout</span>
+        <div className="flex items-center justify-around px-2 py-2">
+          {/* Home */}
+          <button onClick={() => handleTabChange('stats')} className={`flex flex-col items-center justify-center px-4 py-2 rounded-xl transition-all ${tab === 'stats' ? 'text-orange-600 bg-orange-50' : 'text-slate-400'}`}>
+            <BarChart2 className={`w-6 h-6 ${tab === 'stats' ? 'text-orange-500' : ''}`} />
+            <span className="text-[10px] font-semibold mt-1">Home</span>
+            {tab === 'stats' && <span className="w-1 h-1 rounded-full bg-orange-500 mt-1" />}
+          </button>
+          
+          {/* Orders */}
+          <button onClick={() => handleTabChange('orders')} className={`flex flex-col items-center justify-center px-4 py-2 rounded-xl transition-all ${tab === 'orders' ? 'text-orange-600 bg-orange-50' : 'text-slate-400'}`}>
+            <ShoppingBag className={`w-6 h-6 ${tab === 'orders' ? 'text-orange-500' : ''}`} />
+            <span className="text-[10px] font-semibold mt-1">Orders</span>
+            {tab === 'orders' && <span className="w-1 h-1 rounded-full bg-orange-500 mt-1" />}
+          </button>
+          
+          {/* Menu */}
+          <button onClick={() => handleTabChange('menu')} className={`flex flex-col items-center justify-center px-4 py-2 rounded-xl transition-all ${tab === 'menu' ? 'text-orange-600 bg-orange-50' : 'text-slate-400'}`}>
+            <UtensilsCrossed className={`w-6 h-6 ${tab === 'menu' ? 'text-orange-500' : ''}`} />
+            <span className="text-[10px] font-semibold mt-1">Menu</span>
+            {tab === 'menu' && <span className="w-1 h-1 rounded-full bg-orange-500 mt-1" />}
+          </button>
+          
+          {/* More */}
+          <button onClick={() => setShowMoreMenu(true)} className="flex flex-col items-center justify-center px-4 py-2 rounded-xl transition-all text-slate-400">
+            <div className="w-6 h-6 flex items-center justify-center">
+              <div className="grid grid-cols-2 gap-0.5">
+                <div className="w-1.5 h-1.5 rounded-sm bg-slate-400" />
+                <div className="w-1.5 h-1.5 rounded-sm bg-slate-400" />
+                <div className="w-1.5 h-1.5 rounded-sm bg-slate-400" />
+                <div className="w-1.5 h-1.5 rounded-sm bg-slate-400" />
+              </div>
+            </div>
+            <span className="text-[10px] font-semibold mt-1">More</span>
           </button>
         </div>
       </div>
+
+      {/* More Menu Modal */}
+      {showMoreMenu && (
+        <div className="md:hidden fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-end" onClick={() => setShowMoreMenu(false)}>
+          <div className="bg-white rounded-t-3xl w-full max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="sticky top-0 bg-white border-b border-slate-100 px-5 py-4 flex items-center justify-between">
+              <h3 className="text-lg font-black text-slate-900">All Sections</h3>
+              <button onClick={() => setShowMoreMenu(false)} className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center">
+                <span className="text-slate-600 text-xl">×</span>
+              </button>
+            </div>
+            <div className="p-4 space-y-2">
+              {tabs.filter(t => !['stats', 'orders', 'menu'].includes(t.id)).map(t => (
+                <button
+                  key={t.id}
+                  onClick={() => handleTabChange(t.id)}
+                  className={`w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl text-left transition-all ${
+                    tab === t.id ? 'bg-orange-50 text-orange-600 border-2 border-orange-200' : 'bg-slate-50 text-slate-700 hover:bg-slate-100'
+                  }`}
+                >
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+                    tab === t.id ? 'bg-orange-100' : 'bg-white'
+                  }`}>
+                    <t.icon className="w-5 h-5" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-bold text-sm">{t.label}</p>
+                    {t.count !== undefined && (
+                      <p className="text-xs text-slate-400 mt-0.5">{t.count} items</p>
+                    )}
+                  </div>
+                  {tab === t.id && (
+                    <div className="w-2 h-2 rounded-full bg-orange-500" />
+                  )}
+                </button>
+              ))}
+              
+              <div className="pt-4 border-t border-slate-100 mt-4">
+                <button 
+                  onClick={() => { logout(); router.push('/login'); setShowMoreMenu(false); }}
+                  className="w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl text-left bg-red-50 text-red-600 hover:bg-red-100 transition-all"
+                >
+                  <div className="w-10 h-10 rounded-xl bg-red-100 flex items-center justify-center">
+                    <LogOut className="w-5 h-5" />
+                  </div>
+                  <p className="font-bold text-sm">Logout</p>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── USER MODAL ── */}
       {userModal.open && (
@@ -559,19 +656,32 @@ export default function AdminDashboard() {
                   className={inputCls} 
                 />
               </div>
-              <div className="grid grid-cols-2 gap-3">
-                <select name="mealType" defaultValue={menuModal.data?.mealType || 'Lunch'} className={inputCls}>
-                  <option>Breakfast</option><option>Lunch</option><option>Dinner</option><option>Snack</option>
-                </select>
+              <input name="ingredients" defaultValue={menuModal.data?.ingredients?.join(', ') || ''} placeholder="Ingredients (comma separated)" className={inputCls} />
+              
+              <div>
+                <label className="block text-xs font-bold text-slate-500 mb-2 uppercase tracking-wide">Meal Types (Select Multiple)</label>
+                <div className="grid grid-cols-2 gap-3">
+                  {['Breakfast', 'Lunch', 'Dinner', 'Instant'].map(type => (
+                    <label key={type} className="flex items-center gap-2 p-3 border-2 border-slate-200 rounded-xl cursor-pointer hover:border-orange-300 transition">
+                      <input 
+                        type="checkbox" 
+                        name={`mealType_${type}`}
+                        defaultChecked={menuModal.data?.mealTypes?.includes(type) || menuModal.data?.mealType === type}
+                        className="accent-orange-500 w-4 h-4" 
+                      />
+                      <span className="font-medium text-slate-700 text-sm">{type}</span>
+                    </label>
+                  ))}
+                </div>
+                <p className="text-xs text-slate-400 mt-2">💡 Select "Instant" to show in instant orders, "Lunch/Dinner" for schedule</p>
+              </div>
+              
+              <div>
+                <label className="block text-xs font-bold text-slate-500 mb-2 uppercase tracking-wide">Category</label>
                 <select name="category" defaultValue={menuModal.data?.category || 'dal'} className={inputCls}>
                   <option value="dal">Dal</option><option value="sabji">Sabji</option><option value="raita">Raita</option><option value="roti">Roti</option><option value="Veg">Veg</option>
                 </select>
               </div>
-              <select name="cloudKitchen" defaultValue={menuModal.data?.cloudKitchen?._id || menuModal.data?.cloudKitchen || ''} className={inputCls}>
-                <option value="">No Kitchen</option>
-                {kitchens.map(k => <option key={k._id} value={k._id}>{k.name}</option>)}
-              </select>
-              <input name="ingredients" defaultValue={menuModal.data?.ingredients?.join(', ') || ''} placeholder="Ingredients (comma separated)" className={inputCls} />
               
               <div>
                 <label className="block text-xs font-bold text-slate-500 mb-2 uppercase tracking-wide">Availability</label>

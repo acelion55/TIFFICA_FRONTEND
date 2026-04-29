@@ -21,6 +21,11 @@ export default function ForgotPasswordPage() {
   const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(''); setLoading(true);
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setError('Invalid email format');
+      setLoading(false);
+      return;
+    }
     try {
       const res = await fetch(`${API_URL}/auth/forgot-password`, {
         method: 'POST',
@@ -37,6 +42,11 @@ export default function ForgotPasswordPage() {
   const handleVerifyOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(''); setLoading(true);
+    if (!/^\d{6}$/.test(otp)) {
+      setError('OTP must be 6 digits');
+      setLoading(false);
+      return;
+    }
     try {
       const res = await fetch(`${API_URL}/auth/verify-reset-otp`, {
         method: 'POST',
@@ -121,8 +131,8 @@ export default function ForgotPasswordPage() {
               <h2 className="text-lg font-bold text-gray-800 mb-2">Enter OTP</h2>
               <p className="text-sm text-gray-500 mb-4">Enter the 6-digit code sent to <strong>{email}</strong></p>
               <input
-                type="text" value={otp} onChange={e => setOtp(e.target.value)}
-                placeholder="6-digit OTP" required
+                type="text" value={otp} onChange={e => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                placeholder="6-digit OTP" required maxLength={6}
                 className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 bg-gray-50 tracking-widest text-center text-lg"
               />
               <button type="submit" disabled={loading}

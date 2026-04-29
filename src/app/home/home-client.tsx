@@ -37,6 +37,7 @@ interface MenuItem {
   image?: string;
   category?: string;
   mealType?: string;
+  mealTypes?: string[];
   isVeg?: boolean;
   rating?: number;
 }
@@ -108,7 +109,12 @@ export default function HomeClient() {
     if (activeCat === 'All') return items;
     if (activeCat === 'Under79') return items.filter(i => i.price < 79);
     if (activeCat === 'Under99') return items.filter(i => i.price < 99);
-    return items.filter(item => item.mealType === activeCat || item.category === activeCat);
+    // Check both mealType (old) and mealTypes (new array)
+    return items.filter(item => 
+      item.mealType === activeCat || 
+      item.category === activeCat ||
+      (item.mealTypes && item.mealTypes.includes(activeCat))
+    );
   }, [items, activeCat]);
 
   return (
