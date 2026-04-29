@@ -287,9 +287,9 @@ export default function AdminDashboard() {
     { id: 'subscriptions', label: 'Subscriptions', icon: CreditCard, count: subscriptions.length },
     { id: 'schedules', label: 'Schedules', icon: CreditCard, count: scheduleOrders.length },
     { id: 'coupons', label: 'Coupons', icon: CreditCard, count: coupons.length },
-    { id: 'homestyles', label: 'Home Page', icon: Home },
+    { id: 'homestyles', label: 'Video', icon: Home },
     { id: 'notifications', label: 'Notifications', icon: Bell, count: notifications.length },
-    { id: 'legal', label: 'Legal', icon: FileText },
+    { id: 'legal', label: 't&c, privacypolicy', icon: FileText },
   ];
 
   const handleTabChange = (newTab: Tab) => {
