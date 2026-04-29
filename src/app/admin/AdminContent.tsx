@@ -353,65 +353,73 @@ export function OrdersTab({ orders, expandedRow, setExpandedRow, fetchAll, heade
           ) : (
             filteredOrders.map((o: any) => (
               <div key={o._id}>
-            <div className="flex items-center gap-3 px-5 py-3.5 hover:bg-slate-50 transition">
-              <div className="flex-1 min-w-0 cursor-pointer" onClick={() => setExpandedRow(expandedRow === o._id ? null : o._id)}>
-                <div className="flex items-center gap-2 mb-1">
-                  <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${SC[o.status] || 'bg-slate-100 text-slate-600'}`}>{o.status}</span>
-                  <span className="text-slate-400 text-[11px]">{fmtTime(o.createdAt)}</span>
-                  {o.deliveryPartner && (
-                    <span className="text-[10px] bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full font-bold">
-                      🚚 {deliveryPartners?.find((p: any) => p._id === (o.deliveryPartner?._id || o.deliveryPartner))?.name || 'Assigned'}
-                    </span>
+            <div className="flex flex-col gap-3 px-5 py-3.5 hover:bg-slate-50 transition">
+              <div className="flex items-start gap-3">
+                <div className="flex-1 min-w-0 cursor-pointer" onClick={() => setExpandedRow(expandedRow === o._id ? null : o._id)}>
+                  <div className="flex flex-wrap items-center gap-2 mb-1">
+                    <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${SC[o.status] || 'bg-slate-100 text-slate-600'}`}>{o.status}</span>
+                    <span className="text-slate-400 text-[11px]">{fmtTime(o.createdAt)}</span>
+                    {o.deliveryPartner && (
+                      <span className="text-[10px] bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full font-bold">
+                        🚚 {deliveryPartners?.find((p: any) => p._id === (o.deliveryPartner?._id || o.deliveryPartner))?.name || 'Assigned'}
+                      </span>
+                    )}
+                  </div>
+                  <p className="font-semibold text-slate-900 text-sm">{o.user?.name || 'Unknown'}</p>
+                  <p className="text-xs text-slate-400">📱 {o.user?.phone}</p>
+                  {o.deliveryAddress && (
+                    <p className="text-xs text-slate-400 mt-1">📍 {[o.deliveryAddress.street, o.deliveryAddress.city, o.deliveryAddress.state].filter(Boolean).join(', ')}</p>
                   )}
                 </div>
-                <p className="font-semibold text-slate-900 text-sm">{o.user?.name || 'Unknown'}</p>
-                <p className="text-xs text-slate-400">{o.user?.email}</p>
+                <div className="text-right shrink-0 cursor-pointer" onClick={() => setExpandedRow(expandedRow === o._id ? null : o._id)}>
+                  <p className="font-black text-orange-600">₹{o.totalAmount}</p>
+                  <p className="text-xs text-slate-400">{o.items?.length} item(s)</p>
+                </div>
               </div>
-              <div className="text-right shrink-0 cursor-pointer" onClick={() => setExpandedRow(expandedRow === o._id ? null : o._id)}>
-                <p className="font-black text-orange-600">₹{o.totalAmount}</p>
-                <p className="text-xs text-slate-400">{o.items?.length} item(s)</p>
-              </div>
-              <select value={o.status} onChange={async e => { const res = await fetch(`${API_URL}/admin/orders/${o._id}/status`, { method: 'PATCH', headers: { ...headers, 'Content-Type': 'application/json' }, body: JSON.stringify({ status: e.target.value }) }); const d = await res.json(); if (d.success) fetchAll(); }} className="text-xs border border-slate-200 rounded-lg px-2 py-1.5 focus:outline-none focus:border-orange-400 bg-white shrink-0">
-                {['pending', 'confirmed', 'preparing', 'delivered', 'cancelled'].map(s => <option key={s}>{s}</option>)}
-              </select>
-              <select 
-                value={o.deliveryPartner?._id || o.deliveryPartner || ''} 
-                onChange={async e => { 
-                  const partnerId = e.target.value;
-                  if (!partnerId) return;
-                  console.log('Assigning delivery partner:', partnerId, 'to order:', o._id);
-                  try {
-                    const res = await fetch(`${API_URL}/admin/orders/${o._id}/assign-delivery`, { 
-                      method: 'PATCH', 
-                      headers: { ...headers, 'Content-Type': 'application/json' }, 
-                      body: JSON.stringify({ deliveryPartnerId: partnerId }) 
-                    }); 
-                    const d = await res.json();
-                    console.log('Assignment response:', d);
-                    if (d.success) {
-                      alert('Delivery partner assigned successfully!');
-                      fetchAll();
-                    } else {
-                      alert(d.error || 'Failed to assign');
+              
+              <div className="flex flex-wrap items-center gap-2">
+                <select value={o.status} onChange={async e => { const res = await fetch(`${API_URL}/admin/orders/${o._id}/status`, { method: 'PATCH', headers: { ...headers, 'Content-Type': 'application/json' }, body: JSON.stringify({ status: e.target.value }) }); const d = await res.json(); if (d.success) fetchAll(); }} className="text-xs border border-slate-200 rounded-lg px-2 py-1.5 focus:outline-none focus:border-orange-400 bg-white flex-1 min-w-[100px]">
+                  {['pending', 'confirmed', 'preparing', 'delivered', 'cancelled'].map(s => <option key={s}>{s}</option>)}
+                </select>
+                <select 
+                  value={o.deliveryPartner?._id || o.deliveryPartner || ''} 
+                  onChange={async e => { 
+                    const partnerId = e.target.value;
+                    if (!partnerId) return;
+                    console.log('Assigning delivery partner:', partnerId, 'to order:', o._id);
+                    try {
+                      const res = await fetch(`${API_URL}/admin/orders/${o._id}/assign-delivery`, { 
+                        method: 'PATCH', 
+                        headers: { ...headers, 'Content-Type': 'application/json' }, 
+                        body: JSON.stringify({ deliveryPartnerId: partnerId }) 
+                      }); 
+                      const d = await res.json();
+                      console.log('Assignment response:', d);
+                      if (d.success) {
+                        alert('Delivery partner assigned successfully!');
+                        fetchAll();
+                      } else {
+                        alert(d.error || 'Failed to assign');
+                      }
+                    } catch (err) {
+                      console.error('Assignment error:', err);
+                      alert('Failed to assign delivery partner');
                     }
-                  } catch (err) {
-                    console.error('Assignment error:', err);
-                    alert('Failed to assign delivery partner');
-                  }
-                }} 
-                className="text-xs border border-slate-200 rounded-lg px-2 py-1.5 focus:outline-none focus:border-orange-400 bg-white shrink-0 min-w-[130px]"
-              >
-                <option value="">{o.deliveryPartner ? 'Change...' : 'Assign to...'}</option>
-                {deliveryPartners?.map((p: any) => (
-                  <option key={p._id} value={p._id}>
-                    {p.name} {p.isOnline ? '🟢' : '⚫'}
-                  </option>
-                ))}
-              </select>
-              <button onClick={async () => { if (!confirm('Delete order?')) return; const res = await fetch(`${API_URL}/admin/orders/${o._id}`, { method: 'DELETE', headers }); const d = await res.json(); if (d.success) fetchAll(); }} className="p-1.5 bg-red-50 text-red-400 rounded-lg hover:bg-red-100 transition shrink-0"><Trash2 className="w-3.5 h-3.5" /></button>
-              <button onClick={() => setExpandedRow(expandedRow === o._id ? null : o._id)} className="shrink-0 text-slate-300">
-                {expandedRow === o._id ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-              </button>
+                  }} 
+                  className="text-xs border border-slate-200 rounded-lg px-2 py-1.5 focus:outline-none focus:border-orange-400 bg-white flex-1 min-w-[120px]"
+                >
+                  <option value="">{o.deliveryPartner ? 'Change...' : 'Assign to...'}</option>
+                  {deliveryPartners?.map((p: any) => (
+                    <option key={p._id} value={p._id}>
+                      {p.name} {p.isOnline ? '🟢' : '⚫'}
+                    </option>
+                  ))}
+                </select>
+                <button onClick={async () => { if (!confirm('Delete order?')) return; const res = await fetch(`${API_URL}/admin/orders/${o._id}`, { method: 'DELETE', headers }); const d = await res.json(); if (d.success) fetchAll(); }} className="p-1.5 bg-red-50 text-red-400 rounded-lg hover:bg-red-100 transition shrink-0"><Trash2 className="w-3.5 h-3.5" /></button>
+                <button onClick={() => setExpandedRow(expandedRow === o._id ? null : o._id)} className="shrink-0 text-slate-300">
+                  {expandedRow === o._id ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                </button>
+              </div>
             </div>
             {expandedRow === o._id && (
               <div className="px-5 pb-4 bg-slate-50 border-t border-slate-100 pt-3">
