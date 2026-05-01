@@ -8,8 +8,8 @@ import {
   Navigation, Phone, Clock, CheckCircle, Loader2, Menu, X
 } from 'lucide-react';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
-const WS_URL = process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:5000/ws/delivery';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005/api';
+const WS_URL = process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:5005/ws/delivery';
 
 export default function DeliveryDashboard() {
   const router = useRouter();

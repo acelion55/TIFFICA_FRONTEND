@@ -8,7 +8,7 @@ import {
   Home, Briefcase, Hotel, MoreHorizontal, Loader2, Check
 } from 'lucide-react';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005/api';
 
 const ADDRESS_TYPES = ['Home', 'Work', 'Hotel', 'Other'];
 

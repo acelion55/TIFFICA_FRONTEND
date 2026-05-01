@@ -114,8 +114,8 @@ export default function LandingPage() {
       <section className="py-32 bg-gray-50 overflow-hidden">
         <div className="max-w-7xl mx-auto px-4">
           <div className="text-center mb-24">
-            <h2 className="text-sm font-black text-primary uppercase tracking-[0.3em] mb-4">Our Simple Process</h2>
-            <h3 className="text-6xl font-black tracking-tighter uppercase">How it <span className="text-primary italic">Works</span>.</h3>
+            <h2 className="text-6xl font-black tracking-tighter uppercase mb-4">How it <span className="text-primary italic">Works</span>.</h2>
+            <p className="text-sm font-black text-primary uppercase tracking-[0.3em]">Our Simple Process</p>
           </div>
 
           <div className="grid lg:grid-cols-4 gap-8 relative">
@@ -133,7 +133,7 @@ export default function LandingPage() {
                   <item.icon size={32} />
                 </div>
                 <p className="text-xs font-black text-primary mb-2 uppercase tracking-widest">{item.step}.</p>
-                <h4 className="text-2xl font-black mb-4 tracking-tight uppercase">{item.title}</h4>
+                <h3 className="text-2xl font-black mb-4 tracking-tight uppercase">{item.title}</h3>
                 <p className="text-muted font-medium leading-relaxed">{item.desc}</p>
               </div>
             ))}
@@ -154,10 +154,10 @@ export default function LandingPage() {
               />
             </div>
             <div className="flex-1">
-              <h2 className="text-sm font-black text-primary uppercase tracking-[0.3em] mb-6">Authenticity Guaranteed</h2>
-              <h3 className="text-6xl font-black tracking-tighter mb-8 uppercase leading-[0.9]">
+              <h2 className="text-6xl font-black tracking-tighter mb-8 uppercase leading-[0.9]">
                 REAL <span className="text-primary underline decoration-secondary underline-offset-8">HOME CHEFS</span>. REAL TASTE.
-              </h3>
+              </h2>
+              <p className="text-sm font-black text-primary uppercase tracking-[0.3em] mb-6">Authenticity Guaranteed</p>
               <p className="text-xl text-muted font-medium leading-loose mb-10">
                 At Tiffica, we don't use commercial clouds. We partner with passionate home-chefs across Jaipur who understand that food is not just nutrition—it's an emotion. Each chef is vetted for hygiene and taste consistency.
               </p>
@@ -184,8 +184,8 @@ export default function LandingPage() {
         <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10" />
         <div className="max-w-7xl mx-auto px-4 relative z-10">
           <div className="text-center mb-24">
-            <h2 className="text-sm font-black text-primary uppercase tracking-[0.3em] mb-4">Word on the Street</h2>
-            <h3 className="text-6xl font-black tracking-tighter uppercase">What Our <span className="text-primary italic">Community</span> Says.</h3>
+            <h2 className="text-6xl font-black tracking-tighter uppercase mb-4">What Our <span className="text-primary italic">Community</span> Says.</h2>
+            <p className="text-sm font-black text-primary uppercase tracking-[0.3em]">Word on the Street</p>
           </div>
 
           <div className="grid lg:grid-cols-3 gap-8">
@@ -231,8 +231,8 @@ export default function LandingPage() {
       <section className="py-32">
         <div className="max-w-4xl mx-auto px-4">
           <div className="text-center mb-20">
-            <h2 className="text-sm font-black text-primary uppercase tracking-[0.3em] mb-4">Got Questions?</h2>
-            <h3 className="text-5xl font-black tracking-tighter uppercase">FREQUENTLY ASKED</h3>
+            <h2 className="text-5xl font-black tracking-tighter uppercase mb-4">FREQUENTLY ASKED</h2>
+            <p className="text-sm font-black text-primary uppercase tracking-[0.3em]">Got Questions?</p>
           </div>
           <div className="space-y-6">
             {[

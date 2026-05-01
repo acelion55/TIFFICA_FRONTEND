@@ -1,9 +1,7 @@
-'use client';
-
-import { useState, useEffect } from 'react';
+import { Metadata, ResolvingMetadata } from 'next';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
 import { ArrowLeft, ArrowRight, Calendar, User, Share2, Tag } from 'lucide-react';
+import { notFound } from 'next/navigation';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
@@ -15,44 +13,56 @@ interface Blog {
   category: string;
   publishedAt: string;
   slug: string;
+  excerpt?: string;
+  updatedAt?: string;
 }
 
-export default function BlogDetail() {
-  const { slug } = useParams();
-  const [blog, setBlog] = useState<Blog | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetch(`${API_BASE_URL}/blogs/${slug}`)
-      .then(res => res.json())
-      .then(data => {
-        setBlog(data);
-        setLoading(false);
-      })
-      .catch(err => {
-        console.error('Error fetching blog details:', err);
-        setLoading(false);
-      });
-  }, [slug]);
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-white pt-20">
-        <div className="w-16 h-16 border-[6px] border-primary border-t-secondary rounded-pill animate-spin" />
-      </div>
-    );
+async function getBlog(slug: string): Promise<Blog | null> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/blogs/${slug}`, { next: { revalidate: 3600 } });
+    if (!res.ok) return null;
+    return res.json();
+  } catch (error) {
+    console.error('Error fetching blog:', error);
+    return null;
   }
+}
+
+type Props = {
+  params: { slug: string };
+};
+
+export async function generateMetadata(
+  { params }: Props,
+  parent: ResolvingMetadata
+): Promise<Metadata> {
+  const blog = await getBlog(params.slug);
 
   if (!blog) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-white pt-20 px-4">
-        <h1 className="text-4xl font-black mb-4 uppercase">Blog Not Found</h1>
-        <p className="text-muted mb-8 italic">The story you are looking for has already been eaten.</p>
-        <Link href="/blog" className="bg-primary text-white px-8 py-3 rounded-pill font-bold shadow-xl shadow-primary/20">
-          RETURN TO BLOGS
-        </Link>
-      </div>
-    );
+    return {
+      title: 'Blog Not Found | Tiffica',
+    };
+  }
+
+  return {
+    title: `${blog.title} | Tiffica Food Blog`,
+    description: blog.excerpt || blog.title,
+    openGraph: {
+      title: blog.title,
+      description: blog.excerpt || blog.title,
+      images: [blog.image],
+    },
+    alternates: {
+      canonical: `/blog/${params.slug}`,
+    },
+  };
+}
+
+export default async function BlogDetail({ params }: Props) {
+  const blog = await getBlog(params.slug);
+
+  if (!blog) {
+    notFound();
   }
 
   return (
@@ -114,7 +124,7 @@ export default function BlogDetail() {
 
         {/* CTA */}
         <div className="mt-32 p-12 bg-orange-50 rounded-[48px] text-center border-2 border-primary/10">
-          <h3 className="text-3xl font-black tracking-tight mb-4 uppercase italic italic">Loved this story?</h3>
+          <h3 className="text-3xl font-black tracking-tight mb-4 uppercase italic">Loved this story?</h3>
           <p className="text-muted font-medium mb-8">Wait till you taste our food. Experience the best tiffin service in Jaipur.</p>
           <Link href="/signup" className="bg-primary text-white px-10 py-4 rounded-pill font-black text-xl shadow-2xl shadow-primary/30 hover:scale-105 transition-transform inline-flex items-center gap-3 uppercase">
             Order Your Tiffin <ArrowRight />

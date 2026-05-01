@@ -6,7 +6,7 @@ import { X, Tag, Copy, Check } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useLocation } from '@/context/LocationContext';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005/api';
 
 export default function CouponPopup() {
   const { token } = useAuth();

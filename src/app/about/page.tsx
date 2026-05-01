@@ -1,4 +1,10 @@
-'use client';
+import { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: "About Tiffica - Best Tiffin Service with Home Chefs in Jaipur & Ajmer",
+  description: "Learn about Tiffica's mission to provide healthy, home-cooked food in Jaipur, Ajmer, and Beawar. Our certified home chefs prepare fresh meals for students and professionals.",
+  keywords: "about tiffica, home chefs jaipur, healthy tiffin service, tiffin story, homemade food ajmer, tiffin delivery beawar",
+};
 
 import Link from 'next/link';
 import { ArrowRight, Heart, Users, ShieldCheck, Zap, Leaf, Coffee, Globe, Smile } from 'lucide-react';

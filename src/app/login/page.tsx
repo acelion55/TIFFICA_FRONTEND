@@ -8,7 +8,7 @@ import { usePWAInstall } from '@/hooks/usePWAInstall';
 import { Eye, EyeOff, Mail, Lock, ArrowRight, Download, Loader2, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005/api';
 
 type Mode = 'mobile-password' | 'email-otp';
 

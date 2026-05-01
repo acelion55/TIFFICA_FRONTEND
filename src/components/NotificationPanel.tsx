@@ -6,7 +6,7 @@ import { X, Tag, Bell, Package, Info, AlertCircle } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useNotifications } from '@/context/NotificationContext';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005/api';
 
 const TYPE_ICON: Record<string, any> = {
   offer: Tag,

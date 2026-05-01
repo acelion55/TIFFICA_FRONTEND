@@ -8,7 +8,7 @@ import { useNotifications } from '@/context/NotificationContext';
 import { ArrowLeft, Search, X, Star, Clock, Leaf, SlidersHorizontal, Loader2, Bell } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005/api';
 const FALLBACK = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&h=300&fit=crop';
 
 const MEAL_FILTERS  = ['All', 'Breakfast', 'Lunch', 'Dinner', 'Snack'];

@@ -11,7 +11,7 @@ import {
 } from './AdminContent';
 import { CouponModal } from './CouponModal';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005/api';
 type Tab = 'stats' | 'users' | 'orders' | 'menu' | 'kitchens' | 'subscriptions' | 'schedules' | 'homestyles' | 'notifications' | 'legal' | 'coupons';
 interface Stats { users: number; orders: number; menuItems: number; subscriptions: number; totalWalletBalance?: number; }
 

@@ -19,21 +19,25 @@ import PWAGuard from "@/components/pwa-guard";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Tiffica - Best Tiffin Service in Jaipur | Home Cooked Meals Delivered",
-  description: "Order the best affordable tiffin service in Jaipur. Fresh, homemade meals delivered daily. Healthy, hygienic, and delicious tiffin delivery at your doorstep.",
-  keywords: "best tiffin service in jaipur, best affordable tiffin in jaipur, order best tiffin in jaipur, tiffin delivery jaipur, home cooked meals jaipur, healthy tiffin service, daily tiffin jaipur, meal delivery jaipur",
+  title: "Tiffica - Best Tiffin Service in Jaipur, Ajmer & Beawar | Home Cooked Meals",
+  description: "Order the best affordable tiffin service in Jaipur, Ajmer, and Beawar. Fresh, homemade meals delivered daily to areas like Gopalpura, Malviya Nagar, Vaishali Nagar, and Chang Gate. Healthy, hygienic, and delicious.",
+  keywords: "best tiffin service in jaipur, best tiffin center in beawar, best tiffin service in ajmer, tiffin delivery gopalpura jaipur, home cooked meals beawar, healthy tiffin ajmer, daily tiffin jaipur, Malviya Nagar, Mansarovar, C-Scheme, Vaishali Nagar, Pratap Nagar, Jhotwara, Raja Park, Chang Gate Beawar, Mewari Gate, Diggi Mohalla, Panchsheel Ajmer, Adarsh Nagar Ajmer",
+  metadataBase: new URL('https://tiffica.vercel.app'),
+  alternates: {
+    canonical: '/',
+  },
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
-    title: 'Tiffica - Best Tiffin Service Jaipur',
+    title: 'Tiffica - Best Tiffin Service',
   },
   verification: {
     google: 'M3G7DutCabpv_Z7J0SU969bNVe3zw2tOuTuw-0UH9gM',
   },
   openGraph: {
-    title: 'Tiffica - Best Tiffin Service in Jaipur',
-    description: 'Order the best affordable tiffin service in Jaipur. Fresh, homemade meals delivered daily.',
+    title: 'Tiffica - Best Tiffin Service in Jaipur, Ajmer & Beawar',
+    description: 'Order the best affordable tiffin service in Jaipur, Ajmer, and Beawar. Fresh, homemade meals delivered daily.',
     url: 'https://tiffica.vercel.app',
     siteName: 'Tiffica',
     locale: 'en_IN',
@@ -41,8 +45,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Tiffica - Best Tiffin Service in Jaipur',
-    description: 'Order the best affordable tiffin service in Jaipur. Fresh, homemade meals delivered daily.',
+    title: 'Tiffica - Best Tiffin Service in Jaipur, Ajmer & Beawar',
+    description: 'Order the best affordable tiffin service in Jaipur, Ajmer, and Beawar. Fresh, homemade meals delivered daily.',
   },
   robots: {
     index: true,

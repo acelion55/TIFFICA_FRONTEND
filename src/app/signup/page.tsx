@@ -7,7 +7,7 @@ import { useAuth } from '@/context/AuthContext';
 import { usePWAInstall } from '@/hooks/usePWAInstall';
 import { Eye, EyeOff, Mail, Lock, User, Phone, ArrowRight, Download, Loader2, X } from 'lucide-react';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005/api';
 
 export default function SignUpPage() {
   const [name, setName]         = useState('');

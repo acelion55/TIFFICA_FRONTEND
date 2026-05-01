@@ -9,7 +9,7 @@ import { useRouter } from 'next/navigation';
 const NOMINATIM_REVERSE = 'https://nominatim.openstreetmap.org/reverse?format=json';
 const NOMINATIM_SEARCH  = 'https://nominatim.openstreetmap.org/search?format=json&limit=5';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005/api';
 
 const TYPE_ICONS: Record<string, any> = {
   Home, Work: Briefcase, Hotel, Other: MoreHorizontal,
