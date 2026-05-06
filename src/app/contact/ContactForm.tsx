@@ -1,18 +1,83 @@
 'use client';
 
+import { useState } from 'react';
 import { Send } from 'lucide-react';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005/api';
+
 export default function ContactForm() {
+  const [formData, setFormData] = useState({
+    name: '',
+    phone: '',
+    category: 'Subscription Questions',
+    message: ''
+  });
+  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+    setSuccess(false);
+
+    try {
+      const response = await fetch(`${API_URL}/contact`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setSuccess(true);
+        setFormData({
+          name: '',
+          phone: '',
+          category: 'Subscription Questions',
+          message: ''
+        });
+        setTimeout(() => setSuccess(false), 5000);
+      } else {
+        setError(data.error || 'Failed to send message');
+      }
+    } catch (err) {
+      setError('Failed to send message. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="bg-gray-50 p-8 sm:p-12 lg:p-20 rounded-[48px] sm:rounded-[80px] border-2 border-transparent hover:border-primary/20 transition-all shadow-2xl relative overflow-hidden">
       <div className="relative z-10">
         <h2 className="text-3xl sm:text-4xl font-black tracking-tighter mb-8 sm:mb-10 uppercase italic leading-none">Drop us a<br /> <span className="text-primary italic underline decoration-secondary">line</span>.</h2>
-        <form className="space-y-6 sm:space-y-8" onSubmit={(e) => e.preventDefault()}>
+        
+        {success && (
+          <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-2xl text-green-800 text-sm font-bold">
+            ✅ Message sent successfully! We'll get back to you soon.
+          </div>
+        )}
+        
+        {error && (
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-2xl text-red-800 text-sm font-bold">
+            ❌ {error}
+          </div>
+        )}
+
+        <form className="space-y-6 sm:space-y-8" onSubmit={handleSubmit}>
           <div className="grid md:grid-cols-2 gap-6 sm:gap-8">
             <div className="space-y-3">
               <label className="text-[10px] font-black uppercase tracking-widest text-muted block ml-4">Full Name</label>
               <input 
-                type="text" 
+                type="text"
+                required
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 className="w-full bg-white px-6 sm:px-8 py-4 sm:py-5 rounded-pill border-none outline-none focus:ring-4 focus:ring-primary/10 transition-all font-bold placeholder:text-gray-300 shadow-sm text-sm sm:text-base"
                 placeholder="e.g. Rahul Sharma"
               />
@@ -20,7 +85,10 @@ export default function ContactForm() {
             <div className="space-y-3">
               <label className="text-[10px] font-black uppercase tracking-widest text-muted block ml-4">Contact Number</label>
               <input 
-                type="tel" 
+                type="tel"
+                required
+                value={formData.phone}
+                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                 className="w-full bg-white px-6 sm:px-8 py-4 sm:py-5 rounded-pill border-none outline-none focus:ring-4 focus:ring-primary/10 transition-all font-bold placeholder:text-gray-300 shadow-sm text-sm sm:text-base"
                 placeholder="+91 12345 67890"
               />
@@ -29,7 +97,11 @@ export default function ContactForm() {
           
           <div className="space-y-3">
             <label className="text-[10px] font-black uppercase tracking-widest text-muted block ml-4">Inquiry Category</label>
-            <select className="w-full bg-white px-6 sm:px-8 py-4 sm:py-5 rounded-pill border-none outline-none focus:ring-4 focus:ring-primary/10 transition-all font-bold appearance-none shadow-sm text-sm sm:text-base">
+            <select 
+              value={formData.category}
+              onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+              className="w-full bg-white px-6 sm:px-8 py-4 sm:py-5 rounded-pill border-none outline-none focus:ring-4 focus:ring-primary/10 transition-all font-bold appearance-none shadow-sm text-sm sm:text-base"
+            >
               <option>Subscription Questions</option>
               <option>Corporate Catering</option>
               <option>Chef Application</option>
@@ -41,13 +113,20 @@ export default function ContactForm() {
             <label className="text-[10px] font-black uppercase tracking-widest text-muted block ml-4">Your Message</label>
             <textarea 
               rows={5}
+              required
+              value={formData.message}
+              onChange={(e) => setFormData({ ...formData, message: e.target.value })}
               className="w-full bg-white px-6 sm:px-8 py-6 sm:py-8 rounded-[32px] sm:rounded-[48px] border-none outline-none focus:ring-4 focus:ring-primary/10 transition-all font-bold resize-none placeholder:text-gray-300 shadow-sm text-sm sm:text-base"
               placeholder="How can we help your hunger?"
             />
           </div>
 
-          <button className="w-full bg-primary text-white py-5 sm:py-6 rounded-pill font-black text-lg sm:text-xl shadow-[0_20px_40px_-5px_rgba(255,107,0,0.4)] hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3 sm:gap-4 group">
-            EXPLODE THE MESSAGE <Send size={20} className="sm:w-6 sm:h-6 group-hover:translate-x-2 group-hover:-translate-y-2 transition-transform" />
+          <button 
+            type="submit"
+            disabled={loading}
+            className="w-full bg-primary text-white py-5 sm:py-6 rounded-pill font-black text-lg sm:text-xl shadow-[0_20px_40px_-5px_rgba(255,107,0,0.4)] hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3 sm:gap-4 group disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {loading ? 'SENDING...' : 'EXPLODE THE MESSAGE'} <Send size={20} className="sm:w-6 sm:h-6 group-hover:translate-x-2 group-hover:-translate-y-2 transition-transform" />
           </button>
         </form>
       </div>

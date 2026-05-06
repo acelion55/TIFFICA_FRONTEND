@@ -685,7 +685,7 @@ export default function AdminDashboard() {
       {/* ── MENU MODAL ── */}
       {menuModal.open && (
         <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-md z-50 flex items-center justify-center p-6 overflow-y-auto">
-          <div className="bg-white rounded-[3rem] w-full max-w-md p-10 my-8 shadow-2xl animate-in zoom-in-95 duration-300">
+          <div className="bg-white rounded-[3rem] w-full max-w-2xl p-10 my-8 shadow-2xl animate-in zoom-in-95 duration-300">
             <div className="flex flex-col items-center mb-8">
               <div className="w-16 h-16 rounded-[1.5rem] bg-orange-100 flex items-center justify-center text-orange-500 mb-4">
                 <UtensilsCrossed className="w-8 h-8" />
@@ -694,7 +694,7 @@ export default function AdminDashboard() {
               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Menu Asset Management</p>
             </div>
 
-            <form onSubmit={saveMenu} className="space-y-5">
+            <form onSubmit={saveMenu} className="space-y-5 max-h-[70vh] overflow-y-auto pr-4">
               <div className="space-y-3">
                 <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-4">Visual Identity</p>
                 <div className="flex items-center gap-4 bg-slate-50 p-4 rounded-[2rem] border border-slate-100">
@@ -710,20 +710,32 @@ export default function AdminDashboard() {
               </div>
 
               <div className="space-y-2">
-                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-4">Classification</p>
-                <input name="name" defaultValue={menuModal.data?.name || ''} required placeholder="Entry Name" className={inputCls} />
-                <textarea name="description" defaultValue={menuModal.data?.description || ''} placeholder="Composition Details" rows={2} className={`${inputCls} resize-none`} />
+                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-4">Basic Information</p>
+                <input name="name" defaultValue={menuModal.data?.name || ''} required placeholder="Item Name" className={inputCls} />
+                <textarea name="description" defaultValue={menuModal.data?.description || ''} placeholder="Item Description" rows={2} className={`${inputCls} resize-none`} />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-2">
-                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-4">Market Price (₹)</p>
-                  <input name="price" defaultValue={menuModal.data?.price || ''} required placeholder="0.00" type="number" className={inputCls} />
+              <div className="space-y-2">
+                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-4">Pricing</p>
+                <div className="grid grid-cols-3 gap-3">
+                  <input name="price" defaultValue={menuModal.data?.price || ''} required placeholder="Price (₹)" type="number" step="0.01" className={inputCls} />
+                  <input name="originalPrice" defaultValue={menuModal.data?.originalPrice || ''} placeholder="Original Price" type="number" step="0.01" className={inputCls} />
+                  <input name="discount" defaultValue={menuModal.data?.discount || '0'} placeholder="Discount (₹)" type="number" step="0.01" className={inputCls} />
                 </div>
-                <div className="space-y-2">
-                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-4">Rating Focus</p>
-                  <input name="rating" defaultValue={menuModal.data?.rating || '5.0'} placeholder="0-5" type="number" min="0" max="5" step="0.1" className={inputCls} />
-                </div>
+              </div>
+
+              <div className="space-y-2">
+                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-4">Category & Type</p>
+                <select name="category" defaultValue={menuModal.data?.category || ''} required className={inputCls}>
+                  <option value="">Select Category</option>
+                  <option value="Veg">Veg</option>
+                  <option value="Egg">Egg</option>
+                  <option value="Vegan">Vegan</option>
+                  <option value="dal">Dal</option>
+                  <option value="roti">Roti</option>
+                  <option value="sabji">Sabji</option>
+                  <option value="raita">Raita</option>
+                </select>
               </div>
 
               <div className="space-y-3">
@@ -744,8 +756,56 @@ export default function AdminDashboard() {
                   ))}
                 </div>
               </div>
+
+              <div className="space-y-2">
+                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-4">Kitchen Assignment</p>
+                <select name="cloudKitchen" defaultValue={menuModal.data?.cloudKitchen?._id || menuModal.data?.cloudKitchen || ''} className={inputCls}>
+                  <option value="">No Kitchen</option>
+                  {kitchens?.map((k: any) => (
+                    <option key={k._id} value={k._id}>{k.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="space-y-2">
+                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-4">Availability</p>
+                <div className="grid grid-cols-2 gap-3">
+                  <input name="availableQuantity" defaultValue={menuModal.data?.availableQuantity || ''} placeholder="Available Qty" type="number" className={inputCls} />
+                  <input name="availableUntilDate" defaultValue={menuModal.data?.availableUntil ? new Date(menuModal.data.availableUntil).toISOString().split('T')[0] : ''} placeholder="Available Until" type="date" className={inputCls} />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-4">Rating & Ingredients</p>
+                <input name="rating" defaultValue={menuModal.data?.rating || '5.0'} placeholder="Rating (0-5)" type="number" min="0" max="5" step="0.1" className={inputCls} />
+                <input name="ingredients" defaultValue={menuModal.data?.ingredients?.join(', ') || ''} placeholder="Ingredients (comma separated)" className={inputCls} />
+              </div>
+
+              <div className="space-y-3">
+                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-4">Special Flags</p>
+                <div className="grid grid-cols-3 gap-2">
+                  <label className={`flex items-center justify-center py-3 rounded-full border-2 transition font-black text-[10px] uppercase tracking-widest cursor-pointer ${
+                    menuModal.data?.isSpecial ? 'bg-purple-500 border-purple-500 text-white' : 'bg-slate-50 border-slate-50 text-slate-400'
+                  }`}>
+                    <input type="checkbox" name="isSpecial" className="hidden" defaultChecked={menuModal.data?.isSpecial} />
+                    ✨ Special
+                  </label>
+                  <label className={`flex items-center justify-center py-3 rounded-full border-2 transition font-black text-[10px] uppercase tracking-widest cursor-pointer ${
+                    menuModal.data?.isTodaySpecial ? 'bg-amber-500 border-amber-500 text-white' : 'bg-slate-50 border-slate-50 text-slate-400'
+                  }`}>
+                    <input type="checkbox" name="isTodaySpecial" className="hidden" defaultChecked={menuModal.data?.isTodaySpecial} />
+                    ⭐ Today
+                  </label>
+                  <label className={`flex items-center justify-center py-3 rounded-full border-2 transition font-black text-[10px] uppercase tracking-widest cursor-pointer ${
+                    menuModal.data?.isAvailable ? 'bg-emerald-500 border-emerald-500 text-white' : 'bg-slate-50 border-slate-50 text-slate-400'
+                  }`}>
+                    <input type="checkbox" name="isAvailable" className="hidden" defaultChecked={menuModal.data?.isAvailable !== false} />
+                    ✅ Available
+                  </label>
+                </div>
+              </div>
               
-              <div className="flex gap-4 pt-6">
+              <div className="flex gap-4 pt-6 sticky bottom-0 bg-white">
                 <button type="button" onClick={() => { setMenuModal({ open: false, data: null }); setImgPreview(''); }} className="flex-1 py-4 bg-slate-50 text-slate-400 rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-slate-100 transition">Abort</button>
                 <button type="submit" disabled={saving || imgUploading} className="flex-1 py-4 bg-slate-900 text-white rounded-full text-[10px] font-black uppercase tracking-widest shadow-xl shadow-slate-200 transition disabled:opacity-50">
                   {saving ? 'Syncing…' : 'Register Entry'}

@@ -1,23 +1,34 @@
 'use client';
 
 import Link from 'next/link';
-import { Home, CalendarDays, Wallet, RefreshCw } from 'lucide-react';
+import { ShoppingBag, UtensilsCrossed, Store, Truck, TrendingUp } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 
-const navItems = [
-  { href: '/home',          label: 'HOME',         icon: Home },
-  { href: '/schedule',      label: 'SCHEDULE',     icon: CalendarDays },
-  { href: '/subscriptions', label: 'SUBSCRIPTION', icon: Wallet },
-  { href: '/reorder',       label: 'REORDER',      icon: RefreshCw },
+const userNavItems = [
+  { href: '/home',          label: 'HOME',         icon: 'home' },
+  { href: '/schedule',      label: 'SCHEDULE',     icon: 'calendar' },
+  { href: '/analytics',     label: 'ANALYTICS',    icon: 'trending', isCenter: true },
+  { href: '/subscriptions', label: 'SUBSCRIPTION', icon: 'wallet' },
+  { href: '/reorder',       label: 'REORDER',      icon: 'refresh' },
+];
+
+const adminNavItems = [
+  { href: '/admin?tab=orders',      label: 'ORDERS',     icon: ShoppingBag },
+  { href: '/admin?tab=menu',        label: 'MENU',       icon: UtensilsCrossed },
+  { href: '/admin?tab=kitchens',    label: 'KITCHEN',    icon: Store, isCenter: true },
+  { href: '/admin?tab=deliveries',  label: 'DELIVERY',   icon: Truck },
+  { href: '/admin/analytics',       label: 'ANALYTICS',  icon: TrendingUp },
 ];
 
 export default function Navbar() {
   const pathname = usePathname();
-  const { token } = useAuth();
+  const { token, user } = useAuth();
 
-  // Don't show navbar if user is not logged in
   if (!token) return null;
+
+  const isAdmin = user?.role === 'admin' || user?.role === 'kitchen-owner';
+  const navItems = isAdmin ? adminNavItems : userNavItems;
 
   return (
     <nav
@@ -26,18 +37,28 @@ export default function Navbar() {
     >
       <div className="flex items-stretch justify-around h-16">
         {navItems.map(({ href, label, icon: Icon }) => {
-          const isActive = pathname?.startsWith(href);
+          const isActive = pathname?.startsWith(href.split('?')[0]);
           return (
             <Link
               key={href}
               href={href}
               className="flex flex-col items-center justify-center flex-1 gap-1"
             >
-              <Icon
-                size={22}
-                className={isActive ? 'text-orange-500' : 'text-gray-400'}
-                strokeWidth={isActive ? 2.5 : 1.8}
-              />
+              {typeof Icon === 'string' ? (
+                <div className={`text-2xl ${isActive ? 'text-orange-500' : 'text-gray-400'}`}>
+                  {Icon === 'home' && '🏠'}
+                  {Icon === 'calendar' && '📅'}
+                  {Icon === 'trending' && '📈'}
+                  {Icon === 'wallet' && '💳'}
+                  {Icon === 'refresh' && '🔄'}
+                </div>
+              ) : (
+                <Icon
+                  size={22}
+                  className={isActive ? 'text-orange-500' : 'text-gray-400'}
+                  strokeWidth={isActive ? 2.5 : 1.8}
+                />
+              )}
               <span className={`text-[9px] font-bold tracking-wide leading-none ${isActive ? 'text-orange-500' : 'text-gray-400'}`}>
                 {label}
               </span>

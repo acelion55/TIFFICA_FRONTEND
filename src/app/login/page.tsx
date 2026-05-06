@@ -112,9 +112,11 @@ export default function LoginPage() {
       <div className="relative z-10 flex-1 flex flex-col justify-center px-5 py-8">
         <div className="mb-6">
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-12 h-12 bg-orange-500 rounded-2xl flex items-center justify-center shadow-lg">
-              <span className="text-2xl">🍱</span>
-            </div>
+            <img 
+              src="/logo.jpeg" 
+              alt="Tiffica Logo" 
+              className="w-12 h-12 rounded-2xl object-cover shadow-lg"
+            />
             <h1 className="text-4xl font-black text-white tracking-tight">Tiffica</h1>
           </div>
           <p className="text-white/60 text-sm font-medium">Fresh home-cooked meals, delivered daily</p>

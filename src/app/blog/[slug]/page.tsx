@@ -2,6 +2,7 @@ import { Metadata, ResolvingMetadata } from 'next';
 import Link from 'next/link';
 import { ArrowLeft, ArrowRight, Calendar, User, Share2, Tag } from 'lucide-react';
 import { notFound } from 'next/navigation';
+import BlogCTA from '@/components/BlogCTA';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
@@ -29,14 +30,15 @@ async function getBlog(slug: string): Promise<Blog | null> {
 }
 
 type Props = {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 };
 
 export async function generateMetadata(
   { params }: Props,
   parent: ResolvingMetadata
 ): Promise<Metadata> {
-  const blog = await getBlog(params.slug);
+  const { slug } = await params;
+  const blog = await getBlog(slug);
 
   if (!blog) {
     return {
@@ -53,13 +55,14 @@ export async function generateMetadata(
       images: [blog.image],
     },
     alternates: {
-      canonical: `/blog/${params.slug}`,
+      canonical: `/blog/${slug}`,
     },
   };
 }
 
 export default async function BlogDetail({ params }: Props) {
-  const blog = await getBlog(params.slug);
+  const { slug } = await params;
+  const blog = await getBlog(slug);
 
   if (!blog) {
     notFound();
@@ -123,13 +126,7 @@ export default async function BlogDetail({ params }: Props) {
         />
 
         {/* CTA */}
-        <div className="mt-32 p-12 bg-orange-50 rounded-[48px] text-center border-2 border-primary/10">
-          <h3 className="text-3xl font-black tracking-tight mb-4 uppercase italic">Loved this story?</h3>
-          <p className="text-muted font-medium mb-8">Wait till you taste our food. Experience the best tiffin service in Jaipur.</p>
-          <Link href="/signup" className="bg-primary text-white px-10 py-4 rounded-pill font-black text-xl shadow-2xl shadow-primary/30 hover:scale-105 transition-transform inline-flex items-center gap-3 uppercase">
-            Order Your Tiffin <ArrowRight />
-          </Link>
-        </div>
+        <BlogCTA />
       </div>
     </article>
   );

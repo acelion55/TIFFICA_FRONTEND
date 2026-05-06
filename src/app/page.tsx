@@ -6,11 +6,14 @@ import { useAuth } from '@/context/AuthContext';
 import Link from 'next/link';
 import { ArrowRight, CheckCircle, Clock, Shield, Star, MapPin, Play, Utensils, Award, Smile, Coffee, Download, Loader2 } from 'lucide-react';
 import { useInstallApp } from '@/hooks/useInstallApp';
+import { useOrderAction } from '@/hooks/useOrderAction';
+import { AppDownloadModal } from '@/components/AppDownloadModal';
 
 export default function LandingPage() {
   const { token, loading, user } = useAuth();
   const router = useRouter();
   const { handleInstall, isInstalling, isPWAMode } = useInstallApp();
+  const { isMobile, showModal, setShowModal, handleOrderClick, handleDownloadApp } = useOrderAction();
 
   useEffect(() => {
     if (!loading && token) {
@@ -54,13 +57,13 @@ export default function LandingPage() {
           </h1>
           
           <p className="text-xl sm:text-2xl text-muted max-w-2xl mx-auto mb-12 font-medium animate-in slide-in-from-bottom duration-1000">
-            Order the best affordable tiffin in Jaipur. Healthy, home-cooked meals tailored for professionals and students.
+            Order the best affordable tiffin in Jaipur, Ajmer & Beawar. Healthy, home-cooked meals tailored for professionals and students.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-6 justify-center items-center animate-in slide-in-from-bottom duration-1000">
             <button 
-              onClick={handleInstall}
-              disabled={isInstalling}
+              onClick={handleOrderClick}
+              disabled={isInstalling || isMobile === null}
               className="group bg-primary text-white px-10 py-5 rounded-pill font-black text-xl shadow-2xl shadow-primary/40 hover:scale-105 hover:bg-black transition-all flex items-center gap-3 disabled:opacity-70 disabled:cursor-not-allowed"
             >
               {isInstalling ? (
@@ -68,14 +71,10 @@ export default function LandingPage() {
                   <Loader2 className="animate-spin" size={24} />
                   INSTALLING APP...
                 </>
-              ) : isPWAMode ? (
-                <>
-                  START EATING HEALTHY <ArrowRight className="group-hover:translate-x-2 transition-transform" />
-                </>
               ) : (
                 <>
                   <Download size={24} />
-                  START EATING HEALTHY
+                  ORDER YOUR TIFFIN
                 </>
               )}
             </button>
@@ -104,31 +103,13 @@ export default function LandingPage() {
             <div className="w-12 h-12 bg-yellow-100 rounded-2xl flex items-center justify-center text-2xl">🚚</div>
             <div>
               <p className="font-black text-sm uppercase">Quick Delivery</p>
-              <p className="text-xs text-muted">Across Jaipur</p>
+              <p className="text-xs text-muted">Jaipur, Ajmer & Beawar</p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Account Access Section */}
-      {!token && (
-        <section className="relative z-20 -mt-16 px-4">
-          <div className="max-w-4xl mx-auto bg-white/80 backdrop-blur-2xl rounded-[3rem] p-4 shadow-2xl border border-white/50 flex flex-col md:flex-row items-center gap-4">
-            <div className="px-8 py-4 flex-1 text-center md:text-left">
-              <h3 className="text-xl font-black uppercase tracking-tighter">Already a member?</h3>
-              <p className="text-xs text-muted font-bold uppercase tracking-widest">Login to manage your meals</p>
-            </div>
-            <div className="flex w-full md:w-auto gap-3 p-2">
-              <Link href="/login" className="flex-1 md:flex-none bg-black text-white px-8 py-4 rounded-full font-black text-sm hover:bg-primary transition-all text-center">
-                LOGIN
-              </Link>
-              <Link href="/signup" className="flex-1 md:flex-none bg-primary text-white px-8 py-4 rounded-full font-black text-sm shadow-lg shadow-primary/20 hover:scale-105 transition-all text-center">
-                SIGNUP
-              </Link>
-            </div>
-          </div>
-        </section>
-      )}
+    
 
       {/* How It Works Section */}
       <section className="py-32 bg-gray-50 overflow-hidden">
@@ -146,7 +127,7 @@ export default function LandingPage() {
               { step: '01', title: 'Pick a Plan', desc: 'Choose from Daily, Weekly, or Monthly subscriptions that suit your lifestyle.', icon: Coffee },
               { step: '02', title: 'Select Menu', desc: 'Customize your food preferences. We offer North Indian, Rajasthani, and Diet-specific meals.', icon: Utensils },
               { step: '03', title: 'We Cook', desc: 'Our expert home-chefs prepare your meal with fresh ingredients and maximum hygiene.', icon: Award },
-              { step: '04', title: 'Doorstep Delivery', desc: 'Enjoy your hot, delicious, homemade meal delivered right to your door in Jaipur.', icon: Smile },
+              { step: '04', title: 'Doorstep Delivery', desc: 'Enjoy your hot, delicious, homemade meal delivered right to your door in Jaipur, Ajmer & Beawar.', icon: Smile },
             ].map((item, i) => (
               <div key={i} className="relative z-10 bg-white p-10 rounded-[48px] shadow-sm hover:shadow-xl transition-all group">
                 <div className="w-16 h-16 bg-primary text-white rounded-2xl flex items-center justify-center mb-8 font-black text-2xl shadow-lg group-hover:scale-110 transition-transform">
@@ -179,7 +160,7 @@ export default function LandingPage() {
               </h2>
               <p className="text-sm font-black text-primary uppercase tracking-[0.3em] mb-6">Authenticity Guaranteed</p>
               <p className="text-xl text-muted font-medium leading-loose mb-10">
-                At Tiffica, we don't use commercial clouds. We partner with passionate home-chefs across Jaipur who understand that food is not just nutrition—it's an emotion. Each chef is vetted for hygiene and taste consistency.
+                At Tiffica, we don't use commercial clouds. We partner with passionate home-chefs across Jaipur, Ajmer & Beawar who understand that food is not just nutrition—it's an emotion. Each chef is vetted for hygiene and taste consistency.
               </p>
               <div className="grid grid-cols-2 gap-8 mb-12">
                 <div>
@@ -258,7 +239,7 @@ export default function LandingPage() {
             {[
               { q: 'Is the food spicy?', a: 'We offer customizable spice levels. You can choose Mild, Medium, or Spicy in your profile settings.' },
               { q: 'Can I cancel my subscription?', a: 'Yes, you can pause or cancel your subscription at any time directly through the Tiffica dashboard.' },
-              { q: 'Where do you deliver in Jaipur?', a: 'We deliver to almost all major areas including Malviya Nagar, Mansarovar, Vaishali Nagar, and Jhotwara.' },
+              { q: 'Where do you deliver?', a: 'We deliver across Jaipur, Ajmer & Beawar including major areas like Malviya Nagar, Mansarovar, Vaishali Nagar in Jaipur, and key localities in Ajmer and Beawar.' },
               { q: 'Is the packaging eco-friendly?', a: 'We use high-quality, recyclable materials to ensure we minimize our environmental footprint.' },
             ].map((f, i) => (
               <div key={i} className="bg-gray-50 px-10 py-8 rounded-[32px] hover:bg-primary/5 transition-colors group cursor-pointer">
@@ -289,20 +270,27 @@ export default function LandingPage() {
               READY TO TASTE <br /> <span className="text-primary italic"> AUTHENTICITY</span>?
             </h2>
             <p className="text-xl text-slate-400 mb-12 max-w-2xl mx-auto font-medium relative z-10 leading-relaxed">
-              Join thousands of happy customers in Jaipur. Experience the joy of healthy, homemade meals delivered right to your doorstep.
+              Join thousands of happy customers in Jaipur, Ajmer & Beawar. Experience the joy of healthy, homemade meals delivered right to your doorstep.
             </p>
             
             <div className="flex flex-col sm:flex-row gap-6 justify-center items-center relative z-10">
-              <Link href="/signup" className="w-full sm:w-auto bg-primary text-white px-10 py-5 rounded-full font-black text-xl shadow-2xl shadow-primary/40 hover:scale-105 transition-all text-center">
+              <button onClick={handleOrderClick} disabled={isMobile === null} className="w-full sm:w-auto bg-primary text-white px-10 py-5 rounded-full font-black text-xl shadow-2xl shadow-primary/40 hover:scale-105 transition-all text-center disabled:opacity-70 disabled:cursor-not-allowed">
                 GET STARTED NOW
-              </Link>
-              <Link href="/login" className="w-full sm:w-auto backdrop-blur-md bg-white/10 text-white border border-white/20 px-10 py-5 rounded-full font-black text-xl hover:bg-white hover:text-black transition-all text-center">
+              </button>
+              <Link href="/login" className="w-full sm:w-auto backdrop-blur-md bg-black text-white border border-white/20 px-10 py-5 rounded-full font-black text-xl hover:bg-white hover:text-black transition-all text-center">
                 MEMBER LOGIN
               </Link>
             </div>
           </div>
         </div>
       </section>
+
+      {/* App Download Modal */}
+      <AppDownloadModal 
+        isOpen={showModal} 
+        onClose={() => setShowModal(false)}
+        onDownload={handleDownloadApp}
+      />
 
       {/* Footer (Already there) */}
       <footer className="pt-20 border-t border-gray-100">
@@ -317,7 +305,7 @@ export default function LandingPage() {
               <span className="text-xl font-black tracking-tighter text-foreground">TIFFICA</span>
             </Link>
             <p className="text-muted max-w-xs font-medium uppercase text-xs tracking-widest leading-relaxed">
-              Jaipur's most trusted home-food platform. Serving health and hygiene on a platter.
+              Serving Jaipur, Ajmer & Beawar with health and hygiene on a platter.
             </p>
           </div>
           <div>
@@ -339,7 +327,7 @@ export default function LandingPage() {
         </div>
         <div className="bg-gray-50 py-8 text-center px-4">
           <p className="text-[10px] font-black text-gray-400 tracking-[0.4em] uppercase">
-            © 2024 TIFFICA JAIPUR — DESIGNED FOR PREMIUM EXPERIENCE
+            © 2024 TIFFICA — SERVING JAIPUR, AJMER & BEAWAR
           </p>
         </div>
       </footer>

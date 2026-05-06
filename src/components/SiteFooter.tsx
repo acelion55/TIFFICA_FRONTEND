@@ -106,7 +106,7 @@ export default function SiteFooter() {
             <div className="space-y-8">
               <div className="group cursor-pointer">
                 <p className="text-[10px] font-black uppercase tracking-widest text-white/40 mb-2">Email Support</p>
-                <p className="text-xl font-black tracking-tight text-white group-hover:text-primary transition-colors uppercase">hello@tiffica.com</p>
+                <p className="text-xl font-black tracking-tight text-white group-hover:text-primary transition-colors uppercase">supporttiffica@gmail.com</p>
               </div>
               <div className="group cursor-pointer">
                 <p className="text-[10px] font-black uppercase tracking-widest text-white/40 mb-2">Customer Care</p>
@@ -114,7 +114,7 @@ export default function SiteFooter() {
               </div>
               <div className="flex items-center gap-3 text-white/40">
                 <Globe size={16} />
-                <span className="text-xs font-black uppercase tracking-widest">Available across Jaipur</span>
+                <span className="text-xs font-black uppercase tracking-widest">Jaipur, Ajmer & Beawar</span>
               </div>
             </div>
           </div>
@@ -136,7 +136,7 @@ export default function SiteFooter() {
         </div>
 
         {/* Massive Logo Background Text */}
-        <div className="relative mb-24 select-none opacity-[0.03]">
+        <div className="relative mb-24 select-none opacity-[0.05]">
           <h1 className="text-[25vw] font-black leading-none text-center tracking-tighter uppercase whitespace-nowrap">
             TIFFICA
           </h1>

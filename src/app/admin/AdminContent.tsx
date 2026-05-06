@@ -470,17 +470,44 @@ export function OrdersTab({ orders, expandedRow, setExpandedRow, fetchAll, heade
 
                     {/* Order Details */}
                     <div className="bg-slate-50 rounded-3xl p-4 space-y-3">
-                      <div className="flex items-center justify-between">
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Kitchen</p>
-                        <p className="text-xs font-bold text-slate-700">{o.cloudKitchen?.name || 'Unknown Kitchen'}</p>
-                      </div>
-                      <div className="flex flex-wrap gap-1.5">
-                        {o.items?.map((item: any, i: number) => (
-                          <span key={i} className="text-[10px] font-bold px-2.5 py-1 bg-white border border-slate-100 rounded-full text-slate-600 shadow-sm">
-                            {item.menuItem?.name || 'Item'} × {item.quantity}
-                          </span>
-                        ))}
-                      </div>
+                      {o.items && o.items.length > 0 ? (
+                        o.items.map((item: any, i: number) => (
+                          <div key={i} className="bg-white rounded-2xl p-3 border border-slate-100 shadow-sm">
+                            <div className="flex items-start justify-between gap-3 mb-2">
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-black text-slate-900 truncate">
+                                  {item.menuItem?.name || item.name || `Item #${i + 1}`}
+                                </p>
+                                <div className="flex items-center gap-2 mt-1">
+                                  <span className="text-[10px] font-bold text-slate-400">
+                                    🏠 {item.menuItem?.cloudKitchen?.name || item.cloudKitchen?.name || o.cloudKitchen?.name || 'Unknown Kitchen'}
+                                  </span>
+                                </div>
+                              </div>
+                              <div className="text-right shrink-0">
+                                <p className="text-xs font-black text-orange-600">₹{item.price || 0}</p>
+                                <p className="text-[10px] font-bold text-slate-400">Qty: {item.quantity || 1}</p>
+                              </div>
+                            </div>
+                            {item.menuItem?.category && (
+                              <div className="flex items-center gap-2 mt-2">
+                                <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">
+                                  {item.menuItem.category}
+                                </span>
+                                {item.menuItem?.mealType && (
+                                  <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-orange-50 text-orange-600">
+                                    {item.menuItem.mealType}
+                                  </span>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        ))
+                      ) : (
+                        <div className="bg-white rounded-2xl p-4 border border-slate-100 text-center">
+                          <p className="text-xs font-bold text-slate-400">No items in this order</p>
+                        </div>
+                      )}
                     </div>
 
                     {/* Location Segment */}

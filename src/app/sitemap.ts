@@ -13,10 +13,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 1,
     },
     {
-      url: `${baseUrl}/home`,
+      url: `${baseUrl}/menu`,
       lastModified: new Date(),
       changeFrequency: 'daily',
-      priority: 1,
+      priority: 0.9,
     },
     {
       url: `${baseUrl}/about`,
@@ -36,25 +36,24 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: 'weekly',
       priority: 0.9,
     },
-    {
-      url: `${baseUrl}/login`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.5,
-    },
   ];
 
   // Dynamic blog routes
   let blogRoutes: MetadataRoute.Sitemap = [];
   try {
-    const response = await fetch(`${apiUrl}/blogs`);
-    const blogs = await response.json();
+    const response = await fetch(`${apiUrl}/blogs`, {
+      next: { revalidate: 3600 } // Cache for 1 hour
+    });
+    const blogsData = await response.json();
     
-    if (Array.isArray(blogs)) {
+    // Handle both array and object with blogs property
+    const blogs = Array.isArray(blogsData) ? blogsData : (blogsData.blogs || blogsData.data || []);
+    
+    if (Array.isArray(blogs) && blogs.length > 0) {
       blogRoutes = blogs.map((blog: any) => ({
         url: `${baseUrl}/blog/${blog.slug}`,
-        lastModified: new Date(blog.updatedAt || blog.publishedAt || new Date()),
-        changeFrequency: 'monthly',
+        lastModified: new Date(blog.updatedAt || blog.publishedAt || blog.createdAt || new Date()),
+        changeFrequency: 'monthly' as const,
         priority: 0.7,
       }));
     }
@@ -62,5 +61,26 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     console.error('Error fetching blogs for sitemap:', error);
   }
 
-  return [...staticRoutes, ...blogRoutes];
+  // Dynamic menu items routes
+  let menuRoutes: MetadataRoute.Sitemap = [];
+  try {
+    const response = await fetch(`${apiUrl}/menu`, {
+      next: { revalidate: 3600 } // Cache for 1 hour
+    });
+    const data = await response.json();
+    const menuItems = data.items || data.data || [];
+    
+    if (Array.isArray(menuItems) && menuItems.length > 0) {
+      menuRoutes = menuItems.slice(0, 50).map((item: any) => ({
+        url: `${baseUrl}/menu?item=${item._id}`,
+        lastModified: new Date(item.updatedAt || item.createdAt || new Date()),
+        changeFrequency: 'weekly' as const,
+        priority: 0.6,
+      }));
+    }
+  } catch (error) {
+    console.error('Error fetching menu items for sitemap:', error);
+  }
+
+  return [...staticRoutes, ...blogRoutes, ...menuRoutes];
 }

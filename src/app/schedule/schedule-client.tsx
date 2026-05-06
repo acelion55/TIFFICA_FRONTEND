@@ -19,9 +19,9 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005/api';
 const DAYS = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
 
 const MEAL_SLOTS = [
-  { label: 'Breakfast', defaultTime: '08:00', icon: '☕', iconBg: 'bg-orange-100', dark: false },
-  { label: 'Lunch',     defaultTime: '13:00', icon: '🍽️', iconBg: 'bg-amber-50',   dark: false },
-  { label: 'Dinner',    defaultTime: '19:30', icon: '🍛', iconBg: 'bg-gray-700',   dark: true  },
+  { label: 'Breakfast', slabs: ['08:00-10:00', '09:00-11:00', '10:00-12:00'], displaySlabs: ['8:00 AM - 10:00 AM', '9:00 AM - 11:00 AM', '10:00 AM - 12:00 PM'], icon: '☕', iconBg: 'bg-orange-100', dark: false },
+  { label: 'Lunch',     slabs: ['12:00-14:00', '13:00-15:00', '14:00-16:00'], displaySlabs: ['12:00 PM - 2:00 PM', '1:00 PM - 3:00 PM', '2:00 PM - 4:00 PM'], icon: '🍽️', iconBg: 'bg-amber-50',   dark: false },
+  { label: 'Dinner',    slabs: ['18:00-20:00', '19:00-21:00', '20:00-22:00'], displaySlabs: ['6:00 PM - 8:00 PM', '7:00 PM - 9:00 PM', '8:00 PM - 10:00 PM'], icon: '🍛', iconBg: 'bg-gray-700',   dark: true  },
 ];
 
 interface SavedMeal {
@@ -30,12 +30,11 @@ interface SavedMeal {
   deliveryAddress: { fullAddress?: string; houseNo?: string; area?: string; addressType?: string };
   deliveryTime?: string;
   lockedAt: string;
-  mealPrice?: number; // Store the price for refund calculation
+  mealPrice?: number;
 }
 interface DaySchedule { date: string; meals: SavedMeal[]; }
 
 function hoursLeft(lockedAt: string, deliveryTime: string, date: string) {
-  // Calculate hours until delivery time, not hours since lock
   const [hours, minutes] = deliveryTime.split(':').map(Number);
   const deliveryDateTime = new Date(date);
   deliveryDateTime.setHours(hours, minutes, 0, 0);
@@ -63,17 +62,15 @@ export default function ScheduleClient() {
   const [savingTime, setSavingTime]       = useState<string | null>(null);
   const [error, setError]                 = useState('');
 
-  // Per-slot state: chosen address + chosen time
   const [slotAddress, setSlotAddress] = useState<Record<string, any>>({});
-  const [slotTime,    setSlotTime]    = useState<Record<string, string>>({
-    Breakfast: '08:00', Lunch: '13:00', Dinner: '19:30'
+  const [slotSlab,    setSlotSlab]    = useState<Record<string, string>>({
+    Breakfast: '08:00-10:00', Lunch: '12:00-14:00', Dinner: '18:00-20:00'
   });
   const [addrOpen, setAddrOpen] = useState<string | null>(null);
 
   const dateKey  = format(selectedDate, 'yyyy-MM-dd');
   const monthKey = format(currentMonth, 'yyyy-MM');
 
-  /* ── GSAP animations ── */
   useEffect(() => {
     if (calendarRef.current) {
       gsap.fromTo(calendarRef.current, 
@@ -93,7 +90,6 @@ export default function ScheduleClient() {
     }
   }, [selectedDate]);
 
-  /* ── fetch addresses ── */
   useEffect(() => {
     if (!token) return;
     fetch(`${API_URL}/auth/profile`, { headers: { Authorization: `Bearer ${token}` } })
@@ -101,14 +97,12 @@ export default function ScheduleClient() {
       .then(d => {
         const addrs = d.addresses || [];
         setAddresses(addrs);
-        // pre-select default address for all slots
         const def = addrs.find((a: any) => a.isDefault) || addrs[0];
         if (def) setSlotAddress({ Breakfast: def, Lunch: def, Dinner: def });
       })
       .catch(() => {});
   }, [token]);
 
-  /* ── fetch month dots ── */
   const fetchMonth = useCallback(async () => {
     if (!token) return;
     const res = await fetch(`${API_URL}/schedule/month?month=${monthKey}`, {
@@ -123,7 +117,6 @@ export default function ScheduleClient() {
   }, [token, monthKey]);
   useEffect(() => { fetchMonth(); }, [fetchMonth]);
 
-  /* ── fetch day schedule ── */
   const fetchDay = useCallback(async () => {
     if (!token) return;
     setLoadingDay(true); setError('');
@@ -139,9 +132,8 @@ export default function ScheduleClient() {
   const getMeal    = (mt: string) => daySchedule?.meals?.find(m => m.mealType === mt) || null;
   const isLocked   = (meal: SavedMeal | null, mealType: string) => {
     if (!meal?.lockedAt) return false;
-    const deliveryTime = meal.deliveryTime || (mealType === 'Breakfast' ? '08:00' : mealType === 'Lunch' ? '13:00' : '19:30');
+    const deliveryTime = meal.deliveryTime || (mealType === 'Breakfast' ? '08:00' : mealType === 'Lunch' ? '12:00' : '18:00');
     const hoursUntil = hoursLeft(meal.lockedAt, deliveryTime, dateKey);
-    // Only lock if delivery time has passed
     return hoursUntil < 0;
   };
 
@@ -154,7 +146,8 @@ export default function ScheduleClient() {
 
   const handleAddMeal = (mealType: string) => {
     const addr = slotAddress[mealType] || addresses[0];
-    const time = slotTime[mealType] || MEAL_SLOTS.find(s => s.label === mealType)?.defaultTime || '';
+    const slab = slotSlab[mealType] || '08:00-10:00';
+    const time = slab.split('-')[0];
     const meal = getMeal(mealType);
     const existingMealId = meal?.menuItem?._id || '';
     const isEdit = !!meal;
@@ -195,7 +188,8 @@ export default function ScheduleClient() {
     if (!token) return;
     setSavingTime(mealType);
     setError('');
-    const newTime = slotTime[mealType];
+    const slab = slotSlab[mealType];
+    const newTime = slab.split('-')[0];
     const res = await fetch(`${API_URL}/schedule/update-time`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
@@ -203,14 +197,13 @@ export default function ScheduleClient() {
     });
     const d = await res.json();
     if (res.ok) {
-      addToast(`✅ Delivery time updated to ${newTime}`, 'success');
+      addToast(`✅ Delivery slab updated to ${slab}`, 'success');
     } else {
-      setError(d.error || 'Failed to update time');
+      setError(d.error || 'Failed to update slab');
     }
     setSavingTime(null);
   };
 
-  /* ── calendar grid ── */
   const monthStart = startOfMonth(currentMonth);
   const days       = eachDayOfInterval({ start: monthStart, end: endOfMonth(currentMonth) });
   const startPad   = getDay(monthStart);
@@ -346,9 +339,9 @@ export default function ScheduleClient() {
                 const isRemoving = removingMeal === slot.label;
                 const addrPickerOpen = addrOpen === slot.label;
                 const chosenAddr = slotAddress[slot.label];
-                const chosenTime = slotTime[slot.label] || slot.defaultTime;
+                const chosenSlab = slotSlab[slot.label] || '08:00-10:00';
                 const dark       = slot.dark;
-                const deliveryTime = meal?.deliveryTime || chosenTime;
+                const deliveryTime = meal?.deliveryTime || chosenSlab.split('-')[0];
                 const hoursUntil = meal?.lockedAt ? hoursLeft(meal.lockedAt, deliveryTime, dateKey) : 999;
 
                 return (
@@ -435,7 +428,7 @@ export default function ScheduleClient() {
                       )}
                     </div>
 
-                    {/* ── Time input ── */}
+                    {/* ── Slab selector ── */}
                     {!isPastDate && !locked && (
                       <motion.div 
                         initial={{ opacity: 0, height: 0 }}
@@ -443,26 +436,37 @@ export default function ScheduleClient() {
                         exit={{ opacity: 0, height: 0 }}
                         className="px-5 pb-3"
                       >
-                        <div className={`flex items-center gap-2 rounded-2xl px-4 py-3 ${dark ? 'bg-gray-800' : 'bg-gray-50'}`}>
-                          <Clock className={`w-4 h-4 flex-shrink-0 ${dark ? 'text-orange-400' : 'text-orange-500'}`} />
-                          <span className={`text-xs font-semibold mr-1 ${dark ? 'text-gray-400' : 'text-gray-500'}`}>Delivery time</span>
-                          <input
-                            type="time"
-                            value={chosenTime}
-                            onChange={e => setSlotTime(prev => ({ ...prev, [slot.label]: e.target.value }))}
-                            className={`flex-1 text-sm font-bold bg-transparent focus:outline-none ${dark ? 'text-white' : 'text-gray-900'}`}
-                          />
+                        <div className={`rounded-2xl px-4 py-3 ${dark ? 'bg-gray-800' : 'bg-gray-50'}`}>
+                          <p className={`text-xs font-semibold mb-2 ${dark ? 'text-gray-400' : 'text-gray-500'}`}>Select 2-Hour Delivery Slab</p>
+                          <div className="grid grid-cols-1 gap-2">
+                            {slot.slabs.map((slab: string, idx: number) => (
+                              <motion.button
+                                key={slab}
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.98 }}
+                                onClick={() => setSlotSlab(prev => ({ ...prev, [slot.label]: slab }))}
+                                className={`px-4 py-2.5 rounded-xl text-sm font-bold transition ${
+                                  slotSlab[slot.label] === slab
+                                    ? 'bg-orange-500 text-white shadow-lg shadow-orange-200'
+                                    : dark ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-white text-gray-700 border border-gray-200 hover:border-orange-300'
+                                }`}
+                              >
+                                {slot.displaySlabs[idx]}
+                              </motion.button>
+                            ))}
+                          </div>
                           <motion.button 
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
                             transition={{ duration: 0.15 }}
                             onClick={() => handleSaveTime(slot.label)} 
                             disabled={savingTime === slot.label}
-                            className="flex-shrink-0 w-8 h-8 rounded-full bg-orange-500 text-white flex items-center justify-center disabled:opacity-50"
+                            className="w-full mt-3 py-2 bg-orange-500 text-white rounded-xl font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-50"
                           >
                             {savingTime === slot.label
-                              ? <Loader2 className="w-4 h-4 animate-spin" />
-                              : <CheckCircle2 className="w-4 h-4" />}
+                              ? <><Loader2 className="w-4 h-4 animate-spin" /> Saving...</>
+                              : <><CheckCircle2 className="w-4 h-4" /> Save Slab</>
+                            }
                           </motion.button>
                         </div>
                       </motion.div>

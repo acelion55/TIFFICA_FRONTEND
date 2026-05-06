@@ -8,6 +8,7 @@ export const metadata: Metadata = {
 
 import Link from 'next/link';
 import { ArrowRight, Heart, Users, ShieldCheck, Zap, Leaf, Coffee, Globe, Smile } from 'lucide-react';
+import AboutCTA from '@/components/AboutCTA';
 
 export default function AboutPage() {
   return (
@@ -153,21 +154,7 @@ export default function AboutPage() {
         </div>
 
         {/* Join CTA */}
-        <div className="bg-black rounded-[64px] p-20 text-center relative overflow-hidden">
-          <div className="relative z-10">
-            <h2 className="text-5xl font-black text-white mb-8 uppercase tracking-tighter">Support the Tiffin revolution.</h2>
-            <div className="flex flex-col sm:flex-row gap-6 justify-center">
-              <Link href="/signup" className="bg-primary text-white px-10 py-5 rounded-pill font-black text-lg transition-transform hover:scale-105 inline-flex items-center gap-3">
-                ORDER NOW <ArrowRight />
-              </Link>
-              <Link href="/contact" className="bg-white text-black px-10 py-5 rounded-pill font-black text-lg transition-transform hover:scale-105">
-                CONTACT US
-              </Link>
-            </div>
-          </div>
-          <div className="absolute top-0 left-0 w-64 h-64 bg-primary/20 rounded-pill -translate-x-1/2 -translate-y-1/2 blur-[100px]" />
-          <div className="absolute bottom-0 right-0 w-64 h-64 bg-secondary/20 rounded-pill translate-x-1/2 translate-y-1/2 blur-[100px]" />
-        </div>
+        <AboutCTA />
       </div>
     </div>
   );

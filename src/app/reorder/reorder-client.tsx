@@ -8,6 +8,14 @@ import { RefreshCw, ShoppingBag, Clock, Truck, CheckCircle, Package } from 'luci
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005/api';
 const FALLBACK = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=200&h=200&fit=crop';
 
+// Helper to format time to 12-hour format
+const formatTime12Hour = (time24: string) => {
+  const [hours, minutes] = time24.split(':').map(Number);
+  const period = hours >= 12 ? 'PM' : 'AM';
+  const hours12 = hours % 12 || 12;
+  return `${hours12}:${String(minutes).padStart(2, '0')} ${period}`;
+};
+
 // Helper to get delivery status
 const getDeliveryStatus = (date: string, deliveryTime: string) => {
   const now = new Date();
@@ -149,7 +157,7 @@ export default function ReorderClient() {
                             {meal.menuItem?.name || 'Item'}
                           </p>
                           <p className="text-xs text-gray-400">
-                            {meal.mealType} · {meal.deliveryTime || '08:00'}
+                            {meal.mealType} · {formatTime12Hour(meal.deliveryTime || '08:00')}
                           </p>
                           <p className="text-sm font-bold text-gray-900 mt-0.5">
                             ₹{meal.mealPrice || meal.menuItem?.price || 0}

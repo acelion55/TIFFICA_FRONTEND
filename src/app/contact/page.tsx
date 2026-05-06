@@ -33,7 +33,7 @@ export default function ContactPage() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-[10px] font-black uppercase tracking-widest text-muted mb-2">Email Us</p>
-                    <p className="text-xl sm:text-3xl font-black tracking-tight uppercase break-words">hello@tiffica.com</p>
+                    <p className="text-xl sm:text-3xl font-black tracking-tight uppercase break-words">supporttiffica@gmail.com</p>
                     <p className="text-xs sm:text-sm text-muted font-medium mt-1">We usually respond within 2 hours.</p>
                   </div>
                 </div>
@@ -55,8 +55,8 @@ export default function ContactPage() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-[10px] font-black uppercase tracking-widest text-muted mb-2">Our Base</p>
-                    <p className="text-xl sm:text-3xl font-black tracking-tight uppercase">JAIPUR, INDIA</p>
-                    <p className="text-xs sm:text-sm text-muted font-medium mt-1">Malviya Nagar, Sector 3, Rajasthan - 302017</p>
+                    <p className="text-xl sm:text-3xl font-black tracking-tight uppercase">JAIPUR, AJMER & BEAWAR</p>
+                    <p className="text-xs sm:text-sm text-muted font-medium mt-1">Serving across Rajasthan with love</p>
                   </div>
                 </div>
               </div>
