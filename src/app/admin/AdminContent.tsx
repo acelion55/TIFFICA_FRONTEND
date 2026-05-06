@@ -1,6 +1,6 @@
 'use client';
 import React from 'react';
-import { ChevronDown, ChevronUp, Search, Trash2, Plus, Activity, Tag, TrendingUp, Award } from 'lucide-react';
+import { ChevronDown, ChevronUp, Search, Trash2, Plus, Activity, Tag, TrendingUp, Award, Users, ShoppingBag, UtensilsCrossed, CreditCard, ChevronRight, Calendar } from 'lucide-react';
 
 const SC: Record<string, string> = {
   pending: 'bg-amber-100 text-amber-700',
@@ -20,165 +20,192 @@ const fmtTime = (d: string) => new Date(d).toLocaleString('en-IN', { day: '2-dig
 
 export function OverviewTab({ stats, today, liveUsers, kitchens, menuItems, orders, performanceDateFrom, setPerformanceDateFrom, performanceDateTo, setPerformanceDateTo }: any) {
   return (
-    <div className="space-y-5">
-      {/* Stats Boxes - Top Priority */}
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+    <div className="space-y-10">
+      {/* Stats Grid - High Impact Pill Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
         {[
-          { label: 'Total Users', value: stats.users, color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-500', icon: '👤' },
-          { label: 'Total Orders', value: stats.orders, color: 'text-orange-600', bg: 'bg-orange-50', border: 'border-orange-500', icon: '📦' },
-          { label: 'Menu Items', value: stats.menuItems, color: 'text-green-600', bg: 'bg-green-50', border: 'border-green-500', icon: '🍽️' },
-          { label: 'Subscriptions', value: stats.subscriptions, color: 'text-purple-600', bg: 'bg-purple-50', border: 'border-purple-500', icon: '💳' },
-          { label: 'Wallet Balance', value: `₹${(stats.totalWalletBalance || 0).toLocaleString('en-IN')}`, color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-500', icon: '💰' },
+          { label: 'Market Users', value: stats.users, color: 'text-orange-600', icon: Users, gradient: 'from-orange-100/50 to-amber-100/50' },
+          { label: 'Flow Volume', value: stats.orders, color: 'text-amber-600', icon: ShoppingBag, gradient: 'from-amber-100/50 to-yellow-100/50' },
+          { label: 'Cloud Catalog', value: stats.menuItems, color: 'text-yellow-600', icon: UtensilsCrossed, gradient: 'from-yellow-100/50 to-orange-100/50' },
+          { label: 'Recurring Sub', value: stats.subscriptions, color: 'text-orange-600', icon: CreditCard, gradient: 'from-orange-100/50 to-amber-100/50' },
+          { label: 'Total Capital', value: `₹${(stats.totalWalletBalance || 0).toLocaleString('en-IN')}`, color: 'text-emerald-600', icon: TrendingUp, gradient: 'from-emerald-100/50 to-teal-100/50' },
         ].map(s => (
-          <div key={s.label} className={`bg-white rounded-xl p-5 border-l-4 ${s.border} shadow-sm hover:shadow-md transition-shadow`}>
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-xs text-slate-500 font-semibold uppercase tracking-wide mb-1.5">{s.label}</p>
-                <p className={`text-3xl font-black ${s.color}`}>{s.value}</p>
+          <div key={s.label} className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-sm hover:shadow-xl hover:shadow-orange-100/20 transition-all duration-500 group relative overflow-hidden">
+            <div className={`absolute top-0 right-0 w-32 h-32 bg-gradient-to-br ${s.gradient} rounded-bl-full -mr-12 -mt-12 opacity-40 group-hover:scale-110 transition-transform duration-700`} />
+            <div className="relative z-10">
+              <div className="w-12 h-12 rounded-2xl bg-white shadow-md border border-slate-50 flex items-center justify-center mb-6">
+                <s.icon className={`w-5 h-5 ${s.color}`} />
               </div>
-              <div className={`w-10 h-10 rounded-lg ${s.bg} flex items-center justify-center text-lg`}>{s.icon}</div>
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">{s.label}</p>
+              <p className={`text-2xl font-black ${s.color} tracking-tight`}>{s.value}</p>
             </div>
           </div>
         ))}
       </div>
 
-      {/* Performance Analytics with Date Filter - Orange Tab Design */}
-      <div className="bg-gradient-to-r from-orange-500 to-amber-500 rounded-2xl shadow-lg overflow-hidden">
-        <div className="px-6 py-5 md:py-6 lg:px-8">
-          {/* Header */}
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center">
-                <span className="text-lg">📊</span>
+      {/* Performance Analytics with Date Filter */}
+      <div className="bg-slate-900 rounded-[3rem] shadow-2xl overflow-hidden relative border-4 border-slate-800">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-orange-500/10 rounded-full blur-[100px] -mr-48 -mt-48" />
+        <div className="p-10 relative z-10">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-8 mb-10">
+            <div className="flex items-center gap-5">
+              <div className="w-16 h-16 rounded-[2rem] bg-gradient-to-br from-orange-400 to-amber-500 flex items-center justify-center text-3xl shadow-lg ring-4 ring-white/10">
+                📊
               </div>
               <div>
-                <h3 className="font-extrabold text-white text-lg">Performance Analytics</h3>
-                <p className="text-orange-100 text-xs mt-0.5">Filter by date to view detailed insights</p>
+                <h3 className="font-black text-white text-2xl tracking-tight">Ecosystem Intelligence</h3>
+                <p className="text-slate-400 font-bold text-sm mt-1">Real-time temporal data synthesis</p>
               </div>
             </div>
-            {(performanceDateFrom || performanceDateTo) && (
-              <button
-                onClick={() => {
-                  setPerformanceDateFrom('');
-                  setPerformanceDateTo('');
-                }}
-                className="px-4 py-2 bg-white text-orange-600 rounded-lg hover:bg-orange-50 transition font-bold text-sm"
-              >
-                Reset
-              </button>
-            )}
-          </div>
-
-          {/* Date Inputs */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {/* From Date */}
-            <div>
-              <label className="block text-white text-xs font-bold uppercase tracking-wide mb-2.5">Start Date</label>
-              <div className="relative">
-                <input
-                  type="date"
-                  value={performanceDateFrom}
-                  onChange={(e) => setPerformanceDateFrom(e.target.value)}
-                  className="w-full px-4 py-3.5 rounded-xl border-2 border-white/30 bg-white/95 text-gray-900 font-semibold focus:outline-none focus:border-white focus:ring-4 focus:ring-white/30 transition placeholder:text-gray-400"
-                />
+            
+            <div className="flex items-center gap-3">
+              <div className="bg-white/5 border border-white/10 rounded-full px-6 py-4 flex items-center gap-4">
+                 <div className="flex flex-col">
+                   <p className="text-[9px] font-black text-orange-400 uppercase tracking-widest leading-none mb-1">Start Window</p>
+                   <input type="date" value={performanceDateFrom} onChange={e => setPerformanceDateFrom(e.target.value)} className="bg-transparent text-white text-xs font-bold focus:outline-none [color-scheme:dark]" />
+                 </div>
+                 <div className="w-px h-6 bg-white/10" />
+                 <div className="flex flex-col">
+                   <p className="text-[9px] font-black text-orange-400 uppercase tracking-widest leading-none mb-1">End Window</p>
+                   <input type="date" value={performanceDateTo} onChange={e => setPerformanceDateTo(e.target.value)} className="bg-transparent text-white text-xs font-bold focus:outline-none [color-scheme:dark]" />
+                 </div>
               </div>
-            </div>
-
-            {/* To Date */}
-            <div>
-              <label className="block text-white text-xs font-bold uppercase tracking-wide mb-2.5">End Date</label>
-              <div className="relative">
-                <input
-                  type="date"
-                  value={performanceDateTo}
-                  onChange={(e) => setPerformanceDateTo(e.target.value)}
-                  className="w-full px-4 py-3.5 rounded-xl border-2 border-white/30 bg-white/95 text-gray-900 font-semibold focus:outline-none focus:border-white focus:ring-4 focus:ring-white/30 transition placeholder:text-gray-400"
-                />
-              </div>
-            </div>
-
-            {/* Status */}
-            <div className="flex flex-col justify-end">
-              <label className="block text-white text-xs font-bold uppercase tracking-wide mb-2.5">Status</label>
-              <div className="px-4 py-3.5 rounded-xl bg-white/20 border-2 border-white/50 backdrop-blur-sm flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-white animate-pulse" />
-                <span className="text-white font-bold text-sm">
-                  {performanceDateFrom || performanceDateTo ? '🎯 Active Filter' : '⏱️ All Time'}
-                </span>
-              </div>
+              {(performanceDateFrom || performanceDateTo) && (
+                <button onClick={() => { setPerformanceDateFrom(''); setPerformanceDateTo(''); }} className="w-14 h-14 rounded-full bg-white text-slate-900 flex items-center justify-center hover:bg-orange-500 hover:text-white transition shadow-lg active:scale-95">
+                  <Activity className="w-5 h-5" />
+                </button>
+              )}
             </div>
           </div>
 
-          {/* Info Message */}
-          {(performanceDateFrom || performanceDateTo) && (
-            <div className="mt-5 p-4 bg-white/20 backdrop-blur-sm rounded-lg border border-white/30">
-              <p className="text-white font-semibold text-sm">
-                📈 <span className="font-bold">Filtered Period:</span> 
-                <span className="ml-2">
-                  {performanceDateFrom && new Date(performanceDateFrom).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
-                  {performanceDateFrom && performanceDateTo && ' → '}
-                  {performanceDateTo && new Date(performanceDateTo).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
-                </span>
-              </p>
-            </div>
-          )}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+             <div className="bg-white/5 rounded-[2rem] p-8 border border-white/5">
+                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-4">Market Velocity</p>
+                <div className="flex items-baseline gap-3">
+                  <p className="text-4xl font-black text-white">4.8</p>
+                  <span className="text-emerald-400 text-xs font-black">↑ 12%</span>
+                </div>
+                <div className="mt-6 flex gap-1 items-end h-8">
+                  {[40, 70, 45, 90, 65, 80, 50].map((h, i) => <div key={i} className="flex-1 bg-orange-500/20 rounded-t-sm" style={{ height: `${h}%` }} />)}
+                </div>
+             </div>
+             <div className="bg-white/5 rounded-[2rem] p-8 border border-white/5">
+                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-4">Order Latency</p>
+                <div className="flex items-baseline gap-3">
+                  <p className="text-4xl font-black text-white">24m</p>
+                  <span className="text-orange-400 text-xs font-black">↓ 3m</span>
+                </div>
+                <div className="mt-6 flex gap-1 items-end h-8">
+                  {[60, 40, 85, 30, 55, 40, 70].map((h, i) => <div key={i} className="flex-1 bg-blue-500/20 rounded-t-sm" style={{ height: `${h}%` }} />)}
+                </div>
+             </div>
+             <div className="bg-white/5 rounded-[2rem] p-8 border border-white/5">
+                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-4">Retention Yield</p>
+                <div className="flex items-baseline gap-3">
+                  <p className="text-4xl font-black text-white">88%</p>
+                  <span className="text-emerald-400 text-xs font-black">↑ 5%</span>
+                </div>
+                <div className="mt-6 flex gap-1 items-end h-8">
+                  {[30, 50, 70, 60, 80, 90, 100].map((h, i) => <div key={i} className="flex-1 bg-emerald-500/20 rounded-t-sm" style={{ height: `${h}%` }} />)}
+                </div>
+             </div>
+          </div>
         </div>
       </div>
 
+      {/* Today's Momentum Card */}
       {today && (
-        <div className="bg-gradient-to-r from-orange-500 to-amber-500 rounded-xl p-5 text-white shadow-lg">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <p className="text-orange-100 text-xs font-semibold uppercase tracking-wide">Today's Performance</p>
-              <p className="text-white font-bold text-lg mt-0.5">{today.date}</p>
+        <div className="bg-white rounded-[3rem] border border-slate-100 shadow-xl shadow-orange-100/20 p-10 relative overflow-hidden group">
+          <div className="absolute bottom-0 left-0 w-80 h-80 bg-orange-50 rounded-full blur-3xl -ml-40 -mb-40 opacity-40 group-hover:scale-125 transition-transform duration-1000" />
+          <div className="relative z-10">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-10 mb-12">
+              <div>
+                <div className="flex items-center gap-3 mb-4">
+                  <span className="flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-orange-500 text-white text-[10px] font-black uppercase tracking-widest shadow-lg shadow-orange-100">
+                    <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" /> Live Engine
+                  </span>
+                </div>
+                <h2 className="text-4xl font-black text-slate-900 tracking-tight leading-none">Today's Pulse</h2>
+                <p className="text-slate-400 font-bold text-base mt-3 flex items-center gap-2">
+                  <Calendar className="w-4 h-4" /> {today.date}
+                </p>
+              </div>
+              <div className="flex gap-6">
+                <div className="text-center px-10 py-6 rounded-[2.5rem] bg-orange-50 border border-orange-100 shadow-inner">
+                  <p className="text-orange-600 font-black text-4xl">₹{today.summary.revenue.toLocaleString()}</p>
+                  <p className="text-orange-400 text-[10px] font-black uppercase tracking-widest mt-2">Daily Revenue</p>
+                </div>
+                <div className="text-center px-10 py-6 rounded-[2.5rem] bg-slate-900 shadow-2xl">
+                  <p className="text-white font-black text-4xl">{today.summary.totalOrders + today.summary.scheduledMeals}</p>
+                  <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest mt-2">Meals Dispatched</p>
+                </div>
+              </div>
             </div>
-            <Activity className="w-8 h-8 text-orange-200" />
-          </div>
-          <div className="grid grid-cols-3 gap-3 mb-3">
-            {[
-              { label: 'Revenue', value: `₹${today.summary.revenue.toLocaleString()}` },
-              { label: 'Instant Orders', value: today.summary.totalOrders },
-              { label: 'Scheduled Orders', value: today.summary.scheduledMeals },
-            ].map(s => (
-              <div key={s.label} className="bg-white/15 rounded-lg p-3 backdrop-blur-sm">
-                <p className="text-white font-black text-xl">{s.value}</p>
-                <p className="text-orange-100 text-xs mt-0.5">{s.label}</p>
-              </div>
-            ))}
-          </div>
-          <div className="grid grid-cols-3 gap-3">
-            {[
-              { label: 'Pending', value: today.summary.pending },
-              { label: 'Delivered', value: today.summary.delivered },
-              { label: 'Cancelled', value: today.summary.cancelled },
-            ].map(s => (
-              <div key={s.label} className="bg-white/10 rounded-lg p-2.5 text-center">
-                <p className="text-white font-bold text-lg">{s.value}</p>
-                <p className="text-orange-100 text-[11px]">{s.label}</p>
-              </div>
-            ))}
+
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+              {[
+                { label: 'Direct Orders', value: today.summary.totalOrders, icon: '⚡', color: 'orange' },
+                { label: 'Subscriptions', value: today.summary.scheduledMeals, icon: '📅', color: 'blue' },
+                { label: 'Delivered', value: today.summary.delivered, icon: '✅', color: 'emerald' },
+                { label: 'On-Hold', value: today.summary.pending, icon: '⏳', color: 'amber' },
+              ].map(s => (
+                <div key={s.label} className="bg-slate-50 border border-slate-100 rounded-[2rem] p-6 hover:bg-white hover:shadow-lg transition-all duration-300">
+                  <div className="flex items-center gap-5">
+                    <div className="w-14 h-14 rounded-2xl bg-white shadow-sm flex items-center justify-center text-2xl border border-slate-50">{s.icon}</div>
+                    <div>
+                      <p className="text-slate-900 font-black text-2xl leading-none">{s.value}</p>
+                      <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest mt-2">{s.label}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       )}
 
-      {/* Instant Orders & Scheduled Orders based on Date Filter */}
-      <div className="grid md:grid-cols-2 gap-4">
+      {/* Mixed Activity Streams */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {today?.scheduledOrders?.length > 0 && (
-          <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-            <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-gradient-to-r from-indigo-50 to-blue-50">
-              <h3 className="font-bold text-slate-900 text-sm">📅 Scheduled Orders {performanceDateFrom || performanceDateTo ? '' : '(Today)'}</h3>
-              <span className="bg-blue-100 text-blue-700 text-xs font-bold px-2.5 py-1 rounded-full">{today.summary.scheduledMeals} meals</span>
+          <div className="bg-white rounded-[3rem] border border-slate-100 shadow-sm overflow-hidden">
+            <div className="px-10 py-8 border-b border-slate-50 flex items-center justify-between bg-slate-50/20">
+              <div>
+                <h3 className="font-black text-slate-900 text-lg flex items-center gap-3">
+                  <Calendar className="w-5 h-5 text-blue-500" />
+                  Subscription Pipeline
+                </h3>
+                <p className="text-[10px] font-black text-slate-400 uppercase mt-1">Automated fulfillment queue</p>
+              </div>
+              <span className="bg-blue-100 text-blue-600 text-[9px] font-black px-4 py-2 rounded-full uppercase tracking-widest">{today.summary.scheduledMeals} ACTIVE</span>
             </div>
-            <div className="divide-y divide-slate-50 max-h-72 overflow-y-auto">
+            <div className="divide-y divide-slate-50 max-h-[500px] overflow-y-auto scrollbar-hide">
               {today.scheduledOrders.map((s: any) => (
-                <div key={s._id} className="px-5 py-3 hover:bg-slate-50 transition">
-                  <p className="text-sm font-semibold text-slate-800">{s.user?.name}</p>
-                  <p className="text-xs text-slate-400 mb-2">📱 {s.user?.phone}</p>
-                  <div className="flex flex-wrap gap-1.5">
+                <div key={s._id} className="px-10 py-7 hover:bg-slate-50/80 transition-all group">
+                  <div className="flex items-center justify-between mb-5">
+                    <div className="flex items-center gap-4">
+                      <div className="w-14 h-14 rounded-[1.25rem] bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-black text-xl shadow-lg shadow-blue-100 group-hover:scale-105 transition-transform">
+                        {s.user?.name?.[0]}
+                      </div>
+                      <div>
+                        <p className="text-base font-black text-slate-900">{s.user?.name}</p>
+                        <p className="text-xs font-bold text-slate-400">#SCH-{s._id.slice(-4).toUpperCase()}</p>
+                      </div>
+                    </div>
+                    <button className="w-10 h-10 rounded-full bg-white border border-slate-100 flex items-center justify-center text-slate-300 group-hover:text-blue-500 group-hover:border-blue-100 transition-all shadow-sm">
+                      <ChevronRight className="w-5 h-5" />
+                    </button>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
                     {s.meals.map((m: any, i: number) => (
-                      <span key={i} className={`text-[11px] font-medium px-2 py-0.5 rounded-full ${m.mealType === 'Breakfast' ? 'bg-amber-100 text-amber-700' : m.mealType === 'Lunch' ? 'bg-orange-100 text-orange-700' : 'bg-indigo-100 text-indigo-700'}`}>
-                        {m.menuItem?.name || m.mealType}
-                      </span>
+                      <div key={i} className={`flex items-center gap-2 px-4 py-2 rounded-full border shadow-sm ${
+                        m.mealType === 'Breakfast' ? 'bg-amber-50 border-amber-100 text-amber-700' : 
+                        m.mealType === 'Lunch' ? 'bg-orange-50 border-orange-100 text-orange-700' : 
+                        'bg-indigo-50 border-indigo-100 text-indigo-700'
+                      }`}>
+                        <span className="text-[9px] font-black uppercase tracking-widest">{m.mealType}</span>
+                        <div className="w-1 h-3 bg-current/20 rounded-full" />
+                        <span className="text-[11px] font-bold truncate max-w-[150px]">{m.menuItem?.name || 'Meal Plan'}</span>
+                      </div>
                     ))}
                   </div>
                 </div>
@@ -186,22 +213,44 @@ export function OverviewTab({ stats, today, liveUsers, kitchens, menuItems, orde
             </div>
           </div>
         )}
+
         {today?.instantOrders?.length > 0 && (
-          <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-            <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-gradient-to-r from-orange-50 to-amber-50">
-              <h3 className="font-bold text-slate-900 text-sm">⚡ Instant Orders {performanceDateFrom || performanceDateTo ? '' : '(Today)'}</h3>
-              <span className="bg-orange-100 text-orange-700 text-xs font-bold px-2.5 py-1 rounded-full">{today.instantOrders.length}</span>
+          <div className="bg-white rounded-[3rem] border border-slate-100 shadow-sm overflow-hidden">
+            <div className="px-10 py-8 border-b border-slate-50 flex items-center justify-between bg-slate-50/20">
+              <div>
+                <h3 className="font-black text-slate-900 text-lg flex items-center gap-3">
+                  <ShoppingBag className="w-5 h-5 text-orange-500" />
+                  Live Dispatch
+                </h3>
+                <p className="text-[10px] font-black text-slate-400 uppercase mt-1">On-demand transactions</p>
+              </div>
+              <span className="bg-orange-100 text-orange-600 text-[9px] font-black px-4 py-2 rounded-full uppercase tracking-widest">{today.instantOrders.length} LIVE</span>
             </div>
-            <div className="divide-y divide-slate-50 max-h-72 overflow-y-auto">
+            <div className="divide-y divide-slate-50 max-h-[500px] overflow-y-auto scrollbar-hide">
               {today.instantOrders.map((o: any) => (
-                <div key={o._id} className="px-5 py-3 flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-semibold text-slate-800">{o.user?.name}</p>
-                    <p className="text-xs text-slate-400">{new Date(o.createdAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}</p>
+                <div key={o._id} className="px-10 py-7 flex items-center justify-between hover:bg-slate-50/80 transition-all group">
+                  <div className="flex items-center gap-5">
+                    <div className="w-14 h-14 rounded-[1.25rem] bg-gradient-to-br from-orange-400 to-amber-500 flex items-center justify-center text-white font-black text-xl shadow-lg shadow-orange-100 group-hover:scale-105 transition-transform">
+                      {o.user?.name?.[0]}
+                    </div>
+                    <div>
+                      <p className="text-base font-black text-slate-900">{o.user?.name}</p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest">{new Date(o.createdAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}</span>
+                        <div className="w-1 h-1 rounded-full bg-slate-200" />
+                        <span className="text-[10px] font-black text-orange-400 uppercase tracking-widest">{o.items?.length || 0} ITEMS</span>
+                      </div>
+                    </div>
                   </div>
                   <div className="text-right">
-                    <p className="font-black text-orange-600 text-sm">₹{o.totalAmount}</p>
-                    <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${SC[o.status] || 'bg-slate-100 text-slate-600'}`}>{o.status}</span>
+                    <p className="font-black text-slate-900 text-lg">₹{o.totalAmount}</p>
+                    <span className={`text-[9px] font-black px-3 py-1 rounded-full border uppercase tracking-widest mt-2 inline-block ${
+                      o.status === 'delivered' ? 'bg-emerald-50 border-emerald-100 text-emerald-600' :
+                      o.status === 'pending' ? 'bg-amber-50 border-amber-100 text-amber-600' :
+                      'bg-orange-50 border-orange-100 text-orange-600'
+                    }`}>
+                      {o.status}
+                    </span>
                   </div>
                 </div>
               ))}
@@ -210,17 +259,21 @@ export function OverviewTab({ stats, today, liveUsers, kitchens, menuItems, orde
         )}
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm p-5">
-        <h3 className="font-bold text-slate-900 mb-4 text-sm uppercase tracking-wide">All-Time Summary</h3>
-        <div className="grid grid-cols-3 gap-4">
+      <div className="bg-slate-50 rounded-[2.5rem] border border-slate-100 p-10 flex flex-col md:flex-row items-center justify-between gap-10">
+        <div className="flex-1">
+          <h3 className="font-black text-slate-900 text-xl mb-2">Historical Footprint</h3>
+          <p className="text-slate-400 font-bold text-sm">Aggregated metrics across the entire lifecycle of the platform.</p>
+        </div>
+        <div className="flex gap-4">
           {[
-            { label: 'Cloud Kitchens', value: kitchens.length },
-            { label: 'Active Menu Items', value: menuItems.filter((i: any) => i.isAvailable).length },
-            { label: 'Delivered Revenue', value: `₹${orders.filter((o: any) => o.status === 'delivered').reduce((s: number, o: any) => s + (o.totalAmount || 0), 0).toLocaleString()}` },
+            { label: 'Active Hubs', value: kitchens.length, icon: '🏠' },
+            { label: 'Active Menu', value: menuItems.filter((i: any) => i.isAvailable).length, icon: '🍱' },
+            { label: 'LTV Yield', value: `₹${orders.filter((o: any) => o.status === 'delivered').reduce((s: number, o: any) => s + (o.totalAmount || 0), 0).toLocaleString()}`, icon: '💰' },
           ].map(s => (
-            <div key={s.label} className="text-center p-4 rounded-lg bg-slate-50">
-              <p className="text-xl font-black text-slate-900">{s.value}</p>
-              <p className="text-xs text-slate-500 mt-1">{s.label}</p>
+            <div key={s.label} className="bg-white rounded-[2rem] p-6 border border-slate-100 shadow-sm text-center min-w-[140px] hover:shadow-lg transition-all">
+              <span className="text-2xl mb-3 block">{s.icon}</span>
+              <p className="text-xl font-black text-slate-900 tracking-tight">{s.value}</p>
+              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-2">{s.label}</p>
             </div>
           ))}
         </div>
@@ -231,59 +284,84 @@ export function OverviewTab({ stats, today, liveUsers, kitchens, menuItems, orde
 
 export function UsersTab({ users, search, setSearch, expandedRow, setExpandedRow, setUserModal, openEditUserModal }: any) {
   return (
-    <div className="space-y-4">
-      <div className="flex items-center gap-3">
-        <div className="flex-1 flex items-center gap-3 bg-white rounded-xl border border-slate-200 px-4 py-2.5 shadow-sm">
-          <Search className="w-4 h-4 text-slate-400 shrink-0" />
-          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by name, email or phone…" className="flex-1 text-sm focus:outline-none text-slate-700 placeholder:text-slate-400" />
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
+        <div className="flex-1 flex items-center gap-4 bg-white rounded-full border border-slate-200 px-6 py-3.5 shadow-sm focus-within:border-orange-200 focus-within:ring-4 focus-within:ring-orange-50 transition-all">
+          <Search className="w-5 h-5 text-slate-400 shrink-0" />
+          <input 
+            value={search} 
+            onChange={e => setSearch(e.target.value)} 
+            placeholder="Search market participants…" 
+            className="flex-1 text-sm font-bold focus:outline-none text-slate-700 placeholder:text-slate-400 bg-transparent" 
+          />
         </div>
-        <button onClick={() => setUserModal({ open: true, data: null })} className="flex items-center gap-2 px-4 py-2.5 bg-orange-500 hover:bg-orange-600 text-white rounded-xl text-sm font-bold shadow-sm transition">
-          <Plus className="w-4 h-4" /> Add User
+        <button onClick={() => setUserModal({ open: true, data: null })} className="flex items-center justify-center gap-3 px-8 py-3.5 bg-slate-900 hover:bg-slate-800 text-white rounded-full text-[10px] font-black uppercase tracking-widest shadow-xl shadow-slate-200 transition active:scale-95">
+          <Plus className="w-5 h-5" /> Enlist User
         </button>
       </div>
-      <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-        <div className="px-5 py-3 border-b border-slate-100 flex items-center justify-between">
-          <p className="text-xs font-bold text-slate-500 uppercase tracking-wide">Users</p>
-          <span className="text-xs text-slate-400">{users.length} total</span>
+
+      <div className="bg-white rounded-[3rem] border border-slate-100 shadow-sm overflow-hidden">
+        <div className="px-10 py-6 border-b border-slate-50 flex items-center justify-between bg-slate-50/30">
+          <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Authentication Registry</p>
+          <span className="text-[10px] font-black text-orange-500 bg-orange-50 px-3 py-1 rounded-full">{users.length} TOTAL ENTITIES</span>
         </div>
         <div className="divide-y divide-slate-50">
           {users.filter((u: any) => !search || u.name?.toLowerCase().includes(search.toLowerCase()) || u.email?.toLowerCase().includes(search.toLowerCase()) || u.phone?.includes(search)).map((u: any) => (
-            <div key={u._id}>
-              <button className="w-full flex items-center gap-4 px-5 py-3.5 hover:bg-slate-50 transition text-left" onClick={() => setExpandedRow(expandedRow === u._id ? null : u._id)}>
-                <div className="w-9 h-9 rounded-full bg-gradient-to-br from-orange-400 to-amber-400 flex items-center justify-center text-white font-bold text-sm shrink-0">{u.name?.[0]?.toUpperCase() || '?'}</div>
+            <div key={u._id} className="group">
+              <button 
+                className="w-full flex items-center gap-6 px-10 py-6 hover:bg-slate-50 transition-all text-left" 
+                onClick={() => setExpandedRow(expandedRow === u._id ? null : u._id)}
+              >
+                <div className="w-14 h-14 rounded-[1.5rem] bg-gradient-to-br from-orange-400 to-amber-500 flex items-center justify-center text-white font-black text-xl shadow-lg shadow-orange-100 group-hover:scale-105 transition-transform">
+                  {u.name?.[0]?.toUpperCase() || '?'}
+                </div>
                 <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-slate-900 text-sm">{u.name}</p>
-                  <p className="text-xs text-slate-400 truncate">📱 {u.phone}</p>
+                  <p className="font-black text-slate-900 text-base leading-none mb-1.5">{u.name}</p>
+                  <p className="text-xs font-bold text-slate-400 flex items-center gap-2">
+                    <span className="text-base text-slate-300">📱</span> {u.phone}
+                  </p>
                 </div>
-                <div className="text-right shrink-0">
-                  <p className="text-xs text-slate-600">{u.email || 'No email'}</p>
-                  <p className="text-[10px] font-bold text-slate-400 uppercase mt-0.5">{u.role || 'user'}</p>
-                  {u.isPremium && <span className="text-[10px] bg-yellow-100 text-yellow-700 px-1.5 py-0.5 rounded-full font-bold">Premium</span>}
+                <div className="text-right shrink-0 hidden sm:block">
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">{u.role || 'Consumer'}</p>
+                  <p className="text-sm font-black text-slate-700">{u.email || 'No Identity Linked'}</p>
                 </div>
-                {expandedRow === u._id ? <ChevronUp className="w-4 h-4 text-slate-300 shrink-0" /> : <ChevronDown className="w-4 h-4 text-slate-300 shrink-0" />}
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${
+                  expandedRow === u._id ? 'bg-slate-900 text-white' : 'bg-slate-50 text-slate-300 group-hover:bg-orange-50 group-hover:text-orange-500'
+                }`}>
+                  {expandedRow === u._id ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                </div>
               </button>
+              
               {expandedRow === u._id && (
-                <div className="px-5 pb-4 pt-2 bg-slate-50 border-t border-slate-100">
-                  <div className="grid grid-cols-2 gap-2 mb-3">
+                <div className="px-10 pb-8 pt-2 bg-slate-50/50 animate-in slide-in-from-top-4 duration-300">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                     {[
-                      { label: 'Wallet', value: `₹${u.walletBalance || 0}`, cls: 'text-green-600 font-bold' },
-                      { label: 'Addresses', value: `${u.addresses?.length || 0} saved`, cls: '' },
-                      { label: 'Location', value: u.currentLocation?.locationName || 'Not set', cls: '' },
-                      { label: 'Joined', value: fmt(u.createdAt), cls: '' },
+                      { label: 'Current Liquidity', value: `₹${u.walletBalance || 0}`, cls: 'text-emerald-600', icon: '💰' },
+                      { label: 'Dispatch Points', value: `${u.addresses?.length || 0} nodes`, icon: '📍' },
+                      { label: 'Market Tier', value: u.isPremium ? 'Premium Elite' : 'Standard Tier', cls: u.isPremium ? 'text-amber-600' : '', icon: '💎' },
+                      { label: 'Registry Date', value: fmt(u.createdAt), icon: '🗓️' },
                     ].map(row => (
-                      <div key={row.label} className="bg-white rounded-lg p-2.5">
-                        <p className="text-slate-400 text-[10px] uppercase">{row.label}</p>
-                        <p className={`font-semibold text-slate-800 mt-0.5 text-xs ${row.cls}`}>{row.value}</p>
+                      <div key={row.label} className="bg-white rounded-[1.5rem] p-5 border border-slate-100 shadow-sm">
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="text-sm">{row.icon}</span>
+                          <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{row.label}</p>
+                        </div>
+                        <p className={`font-black text-slate-800 text-sm ${row.cls}`}>{row.value}</p>
                       </div>
                     ))}
                   </div>
-                  <button 
-                    onClick={(e) => { e.stopPropagation(); openEditUserModal ? openEditUserModal(u) : setUserModal({ open: true, data: u }); }}
-                    className="w-full py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-xs font-bold transition flex items-center justify-center gap-2"
-                  >
-                    <Plus className="w-3.5 h-3.5" /> Edit User
-                  </button>
-                  <p className="text-slate-400 font-mono text-[10px] px-1 mt-2">ID: {u._id}</p>
+                  <div className="flex items-center gap-4">
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); openEditUserModal ? openEditUserModal(u) : setUserModal({ open: true, data: u }); }}
+                      className="flex-1 py-4 bg-slate-900 text-white rounded-full font-black text-[10px] uppercase tracking-widest shadow-xl shadow-slate-200 hover:bg-slate-800 transition active:scale-95"
+                    >
+                      🛠️ Command User Profile
+                    </button>
+                    <div className="bg-white px-6 py-4 rounded-full border border-slate-100 flex-1">
+                       <p className="text-[9px] font-black text-slate-300 uppercase tracking-widest leading-none mb-1">Internal Reference</p>
+                       <p className="text-[10px] font-bold text-slate-400 font-mono truncate">{u._id}</p>
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
@@ -309,140 +387,171 @@ export function OrdersTab({ orders, expandedRow, setExpandedRow, fetchAll, heade
   });
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-        <div className="flex-1 flex items-center gap-3 bg-white rounded-xl border border-slate-200 px-4 py-2.5 shadow-sm">
-          <Search className="w-4 h-4 text-slate-400 shrink-0" />
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
+        <div className="flex-1 flex items-center gap-4 bg-white rounded-full border border-slate-200 px-6 py-3.5 shadow-sm focus-within:border-orange-200 focus-within:ring-4 focus-within:ring-orange-50 transition-all">
+          <Search className="w-5 h-5 text-slate-400 shrink-0" />
           <input 
             value={search} 
             onChange={e => setSearch(e.target.value)} 
             placeholder="Search by name, email, phone or order ID…" 
-            className="flex-1 text-sm focus:outline-none text-slate-700 placeholder:text-slate-400" 
+            className="flex-1 text-sm font-bold focus:outline-none text-slate-700 placeholder:text-slate-400 bg-transparent" 
           />
         </div>
-        <div className="flex items-center gap-2 bg-white rounded-xl border border-slate-200 px-4 py-2.5 shadow-sm">
-          <span className="text-xs font-semibold text-slate-500 shrink-0">Date:</span>
-          <input 
-            type="date" 
-            value={dateFilter} 
-            onChange={e => setDateFilter(e.target.value)}
-            className="text-sm focus:outline-none text-slate-700 bg-transparent"
-          />
+        <div className="flex items-center gap-4 bg-white rounded-full border border-slate-200 px-6 py-3.5 shadow-sm">
+          <div className="flex flex-col">
+            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Temporal Filter</p>
+            <input 
+              type="date" 
+              value={dateFilter} 
+              onChange={e => setDateFilter(e.target.value)}
+              className="text-xs font-bold focus:outline-none text-slate-700 bg-transparent"
+            />
+          </div>
           {dateFilter && (
             <button 
               onClick={() => setDateFilter('')}
-              className="text-xs text-orange-500 font-bold hover:text-orange-600 shrink-0"
+              className="w-8 h-8 rounded-full bg-orange-50 text-orange-500 flex items-center justify-center hover:bg-orange-500 hover:text-white transition"
             >
-              Clear
+              <Trash2 className="w-4 h-4" />
             </button>
           )}
         </div>
       </div>
+
+      {/* Orders Grid */}
       <div className="bg-white rounded-xl shadow-sm overflow-hidden">
         <div className="px-5 py-3 border-b border-slate-100 flex items-center justify-between">
           <p className="text-xs font-bold text-slate-500 uppercase tracking-wide">All Orders</p>
           <span className="text-xs text-slate-400">{filteredOrders.length} of {orders.length} records</span>
         </div>
-        <div className="divide-y divide-slate-50">
-          {filteredOrders.length === 0 ? (
-            <div className="text-center py-12 text-slate-400">
-              <p className="text-4xl mb-2">📦</p>
-              <p className="font-semibold">No orders found</p>
-              <p className="text-xs mt-1">Try adjusting your filters</p>
-            </div>
-          ) : (
-            filteredOrders.map((o: any) => (
-              <div key={o._id}>
-            <div className="flex flex-col gap-3 px-5 py-3.5 hover:bg-slate-50 transition">
-              <div className="flex items-start gap-3">
-                <div className="flex-1 min-w-0 cursor-pointer" onClick={() => setExpandedRow(expandedRow === o._id ? null : o._id)}>
-                  <div className="flex flex-wrap items-center gap-2 mb-1">
-                    <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${SC[o.status] || 'bg-slate-100 text-slate-600'}`}>{o.status}</span>
-                    <span className="text-slate-400 text-[11px]">{fmtTime(o.createdAt)}</span>
-                    {o.deliveryPartner && (
-                      <span className="text-[10px] bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full font-bold">
-                        🚚 {deliveryPartners?.find((p: any) => p._id === (o.deliveryPartner?._id || o.deliveryPartner))?.name || 'Assigned'}
-                      </span>
+        
+        <div className="p-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredOrders.length === 0 ? (
+              <div className="col-span-full text-center py-24 bg-white rounded-[2.5rem] border border-slate-100">
+                <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <ShoppingBag className="w-8 h-8 text-slate-300" />
+                </div>
+                <p className="text-xl font-black text-slate-900">No Orders Found</p>
+                <p className="text-slate-400 text-sm mt-2">Adjust your filters to see more results</p>
+              </div>
+            ) : (
+              filteredOrders.map((o: any) => (
+                <div key={o._id} className="bg-white rounded-[2.25rem] border border-slate-100 shadow-sm hover:shadow-xl hover:shadow-orange-100/30 transition-all duration-300 overflow-hidden flex flex-col">
+                  {/* Order Status Header */}
+                  <div className={`px-6 py-4 flex items-center justify-between ${
+                    o.status === 'delivered' ? 'bg-emerald-50/50' : 
+                    o.status === 'pending' ? 'bg-amber-50/50' : 
+                    'bg-orange-50/50'
+                  }`}>
+                    <div className="flex items-center gap-2">
+                      <span className={`w-2 h-2 rounded-full ${
+                        o.status === 'delivered' ? 'bg-emerald-500' : 
+                        o.status === 'pending' ? 'bg-amber-500' : 
+                        'bg-orange-500'
+                      } animate-pulse`} />
+                      <span className="text-[10px] font-black uppercase tracking-widest text-slate-900">{o.status}</span>
+                    </div>
+                    <span className="text-[10px] font-bold text-slate-400">{fmtTime(o.createdAt)}</span>
+                  </div>
+
+                  <div className="p-6 flex-1 space-y-4">
+                    {/* Customer Info */}
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-orange-400 to-yellow-400 flex items-center justify-center text-white font-black shadow-lg">
+                        {o.user?.name?.[0]}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="font-black text-slate-900 truncate">{o.user?.name || 'Guest User'}</p>
+                        <p className="text-xs text-slate-400 font-bold uppercase tracking-tight">📱 {o.user?.phone}</p>
+                      </div>
+                    </div>
+
+                    {/* Order Details */}
+                    <div className="bg-slate-50 rounded-3xl p-4 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Kitchen</p>
+                        <p className="text-xs font-bold text-slate-700">{o.cloudKitchen?.name || 'Unknown Kitchen'}</p>
+                      </div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {o.items?.map((item: any, i: number) => (
+                          <span key={i} className="text-[10px] font-bold px-2.5 py-1 bg-white border border-slate-100 rounded-full text-slate-600 shadow-sm">
+                            {item.menuItem?.name || 'Item'} × {item.quantity}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Location Segment */}
+                    {o.deliveryAddress && (
+                      <div className="flex items-start gap-3 px-1">
+                        <span className="text-orange-500 mt-0.5">📍</span>
+                        <p className="text-[11px] font-bold text-slate-500 leading-relaxed line-clamp-2">
+                          {[o.deliveryAddress.street, o.deliveryAddress.city, o.deliveryAddress.landmark].filter(Boolean).join(', ')}
+                        </p>
+                      </div>
                     )}
                   </div>
-                  <p className="font-semibold text-slate-900 text-sm">{o.user?.name || 'Unknown'}</p>
-                  <p className="text-xs text-slate-400">📱 {o.user?.phone}</p>
-                  {o.deliveryAddress && (
-                    <p className="text-xs text-slate-400 mt-1">📍 {[o.deliveryAddress.street, o.deliveryAddress.city, o.deliveryAddress.state].filter(Boolean).join(', ')}</p>
-                  )}
-                </div>
-                <div className="text-right shrink-0 cursor-pointer" onClick={() => setExpandedRow(expandedRow === o._id ? null : o._id)}>
-                  <p className="font-black text-orange-600">₹{o.totalAmount}</p>
-                  <p className="text-xs text-slate-400">{o.items?.length} item(s)</p>
-                </div>
-              </div>
-              
-              <div className="flex flex-wrap items-center gap-2">
-                <select value={o.status} onChange={async e => { const res = await fetch(`${API_URL}/admin/orders/${o._id}/status`, { method: 'PATCH', headers: { ...headers, 'Content-Type': 'application/json' }, body: JSON.stringify({ status: e.target.value }) }); const d = await res.json(); if (d.success) fetchAll(); }} className="text-xs border border-slate-200 rounded-lg px-2 py-1.5 focus:outline-none focus:border-orange-400 bg-white flex-1 min-w-[100px]">
-                  {['pending', 'confirmed', 'preparing', 'delivered', 'cancelled'].map(s => <option key={s}>{s}</option>)}
-                </select>
-                <select 
-                  value={o.deliveryPartner?._id || o.deliveryPartner || ''} 
-                  onChange={async e => { 
-                    const partnerId = e.target.value;
-                    if (!partnerId) return;
-                    console.log('Assigning delivery partner:', partnerId, 'to order:', o._id);
-                    try {
-                      const res = await fetch(`${API_URL}/admin/orders/${o._id}/assign-delivery`, { 
-                        method: 'PATCH', 
-                        headers: { ...headers, 'Content-Type': 'application/json' }, 
-                        body: JSON.stringify({ deliveryPartnerId: partnerId }) 
-                      }); 
-                      const d = await res.json();
-                      console.log('Assignment response:', d);
-                      if (d.success) {
-                        alert('Delivery partner assigned successfully!');
-                        fetchAll();
-                      } else {
-                        alert(d.error || 'Failed to assign');
-                      }
-                    } catch (err) {
-                      console.error('Assignment error:', err);
-                      alert('Failed to assign delivery partner');
-                    }
-                  }} 
-                  className="text-xs border border-slate-200 rounded-lg px-2 py-1.5 focus:outline-none focus:border-orange-400 bg-white flex-1 min-w-[120px]"
-                >
-                  <option value="">{o.deliveryPartner ? 'Change...' : 'Assign to...'}</option>
-                  {deliveryPartners?.map((p: any) => (
-                    <option key={p._id} value={p._id}>
-                      {p.name} {p.isOnline ? '🟢' : '⚫'}
-                    </option>
-                  ))}
-                </select>
-                <button onClick={async () => { if (!confirm('Delete order?')) return; const res = await fetch(`${API_URL}/admin/orders/${o._id}`, { method: 'DELETE', headers }); const d = await res.json(); if (d.success) fetchAll(); }} className="p-1.5 bg-red-50 text-red-400 rounded-lg hover:bg-red-100 transition shrink-0"><Trash2 className="w-3.5 h-3.5" /></button>
-                <button onClick={() => setExpandedRow(expandedRow === o._id ? null : o._id)} className="shrink-0 text-slate-300">
-                  {expandedRow === o._id ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                </button>
-              </div>
-            </div>
-            {expandedRow === o._id && (
-              <div className="px-5 pb-4 bg-slate-50 border-t border-slate-100 pt-3">
-                <div className="grid grid-cols-2 gap-2 mb-2">
-                  {[
-                    { label: 'Payment', value: `${o.paymentMethod} · ${o.paymentStatus}` },
-                    { label: 'Delivery Fee', value: `₹${o.deliveryFee || 0}` },
-                    { label: 'Discount', value: `₹${o.discount || 0}` },
-                    { label: 'Final Amount', value: `₹${o.finalAmount}` },
-                  ].map(row => (
-                    <div key={row.label} className="bg-white rounded-lg p-2.5">
-                      <p className="text-slate-400 text-[10px] uppercase">{row.label}</p>
-                      <p className="font-semibold text-slate-800 mt-0.5 text-xs">{row.value}</p>
+
+                  {/* Actions & Price */}
+                  <div className="px-6 pb-6 pt-2 space-y-4">
+                    <div className="flex items-center justify-between border-t border-slate-100 pt-4">
+                      <button 
+                        onClick={() => setExpandedRow(expandedRow === o._id ? null : o._id)}
+                        className="text-xs font-black text-orange-500 uppercase tracking-widest hover:text-orange-600 flex items-center gap-1"
+                      >
+                        {expandedRow === o._id ? 'Close Details' : 'Full Details'}
+                      </button>
+                      <div className="text-right">
+                        <p className="text-[10px] font-bold text-slate-400 uppercase leading-none mb-1">Total Pay</p>
+                        <p className="text-xl font-black text-slate-900 leading-none">₹{o.totalAmount}</p>
+                      </div>
                     </div>
-                  ))}
+
+                    {expandedRow === o._id && (
+                      <div className="animate-in slide-in-from-top-2 duration-300 space-y-3">
+                        <div className="grid grid-cols-2 gap-2">
+                          <div className="p-3 rounded-2xl bg-slate-50 bg-opacity-50 border border-slate-100">
+                            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Payment</p>
+                            <p className="text-[10px] font-bold text-slate-700 uppercase">{o.paymentMethod || 'N/A'}</p>
+                          </div>
+                          <div className="p-3 rounded-2xl bg-slate-50 bg-opacity-50 border border-slate-100">
+                            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Fee</p>
+                            <p className="text-[10px] font-bold text-slate-700">₹{o.deliveryFee || 0}</p>
+                          </div>
+                        </div>
+                        <div className="space-y-1.5">
+                          <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-1">Update Status</p>
+                          <select 
+                            value={o.status} 
+                            onChange={async e => { 
+                              const res = await fetch(`${API_URL}/admin/orders/${o._id}/status`, { 
+                                method: 'PATCH', 
+                                headers: { ...headers, 'Content-Type': 'application/json' }, 
+                                body: JSON.stringify({ status: e.target.value }) 
+                              }); 
+                              if ((await res.json()).success) fetchAll(); 
+                            }} 
+                            className="w-full bg-slate-50 border border-slate-100 rounded-full px-4 py-2.5 text-xs font-black uppercase tracking-widest text-slate-700 focus:outline-none focus:ring-4 focus:ring-orange-100 appearance-none text-center"
+                          >
+                            <option value="pending">Pending</option>
+                            <option value="confirmed">Confirmed</option>
+                            <option value="preparing">Preparing</option>
+                            <option value="out_for_delivery">Out for Delivery</option>
+                            <option value="delivered">Delivered</option>
+                            <option value="cancelled">Cancelled</option>
+                          </select>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
-                {o.deliveryAddress && <p className="text-xs text-slate-400 px-1">📍 {[o.deliveryAddress.street, o.deliveryAddress.city, o.deliveryAddress.state].filter(Boolean).join(', ')}</p>}
-              </div>
+              ))
             )}
           </div>
-        )))}
+        </div>
       </div>
-    </div>
     </div>
   );
 }
@@ -463,30 +572,32 @@ export function MenuTab({ menuItems, search, setSearch, expandedRow, setExpanded
   return (
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-        <div className="flex-1 flex items-center gap-3 bg-white rounded-xl border border-slate-200 px-4 py-2.5 shadow-sm">
+        <div className="flex-1 flex items-center gap-3 bg-white rounded-full border border-slate-200 px-5 py-3 shadow-sm">
           <Search className="w-4 h-4 text-slate-400 shrink-0" />
           <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search menu items…" className="flex-1 text-sm focus:outline-none placeholder:text-slate-400" />
         </div>
         <div className="relative">
           <button 
             onClick={() => setShowFilters(!showFilters)}
-            className="flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-semibold hover:bg-slate-50 transition"
+            className={`flex items-center gap-2 px-5 py-3 rounded-full text-sm font-bold transition-all ${
+              showFilters ? 'bg-slate-900 text-white' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
+            }`}
           >
             <span>🔍 Filters</span>
             {(nameFilter || kitchenFilter) && (
-              <span className="w-2 h-2 rounded-full bg-orange-500"></span>
+              <span className="w-2 h-2 rounded-full bg-orange-500 animate-pulse"></span>
             )}
             <ChevronDown className={`w-4 h-4 transition-transform ${showFilters ? 'rotate-180' : ''}`} />
           </button>
           {showFilters && (
-            <div className="absolute right-0 top-full mt-2 bg-white rounded-xl shadow-lg border border-slate-200 p-4 z-10 min-w-[280px]">
-              <div className="space-y-3">
+            <div className="absolute right-0 top-full mt-3 bg-white rounded-[2rem] shadow-2xl border border-slate-100 p-6 z-50 min-w-[300px] animate-in fade-in slide-in-from-top-2">
+              <div className="space-y-4">
                 <div>
-                  <label className="block text-xs font-bold text-slate-500 mb-2 uppercase tracking-wide">Filter by Name</label>
+                  <label className="block text-[10px] font-black text-slate-400 mb-2 uppercase tracking-widest">Filter by Name</label>
                   <select 
                     value={nameFilter} 
                     onChange={e => setNameFilter(e.target.value)}
-                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-orange-400"
+                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-100"
                   >
                     <option value="">All Items</option>
                     <option value="dal">Dal Items</option>
@@ -499,11 +610,11 @@ export function MenuTab({ menuItems, search, setSearch, expandedRow, setExpanded
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-500 mb-2 uppercase tracking-wide">Kitchen</label>
+                  <label className="block text-[10px] font-black text-slate-400 mb-2 uppercase tracking-widest">Kitchen</label>
                   <select 
                     value={kitchenFilter} 
                     onChange={e => setKitchenFilter(e.target.value)}
-                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-orange-400"
+                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-100"
                   >
                     <option value="">All Kitchens</option>
                     {kitchens?.map((k: any) => (
@@ -513,8 +624,8 @@ export function MenuTab({ menuItems, search, setSearch, expandedRow, setExpanded
                   </select>
                 </div>
                 <button 
-                  onClick={() => { setNameFilter(''); setKitchenFilter(''); }}
-                  className="w-full py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold transition"
+                  onClick={() => { setNameFilter(''); setKitchenFilter(''); setShowFilters(false); }}
+                  className="w-full py-3 bg-slate-900 text-white rounded-full text-xs font-black uppercase tracking-widest hover:bg-slate-800 transition shadow-lg shadow-slate-200"
                 >
                   Clear All Filters
                 </button>
@@ -522,15 +633,15 @@ export function MenuTab({ menuItems, search, setSearch, expandedRow, setExpanded
             </div>
           )}
         </div>
-        <button onClick={() => { setMenuModal({ open: true, data: null }); setImgPreview(''); }} className="flex items-center gap-2 px-4 py-2.5 bg-orange-500 hover:bg-orange-600 text-white rounded-xl text-sm font-bold shadow-sm transition shrink-0">
-          <Plus className="w-4 h-4" /> Add Item
+        <button onClick={() => { setMenuModal({ open: true, data: null }); setImgPreview(''); }} className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white rounded-full text-sm font-black shadow-lg shadow-orange-200 transition shrink-0 active:scale-95">
+          <Plus className="w-5 h-5" /> Add New Item
         </button>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-        <div className="px-5 py-3 border-b border-slate-100 flex items-center justify-between">
-          <p className="text-xs font-bold text-slate-500 uppercase tracking-wide">Menu Items</p>
-          <span className="text-xs text-slate-400">{filteredItems.length} of {menuItems.length} items</span>
+      <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden">
+        <div className="px-7 py-4 border-b border-slate-50 flex items-center justify-between bg-slate-50/30">
+          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Inventory List</p>
+          <span className="text-[10px] font-bold text-orange-500 bg-orange-50 px-3 py-1 rounded-full">{filteredItems.length} items matched</span>
         </div>
         <div className="divide-y divide-slate-50">
           {filteredItems.length === 0 ? (
@@ -614,7 +725,9 @@ export function MenuTab({ menuItems, search, setSearch, expandedRow, setExpanded
                       </div>
                       <div className="bg-white rounded-lg p-2.5">
                         <p className="text-slate-400 text-[10px] uppercase">Meal Type</p>
-                        <p className="font-semibold text-slate-800 mt-0.5 text-xs">{m.mealType}</p>
+                        <p className="font-semibold text-slate-800 mt-0.5 text-xs truncate" title={m.mealTypes?.join(', ') || m.mealType}>
+                          {m.mealTypes?.length > 0 ? m.mealTypes.join(', ') : m.mealType || 'None'}
+                        </p>
                       </div>
                       <div className="bg-white rounded-lg p-2.5">
                         <p className="text-slate-400 text-[10px] uppercase">Discount Price</p>
@@ -693,50 +806,85 @@ export function MenuTab({ menuItems, search, setSearch, expandedRow, setExpanded
 
 export function KitchensTab({ kitchens, menuItems, setKitchenModal, fetchAll, headers, API_URL }: any) {
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <div className="flex justify-end">
-        <button onClick={() => setKitchenModal({ open: true, data: null })} className="flex items-center gap-2 px-4 py-2.5 bg-orange-500 hover:bg-orange-600 text-white rounded-xl text-sm font-bold shadow-sm transition">
-          <Plus className="w-4 h-4" /> Add Kitchen
+        <button onClick={() => setKitchenModal({ open: true, data: null })} className="flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white rounded-full text-sm font-black shadow-lg shadow-orange-100 transition active:scale-95">
+          <Plus className="w-5 h-5" /> Onboard Kitchen
         </button>
       </div>
-      <div className="grid md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {kitchens.map((k: any) => (
-          <div key={k._id} className="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-shadow">
-            <div className="p-5 flex items-start gap-4">
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-400 to-teal-500 flex items-center justify-center text-2xl shadow-sm shrink-0">🏠</div>
-              <div className="flex-1 min-w-0">
-                <p className="font-bold text-slate-900">{k.name}</p>
-                <p className="text-xs text-slate-400 mt-0.5">{k.location?.coordinates ? `${k.location.coordinates[1].toFixed(4)}°N, ${k.location.coordinates[0].toFixed(4)}°E` : 'No location'}</p>
-                <p className="text-xs text-slate-400 mt-0.5">{menuItems.filter((m: any) => m.cloudKitchen?._id === k._id || m.cloudKitchen === k._id).length} menu items</p>
-              </div>
-              <div className="flex flex-col gap-2">
-                <button onClick={() => setKitchenModal({ open: true, data: k })} className="px-3 py-1.5 bg-orange-50 text-orange-600 rounded-lg text-xs font-bold hover:bg-orange-100 transition shrink-0">Edit</button>
-                {k.location?.coordinates && (
-                  <button 
-                    onClick={() => {
-                      const [lng, lat] = k.location.coordinates;
-                      window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`, '_blank');
-                    }}
-                    className="px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg text-xs font-bold hover:bg-blue-100 transition shrink-0 flex items-center gap-1"
-                  >
-                    <span>🧭</span> Navigate
+          <div key={k._id} className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm hover:shadow-xl hover:shadow-orange-100/20 transition-all duration-500 overflow-hidden group">
+            <div className="p-7">
+              <div className="flex items-start justify-between mb-6">
+                <div className="w-16 h-16 rounded-[1.75rem] bg-gradient-to-br from-orange-100 to-yellow-50 flex items-center justify-center text-3xl shadow-inner group-hover:scale-110 transition-transform duration-500">🏠</div>
+                <div className="flex flex-col gap-2">
+                  <button onClick={() => setKitchenModal({ open: true, data: k })} className="w-10 h-10 flex items-center justify-center bg-slate-50 text-slate-400 rounded-full hover:bg-orange-500 hover:text-white transition-all shadow-sm">
+                    <Plus className="w-4 h-4 rotate-45" />
                   </button>
-                )}
+                </div>
+              </div>
+              
+              <div className="space-y-4">
+                <div>
+                  <h3 className="font-black text-slate-900 text-lg leading-tight">{k.name}</h3>
+                  <div className="flex items-center gap-2 mt-1">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Active Hub</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="p-3 rounded-2xl bg-slate-50 border border-slate-100">
+                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Menu Size</p>
+                    <p className="text-sm font-black text-slate-700">{menuItems.filter((m: any) => m.cloudKitchen?._id === k._id || m.cloudKitchen === k._id).length} Items</p>
+                  </div>
+                  <div className="p-3 rounded-2xl bg-slate-50 border border-slate-100 text-center">
+                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Status</p>
+                    <p className="text-[10px] font-bold text-emerald-600 bg-emerald-50 rounded-full px-2 py-0.5 inline-block">Online</p>
+                  </div>
+                </div>
+
+                <div className="pt-2">
+                  <p className="text-[10px] font-bold text-slate-400 flex items-center gap-2">
+                    <span className="text-base text-slate-300">📍</span>
+                    <span className="truncate">{k.location?.coordinates ? `${k.location.coordinates[1].toFixed(4)}°N, ${k.location.coordinates[0].toFixed(4)}°E` : 'GPS Coordinates Pending'}</span>
+                  </p>
+                </div>
               </div>
             </div>
-            <div className="border-t border-slate-100 px-5 py-2.5 flex items-center justify-between">
-              <span className="text-xs text-slate-400">Added {fmt(k.createdAt)}</span>
-              <button onClick={async () => { if (!confirm('Delete kitchen?')) return; const res = await fetch(`${API_URL}/admin/cloudkitchens/${k._id}`, { method: 'DELETE', headers }); const d = await res.json(); if (d.success) fetchAll(); }} className="p-1.5 text-red-400 hover:bg-red-50 rounded-lg transition"><Trash2 className="w-3.5 h-3.5" /></button>
+
+            <div className="px-7 py-5 bg-slate-50/50 border-t border-slate-50 flex items-center gap-3">
+              <button 
+                onClick={() => setKitchenModal({ open: true, data: k })} 
+                className="flex-1 py-3 bg-white border border-slate-200 rounded-full text-[10px] font-black uppercase tracking-widest text-slate-600 hover:bg-orange-500 hover:text-white hover:border-orange-500 transition-all shadow-sm"
+              >
+                Config Hub
+              </button>
+              {k.location?.coordinates && (
+                <button 
+                  onClick={() => {
+                    const [lng, lat] = k.location.coordinates;
+                    window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`, '_blank');
+                  }}
+                  className="w-12 h-12 flex items-center justify-center bg-white border border-slate-200 rounded-full text-slate-400 hover:text-orange-500 hover:border-orange-100 transition shadow-sm"
+                >
+                  🧭
+                </button>
+              )}
+              <button 
+                onClick={async () => { 
+                  if (!confirm('Permanent shutdown kitchen?')) return; 
+                  const res = await fetch(`${API_URL}/admin/cloudkitchens/${k._id}`, { method: 'DELETE', headers }); 
+                  if ((await res.json()).success) fetchAll(); 
+                }} 
+                className="w-12 h-12 flex items-center justify-center bg-red-50 text-red-400 rounded-full hover:bg-red-500 hover:text-white transition shadow-sm"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
             </div>
           </div>
         ))}
-        {kitchens.length === 0 && (
-          <div className="col-span-2 text-center py-16 text-slate-400 bg-white rounded-xl shadow-sm">
-            <p className="text-5xl mb-3">🏠</p>
-            <p className="font-semibold">No cloud kitchens yet</p>
-            <p className="text-sm mt-1">Add your first kitchen above</p>
-          </div>
-        )}
       </div>
     </div>
   );
@@ -744,55 +892,97 @@ export function KitchensTab({ kitchens, menuItems, setKitchenModal, fetchAll, he
 
 export function SubscriptionsTab({ subscriptions, expandedRow, setExpandedRow, fetchAll, headers, API_URL }: any) {
   return (
-    <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-      <div className="px-5 py-3 border-b border-slate-100 flex items-center justify-between">
-        <p className="text-xs font-bold text-slate-500 uppercase tracking-wide">Subscriptions</p>
-        <span className="text-xs text-slate-400">{subscriptions.length} records</span>
-      </div>
-      {subscriptions.length === 0 ? (
-        <div className="text-center py-16 text-slate-400"><p className="text-5xl mb-3">💳</p><p className="font-semibold">No subscriptions yet</p></div>
-      ) : (
-        <div className="divide-y divide-slate-50">
-          {subscriptions.map((s: any) => (
-            <div key={s._id}>
-              <div className="flex items-center gap-3 px-5 py-3.5 hover:bg-slate-50 transition">
-                <div className="flex-1 min-w-0 cursor-pointer" onClick={() => setExpandedRow(expandedRow === s._id ? null : s._id)}>
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${SC[s.status || 'active'] || 'bg-slate-100 text-slate-600'}`}>{s.status || 'active'}</span>
-                  </div>
-                  <p className="font-semibold text-slate-900 text-sm">{s.user?.name || 'Unknown'}</p>
-                  <p className="text-xs text-slate-400">{s.user?.email}</p>
-                </div>
-                <div className="text-right shrink-0 cursor-pointer" onClick={() => setExpandedRow(expandedRow === s._id ? null : s._id)}>
-                  <p className="font-black text-purple-600">₹{s.amount || s.totalAmount || 0}</p>
-                  <p className="text-xs text-slate-400">{fmt(s.createdAt)}</p>
-                </div>
-                <button onClick={async () => { if (!confirm('Delete subscription?')) return; const res = await fetch(`${API_URL}/admin/subscriptions/${s._id}`, { method: 'DELETE', headers }); const d = await res.json(); if (d.success) fetchAll(); }} className="p-1.5 bg-red-50 text-red-400 rounded-lg hover:bg-red-100 transition shrink-0"><Trash2 className="w-3.5 h-3.5" /></button>
-                <button onClick={() => setExpandedRow(expandedRow === s._id ? null : s._id)} className="shrink-0 text-slate-300">
-                  {expandedRow === s._id ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                </button>
-              </div>
-              {expandedRow === s._id && (
-                <div className="px-5 pb-4 bg-slate-50 border-t border-slate-100 pt-3">
-                  <div className="grid grid-cols-2 gap-2">
-                    {[
-                      { label: 'Plan', value: s.plan || s.planName || 'N/A' },
-                      { label: 'Duration', value: s.duration || s.days || 'N/A' },
-                      { label: 'Start', value: s.startDate ? fmt(s.startDate) : 'N/A' },
-                      { label: 'End', value: s.endDate ? fmt(s.endDate) : 'N/A' },
-                    ].map(row => (
-                      <div key={row.label} className="bg-white rounded-lg p-2.5">
-                        <p className="text-slate-400 text-[10px] uppercase">{row.label}</p>
-                        <p className="font-semibold text-slate-800 mt-0.5 text-xs">{row.value}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          ))}
+    <div className="space-y-6">
+      <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
+        <div className="px-8 py-5 border-b border-slate-50 flex items-center justify-between bg-slate-50/30">
+          <div>
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Active Memberships</p>
+            <p className="text-[10px] font-bold text-orange-500 mt-0.5">{subscriptions.length} recurring records</p>
+          </div>
+          <div className="w-10 h-10 rounded-full bg-white border border-slate-100 flex items-center justify-center shadow-sm">
+            <CreditCard className="w-4 h-4 text-orange-500" />
+          </div>
         </div>
-      )}
+        
+        {subscriptions.length === 0 ? (
+          <div className="text-center py-24 text-slate-400">
+            <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6 text-4xl">💳</div>
+            <p className="text-xl font-black text-slate-900">No active subscriptions</p>
+            <p className="text-sm mt-1">New memberships will appear here</p>
+          </div>
+        ) : (
+          <div className="divide-y divide-slate-50">
+            {subscriptions.map((s: any) => (
+              <div key={s._id} className="group">
+                <div className="flex items-center gap-5 px-8 py-6 hover:bg-slate-50 transition-all duration-300">
+                  <div className="w-14 h-14 rounded-[1.25rem] bg-gradient-to-br from-orange-400 to-amber-500 flex items-center justify-center text-white font-black text-xl shadow-lg shadow-orange-100 group-hover:scale-105 transition-transform">
+                    {s.user?.name?.[0]?.toUpperCase() || 'U'}
+                  </div>
+                  
+                  <div className="flex-1 min-w-0 cursor-pointer" onClick={() => setExpandedRow(expandedRow === s._id ? null : s._id)}>
+                    <div className="flex items-center gap-2 mb-1.5">
+                      <span className={`text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full ${
+                        s.status === 'active' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'
+                      }`}>{s.status || 'active'}</span>
+                      <span className="text-[10px] font-bold text-slate-300">#{s._id.slice(-6).toUpperCase()}</span>
+                    </div>
+                    <p className="font-black text-slate-900 text-base leading-none">{s.user?.name || 'Anonymous User'}</p>
+                    <p className="text-xs font-bold text-slate-400 mt-1 truncate">{s.user?.email || 'No email associated'}</p>
+                  </div>
+
+                  <div className="text-right shrink-0 px-4">
+                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Total Capital</p>
+                    <p className="font-black text-orange-600 text-xl leading-none">₹{(s.amount || s.totalAmount || 0).toLocaleString()}</p>
+                  </div>
+
+                  <div className="flex items-center gap-2 shrink-0">
+                    <button 
+                      onClick={async (e) => { 
+                        e.stopPropagation();
+                        if (!confirm('Abort this subscription permanently?')) return; 
+                        const res = await fetch(`${API_URL}/admin/subscriptions/${s._id}`, { method: 'DELETE', headers }); 
+                        if ((await res.json()).success) fetchAll(); 
+                      }} 
+                      className="w-11 h-11 flex items-center justify-center bg-red-50 text-red-400 rounded-full hover:bg-red-500 hover:text-white transition-all shadow-sm"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                    <button 
+                      onClick={() => setExpandedRow(expandedRow === s._id ? null : s._id)}
+                      className={`w-11 h-11 flex items-center justify-center rounded-full border transition-all ${
+                        expandedRow === s._id ? 'bg-slate-900 border-slate-900 text-white' : 'bg-white border-slate-100 text-slate-400 hover:border-orange-200'
+                      } shadow-sm`}
+                    >
+                      {expandedRow === s._id ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+
+                {expandedRow === s._id && (
+                  <div className="px-8 pb-8 pt-2 bg-slate-50/50 animate-in slide-in-from-top-4 duration-300">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      {[
+                        { label: 'Selected Plan', value: s.plan || s.planName || 'Standard', icon: '💎' },
+                        { label: 'Time Horizon', value: `${s.duration || s.days || '0'} Days`, icon: '🗓️' },
+                        { label: 'Commencement', value: s.startDate ? fmt(s.startDate) : 'N/A', icon: '🚀' },
+                        { label: 'Termination', value: s.endDate ? fmt(s.endDate) : 'N/A', icon: '🏁' },
+                      ].map(row => (
+                        <div key={row.label} className="bg-white rounded-[1.5rem] p-4 border border-slate-100 shadow-sm">
+                          <div className="flex items-center gap-2 mb-2">
+                            <span className="text-sm">{row.icon}</span>
+                            <p className="text-slate-400 text-[9px] font-black uppercase tracking-widest">{row.label}</p>
+                          </div>
+                          <p className="font-black text-slate-800 text-xs">{row.value}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -800,38 +990,107 @@ export function SubscriptionsTab({ subscriptions, expandedRow, setExpandedRow, f
 export function NotificationsTab({ notifications, setNotifications, notifForm, setNotifForm, notifSaving, setNotifSaving, headers, API_URL }: any) {
   const typeEmoji: Record<string, string> = { info: 'ℹ️', offer: '🎁', order: '📦', alert: '⚠️' };
   return (
-    <div className="space-y-5">
-      <div className="bg-white rounded-xl shadow-sm p-5 space-y-3">
-        <h3 className="font-bold text-slate-900">Create Notification</h3>
-        <input placeholder="Title" value={notifForm.title} onChange={e => setNotifForm((f: any) => ({ ...f, title: e.target.value }))} className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-orange-400" />
-        <textarea placeholder="Message" rows={3} value={notifForm.message} onChange={e => setNotifForm((f: any) => ({ ...f, message: e.target.value }))} className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-orange-400 resize-none" />
-        <select value={notifForm.type} onChange={e => setNotifForm((f: any) => ({ ...f, type: e.target.value }))} className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-orange-400">
-          <option value="info">ℹ️ Info</option>
-          <option value="offer">🎁 Offer</option>
-          <option value="order">📦 Order</option>
-          <option value="alert">⚠️ Alert</option>
-        </select>
-        <button disabled={notifSaving || !notifForm.title || !notifForm.message} onClick={async () => { setNotifSaving(true); try { const res = await fetch(`${API_URL}/notifications/admin`, { method: 'POST', headers: { ...headers, 'Content-Type': 'application/json' }, body: JSON.stringify(notifForm) }); const d = await res.json(); if (d.success) { setNotifForm({ title: '', message: '', type: 'info', targetAll: true }); setNotifications((n: any[]) => [d.notification, ...n]); } else alert(d.error || 'Failed'); } catch { alert('Failed'); } setNotifSaving(false); }} className="w-full py-2.5 bg-orange-500 hover:bg-orange-600 text-white rounded-xl font-bold text-sm disabled:opacity-50 transition">
-          {notifSaving ? 'Sending…' : '🚀 Send to All Users'}
-        </button>
+    <div className="space-y-6">
+      <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden p-8">
+        <h3 className="font-black text-slate-900 text-lg mb-6 flex items-center gap-2">
+          <span className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center text-xl">📢</span>
+          Dispatch Notification
+        </h3>
+        <div className="space-y-4">
+          <input 
+            placeholder="Notification Title" 
+            value={notifForm.title} 
+            onChange={e => setNotifForm((f: any) => ({ ...f, title: e.target.value }))} 
+            className="w-full bg-slate-50 border border-slate-100 rounded-full px-6 py-3.5 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-orange-100" 
+          />
+          <textarea 
+            placeholder="Detailed Message" 
+            rows={3} 
+            value={notifForm.message} 
+            onChange={e => setNotifForm((f: any) => ({ ...f, message: e.target.value }))} 
+            className="w-full bg-slate-50 border border-slate-100 rounded-[1.5rem] px-6 py-4 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-orange-100 resize-none" 
+          />
+          <div className="grid grid-cols-2 gap-4">
+            <select 
+              value={notifForm.type} 
+              onChange={e => setNotifForm((f: any) => ({ ...f, type: e.target.value }))} 
+              className="w-full bg-slate-50 border border-slate-100 rounded-full px-6 py-3.5 text-sm font-bold focus:outline-none"
+            >
+              <option value="info">ℹ️ Announcement</option>
+              <option value="offer">🎁 Marketing/Offer</option>
+              <option value="order">📦 Order Update</option>
+              <option value="alert">⚠️ Urgent Alert</option>
+            </select>
+            <button 
+              disabled={notifSaving || !notifForm.title || !notifForm.message} 
+              onClick={async () => { 
+                setNotifSaving(true); 
+                try { 
+                  const res = await fetch(`${API_URL}/notifications/admin`, { 
+                    method: 'POST', 
+                    headers: { ...headers, 'Content-Type': 'application/json' }, 
+                    body: JSON.stringify(notifForm) 
+                  }); 
+                  const d = await res.json(); 
+                  if (d.success) { 
+                    setNotifForm({ title: '', message: '', type: 'info', targetAll: true }); 
+                    setNotifications((n: any[]) => [d.notification, ...n]); 
+                  } else alert(d.error || 'Failed'); 
+                } catch { alert('Failed'); } 
+                setNotifSaving(false); 
+              }} 
+              className="w-full bg-slate-900 hover:bg-slate-800 text-white rounded-full font-black text-[10px] uppercase tracking-widest disabled:opacity-50 transition-all shadow-lg active:scale-95"
+            >
+              {notifSaving ? 'Broadcasting…' : '🚀 Push Broadcast'}
+            </button>
+          </div>
+        </div>
       </div>
-      <p className="text-xs font-bold text-slate-400 uppercase tracking-wide">Sent ({notifications.length})</p>
-      {notifications.length === 0 && <div className="text-center py-12 text-slate-400 bg-white rounded-xl shadow-sm"><p className="text-4xl mb-2">🔔</p><p className="font-semibold">No notifications sent yet</p></div>}
-      <div className="space-y-3">
-        {notifications.map((n: any) => (
-          <div key={n._id} className="bg-white rounded-xl p-4 shadow-sm flex items-start gap-3">
-            <span className="text-xl shrink-0">{typeEmoji[n.type] || 'ℹ️'}</span>
-            <div className="flex-1 min-w-0">
-              <p className="font-semibold text-slate-900 text-sm">{n.title}</p>
-              <p className="text-xs text-slate-400 mt-0.5 line-clamp-2">{n.message}</p>
-              <div className="flex items-center gap-2 mt-2">
-                <span className="text-[10px] text-slate-400">{new Date(n.createdAt).toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}</span>
-                <span className="text-[10px] bg-blue-50 text-blue-500 px-1.5 py-0.5 rounded-full">{n.readBy?.length || 0} read</span>
+
+      <div className="flex items-center justify-between px-2">
+        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Broadcast History</p>
+        <span className="text-[10px] font-black text-orange-500 bg-orange-50 px-3 py-1 rounded-full">{notifications.length} Sent</span>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {notifications.length === 0 ? (
+          <div className="col-span-full text-center py-24 bg-white rounded-[2.5rem] border border-slate-100">
+            <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6 text-4xl">🔔</div>
+            <p className="text-xl font-black text-slate-900">Silence is Golden</p>
+            <p className="text-slate-400 text-sm mt-1">No notifications dispatched yet</p>
+          </div>
+        ) : (
+          notifications.map((n: any) => (
+            <div key={n._id} className="bg-white rounded-[2rem] p-6 border border-slate-100 shadow-sm hover:shadow-md transition-all group">
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center text-xl shrink-0 group-hover:bg-orange-50 transition-colors">
+                  {typeEmoji[n.type] || 'ℹ️'}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="font-black text-slate-900 text-sm truncate">{n.title}</p>
+                    <button 
+                      onClick={async () => { 
+                        if (!confirm('Delete broadcast log?')) return; 
+                        const res = await fetch(`${API_URL}/notifications/admin/${n._id}`, { method: 'DELETE', headers }); 
+                        if ((await res.json()).success) setNotifications((prev: any[]) => prev.filter(x => x._id !== n._id)); 
+                      }} 
+                      className="p-1.5 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-full transition"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                  <p className="text-xs font-medium text-slate-500 mt-1 line-clamp-2">{n.message}</p>
+                  <div className="flex items-center gap-3 mt-4">
+                    <span className="text-[9px] font-black text-slate-300 uppercase tracking-widest">{new Date(n.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}</span>
+                    <span className="w-1 h-1 rounded-full bg-slate-200" />
+                    <span className="text-[9px] font-black text-emerald-500 uppercase tracking-widest">{n.readBy?.length || 0} READS</span>
+                  </div>
+                </div>
               </div>
             </div>
-            <button onClick={async () => { if (!confirm('Delete?')) return; const res = await fetch(`${API_URL}/notifications/admin/${n._id}`, { method: 'DELETE', headers }); const d = await res.json(); if (d.success) setNotifications((prev: any[]) => prev.filter(x => x._id !== n._id)); }} className="p-1.5 bg-red-50 text-red-400 rounded-lg hover:bg-red-100 transition shrink-0"><Trash2 className="w-3.5 h-3.5" /></button>
-          </div>
-        ))}
+          ))
+        )}
       </div>
     </div>
   );
@@ -839,17 +1098,37 @@ export function NotificationsTab({ notifications, setNotifications, notifForm, s
 
 export function LegalTab({ legal, setLegal, legalSaving, setLegalSaving, headers, API_URL }: any) {
   return (
-    <div className="space-y-4">
-      <div className="bg-white rounded-xl p-5 shadow-sm space-y-3">
-        <h3 className="font-bold text-slate-900">📄 Terms & Conditions</h3>
-        <textarea rows={10} value={legal.terms} onChange={e => setLegal((l: any) => ({ ...l, terms: e.target.value }))} placeholder="Enter Terms & Conditions…" className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-orange-400 resize-none" />
+    <div className="space-y-6">
+      <div className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-sm space-y-4">
+        <h3 className="font-black text-slate-900 flex items-center gap-2">
+          <span className="w-10 h-10 rounded-full bg-indigo-50 flex items-center justify-center text-xl">📄</span>
+          Terms & Conditions
+        </h3>
+        <textarea rows={10} value={legal.terms} onChange={e => setLegal((l: any) => ({ ...l, terms: e.target.value }))} placeholder="Enter Legal Terms…" className="w-full bg-slate-50 border border-slate-100 rounded-[2rem] px-6 py-5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-orange-100 resize-none" />
       </div>
-      <div className="bg-white rounded-xl p-5 shadow-sm space-y-3">
-        <h3 className="font-bold text-slate-900">🔒 Privacy Policy</h3>
-        <textarea rows={10} value={legal.privacy} onChange={e => setLegal((l: any) => ({ ...l, privacy: e.target.value }))} placeholder="Enter Privacy Policy…" className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-orange-400 resize-none" />
+      <div className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-sm space-y-4">
+        <h3 className="font-black text-slate-900 flex items-center gap-2">
+          <span className="w-10 h-10 rounded-full bg-emerald-50 flex items-center justify-center text-xl">🔒</span>
+          Privacy Policy
+        </h3>
+        <textarea rows={10} value={legal.privacy} onChange={e => setLegal((l: any) => ({ ...l, privacy: e.target.value }))} placeholder="Enter Privacy Policy…" className="w-full bg-slate-50 border border-slate-100 rounded-[2rem] px-6 py-5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-orange-100 resize-none" />
       </div>
-      <button disabled={legalSaving} onClick={async () => { setLegalSaving(true); try { await Promise.all([fetch(`${API_URL}/legalpages/terms`, { method: 'PUT', headers: { ...headers, 'Content-Type': 'application/json' }, body: JSON.stringify({ title: 'Terms & Conditions', content: legal.terms }) }), fetch(`${API_URL}/legalpages/privacy`, { method: 'PUT', headers: { ...headers, 'Content-Type': 'application/json' }, body: JSON.stringify({ title: 'Privacy Policy', content: legal.privacy }) })]); } catch { alert('Failed'); } setLegalSaving(false); }} className="w-full py-3 bg-orange-500 hover:bg-orange-600 text-white rounded-xl font-bold text-sm disabled:opacity-50 transition">
-        {legalSaving ? 'Saving…' : '💾 Save Legal Content'}
+      <button 
+        disabled={legalSaving} 
+        onClick={async () => { 
+          setLegalSaving(true); 
+          try { 
+            await Promise.all([
+              fetch(`${API_URL}/legalpages/terms`, { method: 'PUT', headers: { ...headers, 'Content-Type': 'application/json' }, body: JSON.stringify({ title: 'Terms & Conditions', content: legal.terms }) }), 
+              fetch(`${API_URL}/legalpages/privacy`, { method: 'PUT', headers: { ...headers, 'Content-Type': 'application/json' }, body: JSON.stringify({ title: 'Privacy Policy', content: legal.privacy }) })
+            ]); 
+            alert('Legal documents updated');
+          } catch { alert('Failed'); } 
+          setLegalSaving(false); 
+        }} 
+        className="w-full py-4 bg-slate-900 text-white rounded-full font-black text-xs uppercase tracking-widest shadow-xl shadow-slate-200 hover:bg-slate-800 disabled:opacity-50 transition active:scale-95"
+      >
+        {legalSaving ? 'Syncing Docs…' : '💾 Commit Legal Updates'}
       </button>
     </div>
   );
@@ -857,28 +1136,51 @@ export function LegalTab({ legal, setLegal, legalSaving, setLegalSaving, headers
 
 export function HomestyleTab({ hsVideos, setHsVideos, hsVideoUploading, hsSaving, saveHomestyle, uploadVideo }: any) {
   return (
-    <div className="space-y-4">
-      <div className="bg-white rounded-xl p-5 shadow-sm space-y-4">
+    <div className="space-y-6">
+      <div className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-sm space-y-6">
         <div className="flex items-center justify-between">
-          <h3 className="font-bold text-slate-900">🎬 Hero Videos</h3>
-          <label className="cursor-pointer px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold rounded-xl transition">
-            {hsVideoUploading ? 'Uploading…' : '+ Upload Video'}
+          <div>
+            <h3 className="font-black text-slate-900 text-lg">🎬 Cinema & Reels</h3>
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Hero Section Media</p>
+          </div>
+          <label className="cursor-pointer px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white text-[10px] font-black uppercase tracking-widest rounded-full shadow-lg shadow-orange-100 transition active:scale-95">
+            {hsVideoUploading ? 'Uploading Reel…' : '+ Add Reel'}
             <input type="file" accept="video/*" className="hidden" disabled={hsVideoUploading} onChange={async e => { const file = e.target.files?.[0]; if (!file) return; try { const url = await uploadVideo(file); setHsVideos((v: string[]) => [...v, url]); } catch { alert('Upload failed'); } }} />
           </label>
         </div>
-        {hsVideos.length === 0 && <p className="text-sm text-slate-400 text-center py-6 border-2 border-dashed border-slate-200 rounded-xl">No videos uploaded yet</p>}
-        <div className="space-y-2">
-          {hsVideos.map((url: string, i: number) => (
-            <div key={i} className="flex items-center gap-3 bg-slate-50 rounded-xl p-3">
-              <video src={url} className="w-20 h-12 rounded-lg object-cover shrink-0" />
-              <p className="flex-1 text-xs text-slate-500 truncate min-w-0">{url}</p>
-              <button onClick={() => setHsVideos((v: string[]) => v.filter((_, idx) => idx !== i))} className="p-1.5 bg-red-100 text-red-500 rounded-lg hover:bg-red-200 transition shrink-0"><Trash2 className="w-4 h-4" /></button>
-            </div>
-          ))}
-        </div>
+
+        {hsVideos.length === 0 ? (
+          <div className="text-center py-20 border-4 border-dashed border-slate-50 rounded-[2.5rem]">
+            <p className="text-4xl mb-4">🎥</p>
+            <p className="text-slate-400 font-bold">No cinematic content uploaded</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {hsVideos.map((url: string, i: number) => (
+              <div key={i} className="group relative bg-slate-900 rounded-[1.5rem] overflow-hidden aspect-video shadow-xl">
+                <video src={url} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-4">
+                   <div className="flex-1 min-w-0">
+                      <p className="text-[9px] font-black text-white/60 uppercase tracking-widest truncate">{url.split('/').pop()}</p>
+                   </div>
+                   <button 
+                    onClick={() => setHsVideos((v: string[]) => v.filter((_, idx) => idx !== i))} 
+                    className="w-10 h-10 rounded-full bg-red-500/20 text-white backdrop-blur-md hover:bg-red-500 transition flex items-center justify-center shrink-0"
+                   >
+                    <Trash2 className="w-4 h-4" />
+                   </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
-      <button onClick={saveHomestyle} disabled={hsSaving} className="w-full py-3 bg-orange-500 hover:bg-orange-600 text-white rounded-xl font-bold text-sm disabled:opacity-50 transition">
-        {hsSaving ? 'Saving…' : '💾 Save Home Page'}
+      <button 
+        onClick={saveHomestyle} 
+        disabled={hsSaving} 
+        className="w-full py-4 bg-slate-900 text-white rounded-full font-black text-xs uppercase tracking-widest shadow-xl shadow-slate-200 hover:bg-slate-800 disabled:opacity-50 transition active:scale-95"
+      >
+        {hsSaving ? 'Saving Scene…' : '💾 Save Cinematic Layout'}
       </button>
     </div>
   );
@@ -886,172 +1188,154 @@ export function HomestyleTab({ hsVideos, setHsVideos, hsVideoUploading, hsSaving
 
 export function CouponsTab({ coupons, userPerformance, setCouponModal, fetchAll, headers, API_URL, performanceDateFrom, setPerformanceDateFrom, performanceDateTo, setPerformanceDateTo }: any) {
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       {/* Performance Date Filter */}
-      <div className="bg-white rounded-xl shadow-sm p-5 border border-gray-100">
-        <h3 className="font-bold text-gray-900 mb-4 text-sm">Filter by Date</h3>
-        <div className="flex gap-3 flex-wrap">
-          <div className="flex-1 min-w-[150px]">
-            <label className="block text-xs font-semibold text-gray-600 mb-2">From Date</label>
+      <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm p-8">
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h3 className="font-black text-slate-900 text-lg">Performance Analytics</h3>
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Audit temporal window</p>
+          </div>
+          <Calendar className="w-8 h-8 text-orange-200" />
+        </div>
+        
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="space-y-2">
+            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Commencement Date</label>
             <input
               type="date"
               value={performanceDateFrom}
               onChange={(e) => setPerformanceDateFrom(e.target.value)}
-              className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+              className="w-full bg-slate-50 border border-slate-100 rounded-full px-6 py-3.5 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-orange-100"
             />
           </div>
-          <div className="flex-1 min-w-[150px]">
-            <label className="block text-xs font-semibold text-gray-600 mb-2">To Date</label>
+          <div className="space-y-2">
+            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Termination Date</label>
             <input
               type="date"
               value={performanceDateTo}
               onChange={(e) => setPerformanceDateTo(e.target.value)}
-              className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+              className="w-full bg-slate-50 border border-slate-100 rounded-full px-6 py-3.5 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-orange-100"
             />
           </div>
-          {(performanceDateFrom || performanceDateTo) && (
-            <div className="flex items-end">
-              <button
-                onClick={() => {
-                  setPerformanceDateFrom('');
-                  setPerformanceDateTo('');
-                }}
-                className="px-4 py-2.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition text-sm font-semibold"
-              >
-                Clear
-              </button>
-            </div>
-          )}
+          <div className="flex items-end">
+            <button
+              onClick={() => { setPerformanceDateFrom(''); setPerformanceDateTo(''); }}
+              className="w-full py-4 rounded-full border border-slate-200 text-slate-400 text-[10px] font-black uppercase tracking-widest hover:bg-slate-50 transition active:scale-95"
+            >
+              Reset Temporal Filters
+            </button>
+          </div>
         </div>
-        {(performanceDateFrom || performanceDateTo) && (
-          <p className="text-xs text-gray-500 mt-3">
-            📊 Showing performance {performanceDateFrom && `from ${new Date(performanceDateFrom).toLocaleDateString('en-IN')}`} {performanceDateFrom && performanceDateTo && 'to'} {performanceDateTo && new Date(performanceDateTo).toLocaleDateString('en-IN')}
-          </p>
-        )}
       </div>
 
       {/* Top Performance Users */}
-      <div className="bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl p-5 text-white shadow-lg">
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <p className="text-purple-100 text-xs font-semibold uppercase tracking-wide">Top Performers</p>
-            <p className="text-white font-bold text-lg mt-0.5">Reward Your Best Customers</p>
-          </div>
-          <Award className="w-8 h-8 text-purple-200" />
-        </div>
-        <div className="grid grid-cols-3 gap-3">
-          {userPerformance.slice(0, 3).map((user: any, i: number) => (
-            <div key={user._id} className="bg-white/15 rounded-lg p-3 backdrop-blur-sm">
-              <p className="text-white font-black text-xl">#{i + 1}</p>
-              <p className="text-purple-100 text-xs mt-0.5 truncate">{user.name}</p>
-              <p className="text-white font-bold text-sm">₹{user.totalSpent.toLocaleString()}</p>
-              <p className="text-purple-100 text-[10px]">{user.totalOrders} orders</p>
+      <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-[2.5rem] p-10 text-white shadow-2xl relative overflow-hidden group">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-orange-500/10 rounded-full blur-[80px] -mr-32 -mt-32 animate-pulse" />
+        <div className="relative z-10">
+          <div className="flex items-center justify-between mb-10">
+            <div>
+              <p className="text-orange-400 text-[10px] font-black uppercase tracking-widest leading-none">MVP Segment</p>
+              <p className="text-white font-black text-3xl mt-3">Elite Tier Consumers</p>
             </div>
-          ))}
+            <Award className="w-12 h-12 text-orange-400 drop-shadow-lg" />
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+            {userPerformance.slice(0, 3).map((user: any, i: number) => (
+              <div key={user._id} className="bg-white/5 border border-white/10 rounded-[2rem] p-6 backdrop-blur-xl group-hover:bg-white/10 transition-colors">
+                <div className="flex items-center justify-between mb-4">
+                   <p className="text-orange-400 font-black text-2xl">0{i + 1}</p>
+                   <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                </div>
+                <p className="text-white font-black text-lg leading-tight truncate">{user.name}</p>
+                <div className="mt-4 flex items-baseline gap-2">
+                   <p className="text-2xl font-black text-white">₹{user.totalSpent.toLocaleString()}</p>
+                   <p className="text-orange-400/60 text-[10px] font-black uppercase tracking-widest">{user.totalOrders} TX</p>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
-      {/* Coupons List */}
-      <div className="flex items-center justify-between">
-        <h3 className="font-extrabold text-gray-900 text-lg">Active Coupons</h3>
-        <button onClick={() => setCouponModal({ open: true, data: null })} className="flex items-center gap-2 px-4 py-2.5 bg-purple-500 hover:bg-purple-600 text-white rounded-xl text-sm font-bold shadow-sm transition">
-          <Plus className="w-4 h-4" /> Create Coupon
+      {/* Coupons Section */}
+      <div className="flex items-center justify-between px-2">
+        <h3 className="font-black text-slate-900 text-lg flex items-center gap-2">
+          <Tag className="w-5 h-5 text-orange-500" />
+          Promo Matrix
+        </h3>
+        <button onClick={() => setCouponModal({ open: true, data: null })} className="flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white rounded-full text-[10px] font-black uppercase tracking-widest shadow-lg shadow-orange-100 transition active:scale-95">
+          <Plus className="w-5 h-5" /> Generate Coupon
         </button>
       </div>
 
-      <div className="grid md:grid-cols-2 gap-4">
+      <div className="grid md:grid-cols-2 gap-6">
         {coupons.map((c: any) => (
-          <div key={c._id} className={`bg-white rounded-xl shadow-sm overflow-hidden border-2 ${c.isActive ? 'border-purple-200' : 'border-gray-200'}`}>
-            <div className="p-5">
-              <div className="flex items-start justify-between mb-3">
-                <div className="flex items-center gap-3">
-                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${c.isActive ? 'bg-purple-100' : 'bg-gray-100'}`}>
-                    <Tag className={`w-6 h-6 ${c.isActive ? 'text-purple-500' : 'text-gray-400'}`} />
+          <div key={c._id} className={`bg-white rounded-[2.5rem] shadow-sm overflow-hidden border transition-all duration-300 ${c.isActive ? 'border-amber-100 hover:shadow-xl hover:shadow-orange-100/20' : 'border-slate-100 opacity-80'}`}>
+            <div className="p-8">
+              <div className="flex items-start justify-between mb-8">
+                <div className="flex items-center gap-5">
+                  <div className={`w-16 h-16 rounded-[1.75rem] flex items-center justify-center text-3xl shadow-inner ${c.isActive ? 'bg-orange-50 text-orange-500' : 'bg-slate-50 text-slate-300'}`}>
+                    🎫
                   </div>
                   <div>
-                    <p className="font-black text-lg text-gray-900">{c.code}</p>
-                    <p className="text-xs text-gray-400">{c.description}</p>
+                    <p className="font-black text-2xl text-slate-900 leading-none mb-2">{c.code}</p>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{c.description || 'Global Platform Offer'}</p>
                   </div>
                 </div>
-                <span className={`text-[10px] font-bold px-2 py-1 rounded-full ${c.isActive ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
-                  {c.isActive ? 'Active' : 'Inactive'}
+                <span className={`text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full ${c.isActive ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}>
+                  {c.isActive ? 'Operational' : 'Disabled'}
                 </span>
               </div>
 
-              <div className="grid grid-cols-2 gap-2 mb-3">
-                <div className="bg-purple-50 rounded-lg p-2.5">
-                  <p className="text-purple-400 text-[10px] uppercase">Discount</p>
-                  <p className="font-bold text-purple-600">
-                    {c.discountType === 'percentage' ? `${c.discountValue}%` : `₹${c.discountValue}`}
+              <div className="grid grid-cols-2 gap-4 mb-8">
+                <div className="bg-orange-50/50 rounded-[1.5rem] p-5 border border-orange-100/30">
+                  <p className="text-orange-400 text-[9px] font-black uppercase tracking-widest mb-1.5">Value Projection</p>
+                  <p className="font-black text-slate-900 text-xl">
+                    {c.discountType === 'percentage' ? `${c.discountValue}% Off` : `₹${c.discountValue} Off`}
                   </p>
                 </div>
-                <div className="bg-gray-50 rounded-lg p-2.5">
-                  <p className="text-gray-400 text-[10px] uppercase">Min Order</p>
-                  <p className="font-bold text-gray-600">₹{c.minOrderAmount}</p>
-                </div>
-                <div className="bg-blue-50 rounded-lg p-2.5">
-                  <p className="text-blue-400 text-[10px] uppercase">Used</p>
-                  <p className="font-bold text-blue-600">{c.usedCount}/{c.usageLimit || '∞'}</p>
-                </div>
-                <div className="bg-orange-50 rounded-lg p-2.5">
-                  <p className="text-orange-400 text-[10px] uppercase">Valid Until</p>
-                  <p className="font-bold text-orange-600 text-xs">{fmt(c.validUntil)}</p>
+                <div className="bg-slate-50 rounded-[1.5rem] p-5 border border-slate-100">
+                  <p className="text-slate-400 text-[9px] font-black uppercase tracking-widest mb-1.5">Usage Threshold</p>
+                  <p className="font-black text-slate-900 text-xl">₹{c.minOrderAmount}</p>
                 </div>
               </div>
 
               {c.userSpecific && (
-                <div className="bg-amber-50 border border-amber-200 rounded-lg p-2 mb-3">
-                  <p className="text-amber-700 text-xs font-semibold">🎁 Exclusive for: {c.userSpecific.name}</p>
-                </div>
-              )}
-
-              {c.performanceBased && (
-                <div className="bg-green-50 border border-green-200 rounded-lg p-2 mb-3">
-                  <p className="text-green-700 text-xs font-semibold">⭐ Performance Reward</p>
-                  {c.performanceCriteria?.reason && (
-                    <p className="text-green-600 text-[10px] mt-0.5">{c.performanceCriteria.reason}</p>
-                  )}
-                </div>
-              )}
-
-              {c.availableForAreas && c.availableForAreas.length > 0 && (
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-2 mb-3">
-                  <p className="text-blue-700 text-xs font-semibold">📍 Available in: {c.availableForAreas.length} area(s)</p>
-                  <div className="flex flex-wrap gap-1 mt-1">
-                    {c.availableForAreas.slice(0, 3).map((area: string) => (
-                      <span key={area} className="text-[10px] bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded-full">
-                        {area}
-                      </span>
-                    ))}
-                    {c.availableForAreas.length > 3 && (
-                      <span className="text-[10px] text-blue-600 font-semibold">+{c.availableForAreas.length - 3} more</span>
-                    )}
+                <div className="bg-indigo-50/50 border border-indigo-100/50 rounded-2xl p-4 mb-6 flex items-center gap-3">
+                  <span className="text-xl">👤</span>
+                  <div>
+                    <p className="text-indigo-400 text-[9px] font-black uppercase tracking-widest">Exclusive Holder</p>
+                    <p className="text-xs font-black text-slate-900">{c.userSpecific.name}</p>
                   </div>
                 </div>
               )}
 
-              <div className="flex gap-2">
-                <button onClick={() => setCouponModal({ open: true, data: c })} className="flex-1 py-2 bg-purple-50 text-purple-600 rounded-lg text-xs font-bold hover:bg-purple-100 transition">
-                  Edit
+              <div className="flex gap-3">
+                <button 
+                  onClick={() => setCouponModal({ open: true, data: c })} 
+                  className="flex-1 py-3.5 bg-slate-900 text-white rounded-full text-[10px] font-black uppercase tracking-widest shadow-xl shadow-slate-200 hover:bg-slate-800 transition active:scale-95"
+                >
+                  Edit Terms
                 </button>
                 <button 
                   onClick={async () => {
                     const res = await fetch(`${API_URL}/coupons/${c._id}/toggle`, { method: 'PATCH', headers });
-                    const d = await res.json();
-                    if (d.success) fetchAll();
+                    if ((await res.json()).success) fetchAll();
                   }}
-                  className="flex-1 py-2 bg-gray-50 text-gray-600 rounded-lg text-xs font-bold hover:bg-gray-100 transition"
+                  className={`flex-1 py-3.5 rounded-full border text-[10px] font-black uppercase tracking-widest transition-all ${
+                    c.isActive ? 'bg-orange-50 border-orange-100 text-orange-600 hover:bg-orange-100' : 'bg-white border-slate-200 text-slate-400 hover:bg-slate-50'
+                  }`}
                 >
-                  {c.isActive ? 'Deactivate' : 'Activate'}
+                  {c.isActive ? 'Suspend' : 'Activate'}
                 </button>
                 <button 
                   onClick={async () => {
-                    if (!confirm('Delete coupon?')) return;
+                    if (!confirm('Permanent deletion of coupon?')) return;
                     const res = await fetch(`${API_URL}/coupons/${c._id}`, { method: 'DELETE', headers });
-                    const d = await res.json();
-                    if (d.success) fetchAll();
+                    if ((await res.json()).success) fetchAll();
                   }}
-                  className="p-2 bg-red-50 text-red-400 rounded-lg hover:bg-red-100 transition"
+                  className="w-12 h-12 flex items-center justify-center bg-red-50 text-red-500 rounded-full hover:bg-red-500 hover:text-white transition shadow-sm shrink-0"
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
@@ -1062,50 +1346,50 @@ export function CouponsTab({ coupons, userPerformance, setCouponModal, fetchAll,
       </div>
 
       {coupons.length === 0 && (
-        <div className="text-center py-16 text-gray-400 bg-white rounded-xl shadow-sm">
-          <p className="text-5xl mb-3">🎟️</p>
-          <p className="font-semibold">No coupons created yet</p>
-          <p className="text-sm mt-1">Create your first coupon above</p>
+        <div className="text-center py-32 bg-white rounded-[3rem] border border-slate-100">
+          <div className="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6 text-5xl">🎟️</div>
+          <p className="text-2xl font-black text-slate-900">Zero Inventory</p>
+          <p className="text-slate-400 text-sm mt-2">Generate your first promotion above</p>
         </div>
       )}
 
       {/* User Performance Table */}
-      <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-        <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
-          <h3 className="font-bold text-gray-900 flex items-center gap-2">
-            <TrendingUp className="w-5 h-5 text-purple-500" />
-            User Performance
+      <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden mt-12">
+        <div className="px-8 py-6 border-b border-slate-50 flex items-center justify-between bg-slate-50/30">
+          <h3 className="font-black text-slate-900 flex items-center gap-3">
+            <TrendingUp className="w-5 h-5 text-orange-500" />
+            Performance Audit Log
           </h3>
-          <span className="text-xs text-gray-400">{userPerformance.length} users</span>
+          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{userPerformance.length} Total Registered Entities</span>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-gray-50">
+            <thead className="bg-slate-50/50">
               <tr>
-                <th className="px-5 py-3 text-left text-xs font-bold text-gray-500 uppercase">User</th>
-                <th className="px-5 py-3 text-left text-xs font-bold text-gray-500 uppercase">Orders</th>
-                <th className="px-5 py-3 text-left text-xs font-bold text-gray-500 uppercase">Total Spent</th>
-                <th className="px-5 py-3 text-left text-xs font-bold text-gray-500 uppercase">Avg Order</th>
-                <th className="px-5 py-3 text-left text-xs font-bold text-gray-500 uppercase">Action</th>
+                <th className="px-8 py-5 text-left text-[9px] font-black text-slate-400 uppercase tracking-widest">Client Entity</th>
+                <th className="px-8 py-5 text-left text-[9px] font-black text-slate-400 uppercase tracking-widest">Log Count</th>
+                <th className="px-8 py-5 text-left text-[9px] font-black text-slate-400 uppercase tracking-widest">Market Value</th>
+                <th className="px-8 py-5 text-left text-[9px] font-black text-slate-400 uppercase tracking-widest">LTV Average</th>
+                <th className="px-8 py-5 text-right text-[9px] font-black text-slate-400 uppercase tracking-widest">Workflow</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-50">
+            <tbody className="divide-y divide-slate-50">
               {userPerformance.slice(0, 10).map((user: any) => (
-                <tr key={user._id} className="hover:bg-gray-50">
-                  <td className="px-5 py-3">
-                    <p className="font-semibold text-sm text-gray-900">{user.name}</p>
-                    <p className="text-xs text-gray-400">{user.email}</p>
+                <tr key={user._id} className="hover:bg-slate-50 transition-colors">
+                  <td className="px-8 py-5">
+                    <p className="font-black text-slate-900 text-sm">{user.name}</p>
+                    <p className="text-[10px] font-bold text-slate-400 mt-0.5">{user.email}</p>
                   </td>
-                  <td className="px-5 py-3">
-                    <span className="font-bold text-gray-900">{user.totalOrders}</span>
+                  <td className="px-8 py-5">
+                    <span className="font-black text-slate-700 text-base">{user.totalOrders}</span>
                   </td>
-                  <td className="px-5 py-3">
-                    <span className="font-bold text-purple-600">₹{user.totalSpent.toLocaleString()}</span>
+                  <td className="px-8 py-5">
+                    <span className="font-black text-orange-600 text-base">₹{user.totalSpent.toLocaleString()}</span>
                   </td>
-                  <td className="px-5 py-3">
-                    <span className="text-sm text-gray-600">₹{Math.round(user.avgOrderValue)}</span>
+                  <td className="px-8 py-5">
+                    <span className="text-xs font-bold text-slate-500">₹{Math.round(user.avgOrderValue)}</span>
                   </td>
-                  <td className="px-5 py-3">
+                  <td className="px-8 py-5 text-right">
                     <button 
                       onClick={() => setCouponModal({ 
                         open: true, 
@@ -1115,13 +1399,13 @@ export function CouponsTab({ coupons, userPerformance, setCouponModal, fetchAll,
                           performanceCriteria: {
                             minOrders: user.totalOrders,
                             minSpent: user.totalSpent,
-                            reason: `Reward for ${user.totalOrders} orders worth ₹${user.totalSpent.toLocaleString()}`
+                            reason: `Loyalty reward: ${user.totalOrders} orders | LTV ₹${user.totalSpent.toLocaleString()}`
                           }
                         } 
                       })}
-                      className="px-3 py-1.5 bg-purple-500 text-white rounded-lg text-xs font-bold hover:bg-purple-600 transition"
+                      className="px-6 py-2.5 bg-slate-900 text-white rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-orange-500 transition shadow-lg shadow-slate-100 active:scale-95"
                     >
-                      Reward
+                      Issue Reward
                     </button>
                   </td>
                 </tr>
@@ -1150,152 +1434,149 @@ export function ScheduleOrdersTab({ scheduleOrders, expandedRow, setExpandedRow,
   });
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-        <div className="flex-1 flex items-center gap-3 bg-white rounded-xl border border-slate-200 px-4 py-2.5 shadow-sm">
-          <Search className="w-4 h-4 text-slate-400 shrink-0" />
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
+        <div className="flex-1 flex items-center gap-4 bg-white rounded-full border border-slate-200 px-6 py-3.5 shadow-sm focus-within:border-orange-200 focus-within:ring-4 focus-within:ring-orange-50 transition-all">
+          <Search className="w-5 h-5 text-slate-400 shrink-0" />
           <input 
             value={search} 
             onChange={e => setSearch(e.target.value)} 
-            placeholder="Search by name, email, phone or schedule ID…" 
-            className="flex-1 text-sm focus:outline-none text-slate-700 placeholder:text-slate-400" 
+            placeholder="Trace subscription schedules…" 
+            className="flex-1 text-sm font-bold focus:outline-none text-slate-700 placeholder:text-slate-400 bg-transparent" 
           />
         </div>
-        <div className="flex items-center gap-2 bg-white rounded-xl border border-slate-200 px-4 py-2.5 shadow-sm">
-          <span className="text-xs font-semibold text-slate-500 shrink-0">Date:</span>
-          <input 
-            type="date" 
-            value={dateFilter} 
-            onChange={e => setDateFilter(e.target.value)}
-            className="text-sm focus:outline-none text-slate-700 bg-transparent"
-          />
+        <div className="flex items-center gap-4 bg-white rounded-full border border-slate-200 px-6 py-3.5 shadow-sm">
+          <div className="flex flex-col">
+            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Temporal Node</p>
+            <input 
+              type="date" 
+              value={dateFilter} 
+              onChange={e => setDateFilter(e.target.value)}
+              className="text-xs font-bold focus:outline-none text-slate-700 bg-transparent"
+            />
+          </div>
           {dateFilter && (
             <button 
               onClick={() => setDateFilter('')}
-              className="text-xs text-orange-500 font-bold hover:text-orange-600 shrink-0"
+              className="w-8 h-8 rounded-full bg-orange-50 text-orange-500 flex items-center justify-center hover:bg-orange-500 hover:text-white transition"
             >
-              Clear
+              <Trash2 className="w-4 h-4" />
             </button>
           )}
         </div>
       </div>
       
-      <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-        <div className="px-5 py-3 border-b border-slate-100 flex items-center justify-between">
-          <p className="text-xs font-bold text-slate-500 uppercase tracking-wide">📅 Schedule Orders</p>
-          <span className="text-xs text-slate-400">{filteredOrders.length} of {scheduleOrders.length} records</span>
+      <div className="bg-white rounded-[3rem] border border-slate-100 shadow-sm overflow-hidden">
+        <div className="px-10 py-6 border-b border-slate-50 flex items-center justify-between bg-slate-50/30">
+          <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Subscription Dispatch Ledger</p>
+          <span className="text-[10px] font-black text-orange-500 bg-orange-50 px-3 py-1 rounded-full">{filteredOrders.length} ACTIVE FLOWS</span>
         </div>
-        <div className="divide-y divide-slate-50">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {filteredOrders.length === 0 ? (
-            <div className="text-center py-12 text-slate-400">
-              <p className="text-4xl mb-2">📅</p>
-              <p className="font-semibold">No schedule orders found</p>
-              <p className="text-xs mt-1">Try adjusting your filters</p>
+            <div className="col-span-full text-center py-24 bg-white rounded-[2.5rem] border border-slate-100">
+              <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6 text-4xl">📅</div>
+              <p className="text-xl font-black text-slate-900">No Schedules Found</p>
+              <p className="text-slate-400 text-sm mt-2">No active subscriptions matches your criteria</p>
             </div>
           ) : (
             filteredOrders.map((s: any) => (
-              <div key={s._id}>
-                <div className="flex items-center gap-3 px-5 py-3.5 hover:bg-slate-50 transition">
-                  <div className="flex-1 min-w-0 cursor-pointer" onClick={() => setExpandedRow(expandedRow === s._id ? null : s._id)}>
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700">Schedule</span>
-                      <span className="text-slate-400 text-[11px]">{s.meals?.length || 0} meals</span>
+              <div key={s._id} className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm hover:shadow-xl hover:shadow-indigo-100/30 transition-all duration-300 flex flex-col">
+                <div className="p-7 flex flex-col flex-1 space-y-6">
+                  {/* Header: Customer & ID */}
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className="w-14 h-14 rounded-[1.5rem] bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-black text-xl shadow-lg ring-4 ring-indigo-50">
+                        {s.user?.name?.[0]}
+                      </div>
+                      <div>
+                        <p className="text-lg font-black text-slate-900 leading-none mb-1.5">{s.user?.name || 'Valued Subscriber'}</p>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-2 py-0.5 bg-slate-50 rounded-full border border-slate-100">#{s._id.slice(-6).toUpperCase()}</span>
+                          <span className="text-[10px] font-black uppercase tracking-widest text-indigo-500">{s.meals?.length || 0} Meals Total</span>
+                        </div>
+                      </div>
                     </div>
-                    <p className="font-semibold text-slate-900 text-sm">{s.user?.name || 'Unknown'}</p>
-                    <p className="text-xs text-slate-400">📱 {s.user?.phone} · {s.user?.email}</p>
+                    <div className="text-right">
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Reserved Capital</p>
+                      <p className="text-2xl font-black text-indigo-600 leading-none">₹{s.meals?.reduce((sum: number, m: any) => sum + (m.mealPrice || 0), 0) || 0}</p>
+                    </div>
                   </div>
-                  <div className="text-right shrink-0 cursor-pointer" onClick={() => setExpandedRow(expandedRow === s._id ? null : s._id)}>
-                    <p className="font-black text-indigo-600">₹{s.meals?.reduce((sum: number, m: any) => sum + (m.mealPrice || 0), 0) || 0}</p>
-                    <p className="text-xs text-slate-400">{fmt(s.createdAt)}</p>
-                  </div>
-                  <button onClick={async () => { if (!confirm('Delete schedule?')) return; const res = await fetch(`${API_URL}/admin/schedules/${s._id}`, { method: 'DELETE', headers }); const d = await res.json(); if (d.success) fetchAll(); }} className="p-1.5 bg-red-50 text-red-400 rounded-lg hover:bg-red-100 transition shrink-0"><Trash2 className="w-3.5 h-3.5" /></button>
-                  <button onClick={() => setExpandedRow(expandedRow === s._id ? null : s._id)} className="shrink-0 text-slate-300">
-                    {expandedRow === s._id ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                  </button>
-                </div>
-                {expandedRow === s._id && (
-                  <div className="px-5 pb-4 bg-slate-50 border-t border-slate-100 pt-3">
-                    <div className="space-y-3">
-                      <div className="bg-white rounded-lg p-3">
-                        <p className="text-slate-400 text-[10px] uppercase mb-2">Customer Details</p>
-                        <div className="grid grid-cols-2 gap-2">
-                          <div>
-                            <p className="text-xs text-slate-500">Name</p>
-                            <p className="font-semibold text-slate-800 text-sm">{s.user?.name}</p>
-                          </div>
-                          <div>
-                            <p className="text-xs text-slate-500">Phone</p>
-                            <p className="font-semibold text-slate-800 text-sm">{s.user?.phone}</p>
-                          </div>
-                          <div className="col-span-2">
-                            <p className="text-xs text-slate-500">Email</p>
-                            <p className="font-semibold text-slate-800 text-sm">{s.user?.email || 'N/A'}</p>
-                          </div>
-                          <div>
-                            <p className="text-xs text-slate-500">Wallet Balance</p>
-                            <p className="font-semibold text-green-600 text-sm">₹{s.user?.walletBalance || 0}</p>
-                          </div>
-                          <div>
-                            <p className="text-xs text-slate-500">Location</p>
-                            <p className="font-semibold text-slate-800 text-sm">{s.user?.currentLocation?.locationName || 'N/A'}</p>
-                          </div>
-                        </div>
-                      </div>
 
-                      <div className="bg-white rounded-lg p-3">
-                        <p className="text-slate-400 text-[10px] uppercase mb-2">Scheduled Meals</p>
-                        <div className="space-y-2">
-                          {s.meals?.map((m: any, i: number) => (
-                            <div key={i} className="flex items-center justify-between p-2 bg-slate-50 rounded-lg">
-                              <div className="flex-1">
-                                <div className="flex items-center gap-2 mb-1">
-                                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                                    m.mealType === 'Breakfast' ? 'bg-amber-100 text-amber-700' : 
-                                    m.mealType === 'Lunch' ? 'bg-orange-100 text-orange-700' : 
-                                    'bg-indigo-100 text-indigo-700'
-                                  }`}>{m.mealType}</span>
-                                  <span className="text-xs text-slate-400">{m.date ? new Date(m.date).toLocaleDateString('en-IN') : 'N/A'}</span>
-                                </div>
-                                <p className="font-semibold text-slate-800 text-sm">{m.menuItem?.name || 'N/A'}</p>
-                                <p className="text-xs text-slate-400">🕐 {m.deliveryTime || 'N/A'}</p>
-                              </div>
-                              <div className="text-right">
-                                <p className="font-bold text-indigo-600">₹{m.mealPrice || 0}</p>
-                                {m.status && (
-                                  <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${SC[m.status] || 'bg-slate-100 text-slate-600'}`}>
-                                    {m.status}
-                                  </span>
-                                )}
-                              </div>
+                  {/* Customer Quick Contact */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="px-4 py-3 rounded-2xl bg-slate-50 border border-slate-100">
+                      <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Direct Dial</p>
+                      <p className="text-xs font-black text-slate-700">📱 {s.user?.phone}</p>
+                    </div>
+                    <div className="px-4 py-3 rounded-2xl bg-slate-50 border border-slate-100">
+                      <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Credit Limit</p>
+                      <p className="text-xs font-black text-emerald-600">₹{s.user?.walletBalance || 0}</p>
+                    </div>
+                  </div>
+
+                  {/* Meal Breakdown Preview */}
+                  <div className="space-y-3">
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Upcoming Dispatch Queue</p>
+                    <div className="space-y-2.5 max-h-[280px] overflow-y-auto pr-2 scrollbar-hide">
+                      {s.meals?.map((m: any, i: number) => (
+                        <div key={i} className="group relative bg-white border border-slate-100 rounded-[1.25rem] p-4 hover:border-orange-200 hover:shadow-md transition-all">
+                          <div className="flex items-center justify-between mb-2">
+                             <div className="flex items-center gap-2">
+                               <span className={`px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${
+                                 m.mealType === 'Breakfast' ? 'bg-amber-100 text-amber-700' : 
+                                 m.mealType === 'Lunch' ? 'bg-orange-100 text-orange-700' : 
+                                 'bg-indigo-100 text-indigo-700'
+                               }`}>{m.mealType}</span>
+                               <span className="text-[10px] font-bold text-slate-400">{m.date ? new Date(m.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) : 'Date N/A'}</span>
+                             </div>
+                             <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full ${SC[m.status] || 'bg-slate-100 text-slate-500'}`}>{m.status}</span>
+                          </div>
+                          <div className="flex items-center justify-between gap-4">
+                            <div className="min-w-0">
+                               <p className="text-sm font-black text-slate-800 truncate">{m.menuItem?.name || 'Custom Meal Plan'}</p>
+                               <p className="text-[10px] font-bold text-slate-400 flex items-center gap-1.5 mt-0.5">
+                                 <span>🕑 {m.deliveryTime || 'Standard Time'}</span>
+                                 <span className="w-1 h-1 rounded-full bg-slate-200" />
+                                 <span>{m.menuItem?.cloudKitchen?.name || 'Master Kitchen'}</span>
+                               </p>
                             </div>
-                          ))}
+                            <p className="text-xs font-black text-slate-900 shrink-0">₹{m.mealPrice || 0}</p>
+                          </div>
                         </div>
-                      </div>
+                      ))}
+                    </div>
+                  </div>
 
-                      {s.meals?.[0]?.deliveryAddress && (
-                        <div className="bg-white rounded-lg p-3">
-                          <p className="text-slate-400 text-[10px] uppercase mb-2">Delivery Address</p>
-                          <p className="text-xs text-slate-600">
-                            📍 {[
-                              s.meals[0].deliveryAddress.street,
-                              s.meals[0].deliveryAddress.city,
-                              s.meals[0].deliveryAddress.state,
-                              s.meals[0].deliveryAddress.pincode
-                            ].filter(Boolean).join(', ')}
+                  {/* Delivery Node */}
+                  {s.meals?.[0]?.deliveryAddress && (
+                    <div className="p-4 rounded-3xl bg-orange-50 border border-orange-100/50">
+                      <div className="flex items-start gap-3">
+                        <span className="text-lg">📍</span>
+                        <div className="min-w-0">
+                          <p className="text-[10px] font-black text-orange-400 uppercase tracking-widest mb-1">Delivery Destination</p>
+                          <p className="text-xs font-bold text-slate-700 leading-tight">
+                            {[s.meals[0].deliveryAddress.street, s.meals[0].deliveryAddress.city, s.meals[0].deliveryAddress.landmark].filter(Boolean).join(', ')}
                           </p>
                         </div>
-                      )}
-
-                      <div className="bg-indigo-50 rounded-lg p-3 border border-indigo-200">
-                        <div className="flex items-center justify-between">
-                          <p className="text-sm font-bold text-slate-700">Total Amount</p>
-                          <p className="text-xl font-black text-indigo-600">₹{s.meals?.reduce((sum: number, m: any) => sum + (m.mealPrice || 0), 0) || 0}</p>
-                        </div>
                       </div>
                     </div>
-                    <p className="text-slate-400 font-mono text-[10px] px-1 mt-2">ID: {s._id}</p>
-                  </div>
-                )}
+                  )}
+                </div>
+
+                <div className="px-7 pb-7 pt-2 flex items-center gap-3">
+                  <button 
+                     onClick={async () => { if (confirm('Abort absolute subscription?')) { const res = await fetch(`${API_URL}/admin/schedules/${s._id}`, { method: 'DELETE', headers }); if ((await res.json()).success) fetchAll(); } }}
+                     className="flex-1 py-3.5 rounded-full border border-slate-100 text-slate-400 text-[10px] font-black uppercase tracking-widest hover:bg-slate-50 hover:text-slate-600 transition"
+                  >
+                    Hold Schedule
+                  </button>
+                  <button 
+                    onClick={() => setExpandedRow(expandedRow === s._id ? null : s._id)}
+                    className="flex-1 py-3.5 rounded-full bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest shadow-xl shadow-slate-200 hover:bg-slate-800 transition"
+                  >
+                    Modify Plan
+                  </button>
+                </div>
               </div>
             ))
           )}

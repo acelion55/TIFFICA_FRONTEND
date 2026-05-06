@@ -37,13 +37,13 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="relative flex flex-col min-h-screen bg-[#F8F9FB]">
-      {showWalletBar && <WalletBar />}
-      <main className="flex-1 pb-20">
+      {isPWAMode && showWalletBar && <WalletBar />}
+      <main className={`flex-1 ${isPWAMode ? 'pb-20' : ''}`}>
         {children}
       </main>
 
       {/* Cart Bar */}
-      {totalItems > 0 && !hideCartBar && (
+      {totalItems > 0 && !hideCartBar && isPWAMode && (
         <div className="fixed bottom-[72px] left-4 right-4 z-[60]">
           <button
             onClick={() => router.push('/checkout')}

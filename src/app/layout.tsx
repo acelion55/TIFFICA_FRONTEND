@@ -27,6 +27,11 @@ export const metadata: Metadata = {
     canonical: '/',
   },
   manifest: '/manifest.json',
+  icons: {
+    icon: '/logo.jpeg',
+    apple: '/logo.jpeg',
+    shortcut: '/logo.jpeg',
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
@@ -42,11 +47,13 @@ export const metadata: Metadata = {
     siteName: 'Tiffica',
     locale: 'en_IN',
     type: 'website',
+    images: ['/logo.jpeg'],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Tiffica - Best Tiffin Service in Jaipur, Ajmer & Beawar',
     description: 'Order the best affordable tiffin service in Jaipur, Ajmer, and Beawar. Fresh, homemade meals delivered daily.',
+    images: ['/logo.jpeg'],
   },
   robots: {
     index: true,
@@ -87,6 +94,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <head>
+        <link rel="icon" href="/logo.jpeg" type="image/jpeg" />
+        <link rel="apple-touch-icon" href="/logo.jpeg" />
         <script src="https://checkout.razorpay.com/v1/checkout.js" async />
         <script
           type="application/ld+json"

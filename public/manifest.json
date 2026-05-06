@@ -9,22 +9,28 @@
   "orientation": "portrait",
   "icons": [
     {
-      "src": "/icon-192.svg",
+      "src": "/logo.jpeg",
       "sizes": "192x192",
-      "type": "image/svg+xml",
+      "type": "image/jpeg",
       "purpose": "any"
     },
     {
-      "src": "/icon-512.svg",
+      "src": "/logo.jpeg",
       "sizes": "512x512",
-      "type": "image/svg+xml",
+      "type": "image/jpeg",
       "purpose": "any"
     },
     {
-      "src": "/favicon.ico",
+      "src": "/logo.jpeg",
       "sizes": "48x48",
-      "type": "image/x-icon",
+      "type": "image/jpeg",
       "purpose": "any"
+    },
+    {
+      "src": "/logo.jpeg",
+      "sizes": "144x144",
+      "type": "image/jpeg",
+      "purpose": "maskable"
     }
   ]
 }

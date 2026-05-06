@@ -6,7 +6,7 @@ import { useInstallApp } from '@/hooks/useInstallApp';
 
 export default function SiteFooter() {
   const { handleInstall, isInstalling, isPWAMode } = useInstallApp();
-  
+
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -48,7 +48,7 @@ export default function SiteFooter() {
             ) : (
               <>
                 <Download size={24} />
-                 ORDER YOUR FIRST TIFFIN  
+                ORDER YOUR FIRST TIFFIN
               </>
             )}
           </button>
@@ -71,8 +71,8 @@ export default function SiteFooter() {
                 { Icon: Twitter, label: 'Twitter' },
                 { Icon: Facebook, label: 'Facebook' }
               ].map((social, i) => (
-                <button 
-                  key={i} 
+                <button
+                  key={i}
                   className="w-14 h-14 rounded-[20px] border border-white/10 flex items-center justify-center hover:bg-white hover:text-black transition-all group scale-100 hover:scale-110"
                 >
                   <social.Icon size={24} />
@@ -102,36 +102,36 @@ export default function SiteFooter() {
 
           {/* Column 3: Contact */}
           <div className="lg:col-span-3">
-             <h5 className="font-black text-xs uppercase tracking-[0.3em] mb-10 text-primary italic">Get in Touch</h5>
-             <div className="space-y-8">
-                <div className="group cursor-pointer">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-white/40 mb-2">Email Support</p>
-                  <p className="text-xl font-black tracking-tight text-white group-hover:text-primary transition-colors uppercase">hello@tiffica.com</p>
-                </div>
-                <div className="group cursor-pointer">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-white/40 mb-2">Customer Care</p>
-                  <p className="text-xl font-black tracking-tight text-white group-hover:text-primary transition-colors uppercase">+91 98765 43210</p>
-                </div>
-                <div className="flex items-center gap-3 text-white/40">
-                   <Globe size={16} />
-                   <span className="text-xs font-black uppercase tracking-widest">Available across Jaipur</span>
-                </div>
-             </div>
+            <h5 className="font-black text-xs uppercase tracking-[0.3em] mb-10 text-primary italic">Get in Touch</h5>
+            <div className="space-y-8">
+              <div className="group cursor-pointer">
+                <p className="text-[10px] font-black uppercase tracking-widest text-white/40 mb-2">Email Support</p>
+                <p className="text-xl font-black tracking-tight text-white group-hover:text-primary transition-colors uppercase">hello@tiffica.com</p>
+              </div>
+              <div className="group cursor-pointer">
+                <p className="text-[10px] font-black uppercase tracking-widest text-white/40 mb-2">Customer Care</p>
+                <p className="text-xl font-black tracking-tight text-white group-hover:text-primary transition-colors uppercase">+91 82394 56238</p>
+              </div>
+              <div className="flex items-center gap-3 text-white/40">
+                <Globe size={16} />
+                <span className="text-xs font-black uppercase tracking-widest">Available across Jaipur</span>
+              </div>
+            </div>
           </div>
 
           {/* Column 4: Newsletter or Badges */}
           <div className="lg:col-span-3">
-             <h5 className="font-black text-xs uppercase tracking-[0.3em] mb-10 text-primary italic">Certifications</h5>
-             <div className="grid grid-cols-2 gap-4">
-               <div className="bg-white/5 p-6 rounded-[24px] border border-white/10 text-center flex flex-col items-center justify-center group hover:bg-white/10 transition-colors">
-                 <ShieldCheck className="text-primary mb-2" size={32} />
-                 <p className="text-[10px] font-black uppercase tracking-widest">FSSAI Certified</p>
-               </div>
-               <div className="bg-white/5 p-6 rounded-[24px] border border-white/10 text-center flex flex-col items-center justify-center group hover:bg-white/10 transition-colors">
-                 <div className="text-2xl mb-2">🌾</div>
-                 <p className="text-[10px] font-black uppercase tracking-widest">100% Organic</p>
-               </div>
-             </div>
+            <h5 className="font-black text-xs uppercase tracking-[0.3em] mb-10 text-primary italic">Certifications</h5>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-white/5 p-6 rounded-[24px] border border-white/10 text-center flex flex-col items-center justify-center group hover:bg-white/10 transition-colors">
+                <ShieldCheck className="text-primary mb-2" size={32} />
+                <p className="text-[10px] font-black uppercase tracking-widest">FSSAI Certified</p>
+              </div>
+              <div className="bg-white/5 p-6 rounded-[24px] border border-white/10 text-center flex flex-col items-center justify-center group hover:bg-white/10 transition-colors">
+                <div className="text-2xl mb-2">🌾</div>
+                <p className="text-[10px] font-black uppercase tracking-widest">100% Organic</p>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -149,10 +149,10 @@ export default function SiteFooter() {
           </p>
           <div className="flex items-center gap-12">
             <div className="flex gap-8">
-               <Link href="/privacy" className="text-[10px] font-black text-white/40 tracking-widest uppercase hover:text-white transition-colors">Privacy</Link>
-               <Link href="/terms" className="text-[10px] font-black text-white/40 tracking-widest uppercase hover:text-white transition-colors">Terms</Link>
+              <Link href="/privacy" className="text-[10px] font-black text-white/40 tracking-widest uppercase hover:text-white transition-colors">Privacy</Link>
+              <Link href="/terms" className="text-[10px] font-black text-white/40 tracking-widest uppercase hover:text-white transition-colors">Terms</Link>
             </div>
-            <button 
+            <button
               onClick={scrollToTop}
               className="w-12 h-12 rounded-full border border-white/20 flex items-center justify-center hover:bg-white hover:text-black transition-all"
             >

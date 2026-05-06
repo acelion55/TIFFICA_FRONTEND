@@ -44,9 +44,11 @@ export default function SiteHeader() {
         <div className="flex justify-between items-center">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 group">
-            <div className="bg-primary rounded-pill w-10 h-10 flex items-center justify-center text-white text-xl shadow-lg group-hover:scale-110 transition-transform">
-              🍱
-            </div>
+            <img 
+              src="/logo.jpeg" 
+              alt="Tiffica Logo" 
+              className="w-10 h-10 rounded-full object-cover shadow-lg group-hover:scale-110 transition-transform"
+            />
             <span className="text-2xl font-black tracking-tighter text-foreground group-hover:text-primary transition-colors">
               TIFFICA
             </span>
@@ -67,25 +69,19 @@ export default function SiteHeader() {
 
           {/* CTA / Login */}
           <div className="hidden md:flex items-center gap-4">
-            {isPWAMode ? (
-              !token ? (
-                <>
-                  <Link href="/login" className="text-sm font-bold hover:text-primary transition-colors px-4 py-2">
-                    LOGIN
-                  </Link>
-                  <Link href="/signup" className="bg-primary text-white px-6 py-2.5 rounded-pill font-bold text-sm shadow-xl hover:shadow-primary/20 hover:-translate-y-0.5 transition-all flex items-center gap-2">
-                    GET STARTED <ArrowRight size={16} />
-                  </Link>
-                </>
-              ) : (
-                <Link href="/home" className="bg-primary text-white px-6 py-2.5 rounded-pill font-bold text-sm shadow-xl hover:shadow-primary/20 hover:-translate-y-0.5 transition-all">
-                  DASHBOARD
+            {!token ? (
+              <>
+                <Link href="/login" className="text-sm font-bold hover:text-primary transition-colors px-4 py-2">
+                  LOGIN
                 </Link>
-              )
+                <Link href="/signup" className="bg-primary text-white px-6 py-2.5 rounded-pill font-bold text-sm shadow-xl hover:shadow-primary/20 hover:-translate-y-0.5 transition-all flex items-center gap-2">
+                  GET STARTED <ArrowRight size={16} />
+                </Link>
+              </>
             ) : (
-              <button className="bg-primary text-white px-6 py-2.5 rounded-pill font-bold text-sm shadow-xl hover:shadow-primary/20 hover:-translate-y-0.5 transition-all flex items-center gap-2">
-                DOWNLOAD APP <ArrowRight size={16} />
-              </button>
+              <Link href="/home" className="bg-primary text-white px-6 py-2.5 rounded-pill font-bold text-sm shadow-xl hover:shadow-primary/20 hover:-translate-y-0.5 transition-all">
+                DASHBOARD
+              </Link>
             )}
           </div>
 
@@ -110,25 +106,19 @@ export default function SiteHeader() {
               </Link>
             ))}
             <hr className="border-gray-100" />
-            {isPWAMode ? (
-              !token ? (
-                <div className="flex flex-col gap-4">
-                  <Link href="/login" className="text-center font-bold text-gray-500 py-2">
-                    LOGIN
-                  </Link>
-                  <Link href="/signup" className="bg-primary text-white text-center py-4 rounded-pill font-black text-lg shadow-xl shadow-primary/20">
-                    GET STARTED NOW
-                  </Link>
-                </div>
-              ) : (
-                <Link href="/home" className="bg-primary text-white text-center py-4 rounded-pill font-black text-lg">
-                  GOTO DASHBOARD
+            {!token ? (
+              <div className="flex flex-col gap-4">
+                <Link href="/login" className="text-center font-bold text-gray-500 py-2">
+                  LOGIN
                 </Link>
-              )
+                <Link href="/signup" className="bg-primary text-white text-center py-4 rounded-pill font-black text-lg shadow-xl shadow-primary/20">
+                  GET STARTED NOW
+                </Link>
+              </div>
             ) : (
-              <button className="bg-primary text-white text-center py-4 rounded-pill font-black text-lg shadow-xl shadow-primary/20 w-full">
-                DOWNLOAD APP NOW
-              </button>
+              <Link href="/home" className="bg-primary text-white text-center py-4 rounded-pill font-black text-lg">
+                GOTO DASHBOARD
+              </Link>
             )}
           </div>
         </div>

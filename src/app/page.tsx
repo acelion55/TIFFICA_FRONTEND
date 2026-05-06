@@ -110,6 +110,26 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Account Access Section */}
+      {!token && (
+        <section className="relative z-20 -mt-16 px-4">
+          <div className="max-w-4xl mx-auto bg-white/80 backdrop-blur-2xl rounded-[3rem] p-4 shadow-2xl border border-white/50 flex flex-col md:flex-row items-center gap-4">
+            <div className="px-8 py-4 flex-1 text-center md:text-left">
+              <h3 className="text-xl font-black uppercase tracking-tighter">Already a member?</h3>
+              <p className="text-xs text-muted font-bold uppercase tracking-widest">Login to manage your meals</p>
+            </div>
+            <div className="flex w-full md:w-auto gap-3 p-2">
+              <Link href="/login" className="flex-1 md:flex-none bg-black text-white px-8 py-4 rounded-full font-black text-sm hover:bg-primary transition-all text-center">
+                LOGIN
+              </Link>
+              <Link href="/signup" className="flex-1 md:flex-none bg-primary text-white px-8 py-4 rounded-full font-black text-sm shadow-lg shadow-primary/20 hover:scale-105 transition-all text-center">
+                SIGNUP
+              </Link>
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* How It Works Section */}
       <section className="py-32 bg-gray-50 overflow-hidden">
         <div className="max-w-7xl mx-auto px-4">
@@ -257,18 +277,43 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Stats Section (Already there but moving it for flow) */}
-
-      {/* SEO & Values Section (Already there) */}
-
-      {/* Final CTA (Already there) */}
+      {/* Premium CTA Section */}
+      <section className="py-24 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="bg-gradient-to-br from-slate-900 to-black rounded-[4rem] p-12 md:p-24 relative overflow-hidden text-center shadow-2xl">
+            {/* Background patterns */}
+            <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#f97316_1px,transparent_1px)] [background-size:20px_20px]" />
+            <div className="absolute -top-[20%] -right-[10%] w-[50%] h-[80%] bg-primary/20 blur-[100px] rounded-full" />
+            
+            <h2 className="text-4xl md:text-7xl font-black text-white tracking-tighter uppercase mb-6 relative z-10 leading-none">
+              READY TO TASTE <br /> <span className="text-primary italic"> AUTHENTICITY</span>?
+            </h2>
+            <p className="text-xl text-slate-400 mb-12 max-w-2xl mx-auto font-medium relative z-10 leading-relaxed">
+              Join thousands of happy customers in Jaipur. Experience the joy of healthy, homemade meals delivered right to your doorstep.
+            </p>
+            
+            <div className="flex flex-col sm:flex-row gap-6 justify-center items-center relative z-10">
+              <Link href="/signup" className="w-full sm:w-auto bg-primary text-white px-10 py-5 rounded-full font-black text-xl shadow-2xl shadow-primary/40 hover:scale-105 transition-all text-center">
+                GET STARTED NOW
+              </Link>
+              <Link href="/login" className="w-full sm:w-auto backdrop-blur-md bg-white/10 text-white border border-white/20 px-10 py-5 rounded-full font-black text-xl hover:bg-white hover:text-black transition-all text-center">
+                MEMBER LOGIN
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
 
       {/* Footer (Already there) */}
       <footer className="pt-20 border-t border-gray-100">
         <div className="max-w-7xl mx-auto px-4 grid md:grid-cols-4 gap-12 pb-20">
           <div className="col-span-2">
             <Link href="/" className="flex items-center gap-2 mb-6">
-              <div className="bg-primary rounded-pill w-8 h-8 flex items-center justify-center text-white text-lg">🍱</div>
+              <img 
+                src="/logo.jpeg" 
+                alt="Tiffica Logo" 
+                className="w-8 h-8 rounded-full object-cover"
+              />
               <span className="text-xl font-black tracking-tighter text-foreground">TIFFICA</span>
             </Link>
             <p className="text-muted max-w-xs font-medium uppercase text-xs tracking-widest leading-relaxed">
