@@ -64,10 +64,11 @@ export default function CheckoutPage() {
         userEmail: user.email,
         userPhone: user.phone,
         onSuccess: async (paymentId) => {
-          addToast('✅ Payment successful! Order placed.', 'success');
+          addToast('✅ Payment successful! Processing order...', 'success');
           
           // Send order to backend
           try {
+            console.log('📦 Sending order to backend...');
             const orderData = {
               items: cart.map(item => ({
                 menuItemId: item._id,
@@ -80,6 +81,10 @@ export default function CheckoutPage() {
               paymentId: paymentId,
             };
 
+            console.log('📋 Order data:', JSON.stringify(orderData, null, 2));
+            console.log('🔑 Using token:', token ? 'Token present' : 'No token');
+            console.log('🏠 Selected address:', selectedAddress);
+
             const response = await fetch(`${API_URL}/orders`, {
               method: 'POST',
               headers: {
@@ -89,15 +94,23 @@ export default function CheckoutPage() {
               body: JSON.stringify(orderData),
             });
 
+            console.log('📡 Response status:', response.status);
+            console.log('📡 Response ok:', response.ok);
+            
             const result = await response.json();
+            console.log('📋 Backend response:', result);
             
             if (!response.ok) {
-              console.error('Order creation failed:', result);
-              addToast('⚠️ Payment successful but order save failed', 'error');
+              console.error('❌ Order creation failed:', result);
+              addToast(`⚠️ Payment successful but order save failed: ${result.error || 'Unknown error'}`, 'error');
+            } else {
+              console.log('✅ Order saved successfully:', result.order?._id);
+              addToast('✅ Order placed and saved successfully!', 'success');
             }
           } catch (e) {
-            console.error('Order save failed:', e);
-            addToast('⚠️ Payment successful but order save failed', 'error');
+            console.error('❌ Order save failed:', e);
+            const errorMessage = e instanceof Error ? e.message : 'Unknown error';
+            addToast(`⚠️ Payment successful but order save failed: ${errorMessage}`, 'error');
           }
 
           clearCart();

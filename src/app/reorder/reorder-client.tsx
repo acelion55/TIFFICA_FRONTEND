@@ -49,7 +49,11 @@ export default function ReorderClient() {
         });
         const ordersData = await ordersRes.json();
         console.log('📦 My orders response:', ordersData);
-        setOrders(ordersData.orders || []);
+        // Sort orders by creation date (latest first)
+        const sortedOrders = (ordersData.orders || []).sort((a: any, b: any) => 
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
+        setOrders(sortedOrders);
 
         // Fetch scheduled meals
         console.log('🔍 Fetching schedule history...');
@@ -63,7 +67,11 @@ export default function ReorderClient() {
           const schedulesData = await schedulesRes.json();
           console.log('📅 Scheduled meals response:', schedulesData);
           console.log('📅 Number of schedules:', schedulesData.schedules?.length || 0);
-          setSchedules(schedulesData.schedules || []);
+          // Sort schedules by date (latest first)
+          const sortedSchedules = (schedulesData.schedules || []).sort((a: any, b: any) => 
+            new Date(b.date).getTime() - new Date(a.date).getTime()
+          );
+          setSchedules(sortedSchedules);
         } else {
           const errorText = await schedulesRes.text();
           console.error('❌ Schedule fetch failed:', errorText);

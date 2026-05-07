@@ -15,6 +15,8 @@ const NAV_LINKS = [
   { name: 'Contact', href: '/contact' },
 ];
 
+const HIDE_HEADER_ROUTES = ['/login', '/signup', '/forgot-password', '/onboarding'];
+
 export default function SiteHeader() {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -35,8 +37,9 @@ export default function SiteHeader() {
   // Close mobile menu on route change
   useEffect(() => setIsOpen(false), [pathname]);
 
-  // Hide header in PWA mode
-  if (isPWAMode) return null;
+  // Hide header in PWA mode or on auth pages
+  const hideHeader = isPWAMode || HIDE_HEADER_ROUTES.some(route => pathname?.startsWith(route));
+  if (hideHeader) return null;
 
   return (
     <header className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-300 ${scrolled ? 'bg-white/80 backdrop-blur-md shadow-sm py-3' : 'bg-transparent py-5'}`}>

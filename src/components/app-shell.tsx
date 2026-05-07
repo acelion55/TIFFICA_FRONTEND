@@ -11,7 +11,7 @@ import { isPWA } from '@/lib/pwaDetect';
 import { useEffect, useState } from 'react';
 
 const HIDE_SHELL_ROUTES = ['/login', '/signup', '/forgot-password', '/onboarding', '/admin', '/delivery-partner'];
-const SHOW_WALLETBAR_ROUTES = ['/home', '/search', '/menu', '/orders', '/subscriptions', '/schedule', '/reorder', '/profile', '/plan', '/subscribe', '/addresses'];
+const SHOW_WALLETBAR_ROUTES = ['/home', '/search', '/menu', '/subscriptions', '/schedule', '/reorder', '/profile', '/plan', '/subscribe', '/addresses'];
 const HIDE_CARTBAR_ROUTES = ['/checkout', '/schedule/menu'];
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
@@ -37,8 +37,8 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="relative flex flex-col min-h-screen bg-[#F8F9FB]">
-      {isPWAMode && showWalletBar && <WalletBar />}
-      <main className={`flex-1 ${isPWAMode ? 'pb-20' : ''}`}>
+      {token && showWalletBar && <WalletBar />}
+      <main className={`flex-1 ${isPWAMode ? 'pb-20' : 'pb-20'}`}>
         {children}
       </main>
 
@@ -63,7 +63,8 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         </div>
       )}
 
-      {isPWAMode && <Navbar />}
+      {/* Show navbar for all logged-in users */}
+      {token && <Navbar />}
     </div>
   );
 }

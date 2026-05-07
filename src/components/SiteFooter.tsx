@@ -3,9 +3,16 @@
 import Link from 'next/link';
 import { Mail, Phone, Instagram, Twitter, Facebook, ArrowRight, ArrowUpRight, Globe, ShieldCheck, Download, Loader2 } from 'lucide-react';
 import { useInstallApp } from '@/hooks/useInstallApp';
+import { usePathname } from 'next/navigation';
+import { useAuth } from '@/context/AuthContext';
+
+// Routes where footer should be shown (web pages only)
+const FOOTER_ROUTES = ['/', '/about', '/contact', '/blog', '/menu', '/terms', '/privacy', '/faq'];
 
 export default function SiteFooter() {
   const { handleInstall, isInstalling, isPWAMode } = useInstallApp();
+  const pathname = usePathname();
+  const { token } = useAuth();
 
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -13,6 +20,16 @@ export default function SiteFooter() {
 
   // Hide footer in PWA mode
   if (isPWAMode) return null;
+  
+  // Hide footer in user portal (when logged in)
+  if (token) return null;
+  
+  // Only show footer on specific web pages
+  const shouldShowFooter = FOOTER_ROUTES.some(route => 
+    pathname === route || (route !== '/' && pathname?.startsWith(route))
+  );
+  
+  if (!shouldShowFooter) return null;
 
   return (
     <footer className="bg-black text-white selection:bg-primary selection:text-white pt-24 pb-12 overflow-hidden relative">

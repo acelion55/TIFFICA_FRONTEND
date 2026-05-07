@@ -1,5 +1,4 @@
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import { LocationProvider } from "@/context/LocationContext";
@@ -15,8 +14,6 @@ import CouponPopup from "@/components/CouponPopup";
 import RoleRedirect from "@/components/role-redirect";
 import PWAUpdater from "@/components/pwa-updater";
 import PWAGuard from "@/components/pwa-guard";
-
-const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "Tiffica - Best Tiffin Service in Jaipur, Ajmer & Beawar | Home Cooked Meals",
@@ -102,7 +99,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
       </head>
-      <body className={inter.className}>
+      <body className="font-sans">
         <ToastProvider>
           <AuthProvider>
             <DeliveryAuthProvider>
@@ -111,7 +108,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   <LocationProvider>
                     <RoleRedirect />
                     <PWAGuard>
-                      <SiteHeader />
                       <AppShell>{children}</AppShell>
                       <SiteFooter />
                     </PWAGuard>

@@ -1,6 +1,7 @@
 'use client';
 import React from 'react';
 import { ChevronDown, ChevronUp, Search, Trash2, Plus, Activity, Tag, TrendingUp, Award, Users, ShoppingBag, UtensilsCrossed, CreditCard, ChevronRight, Calendar } from 'lucide-react';
+import AdminNotifications from '@/components/AdminNotifications';
 
 const SC: Record<string, string> = {
   pending: 'bg-amber-100 text-amber-700',
@@ -20,9 +21,13 @@ const fmtTime = (d: string) => new Date(d).toLocaleString('en-IN', { day: '2-dig
 
 export function OverviewTab({ stats, today, liveUsers, kitchens, menuItems, orders, performanceDateFrom, setPerformanceDateFrom, performanceDateTo, setPerformanceDateTo }: any) {
   return (
-    <div className="space-y-10">
+    <>
+      {/* Admin Notifications */}
+      <AdminNotifications />
+      
+      <div className="space-y-10">
       {/* Stats Grid - High Impact Pill Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
         {[
           { label: 'Market Users', value: stats.users, color: 'text-orange-600', icon: Users, gradient: 'from-orange-100/50 to-amber-100/50' },
           { label: 'Flow Volume', value: stats.orders, color: 'text-amber-600', icon: ShoppingBag, gradient: 'from-amber-100/50 to-yellow-100/50' },
@@ -30,48 +35,48 @@ export function OverviewTab({ stats, today, liveUsers, kitchens, menuItems, orde
           { label: 'Recurring Sub', value: stats.subscriptions, color: 'text-orange-600', icon: CreditCard, gradient: 'from-orange-100/50 to-amber-100/50' },
           { label: 'Total Capital', value: `₹${(stats.totalWalletBalance || 0).toLocaleString('en-IN')}`, color: 'text-emerald-600', icon: TrendingUp, gradient: 'from-emerald-100/50 to-teal-100/50' },
         ].map(s => (
-          <div key={s.label} className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-sm hover:shadow-xl hover:shadow-orange-100/20 transition-all duration-500 group relative overflow-hidden">
-            <div className={`absolute top-0 right-0 w-32 h-32 bg-gradient-to-br ${s.gradient} rounded-bl-full -mr-12 -mt-12 opacity-40 group-hover:scale-110 transition-transform duration-700`} />
+          <div key={s.label} className={`rounded-2xl sm:rounded-[2.5rem] p-4 sm:p-6 lg:p-8 shadow-sm hover:shadow-lg transition-all duration-300 group relative overflow-hidden bg-gradient-to-br ${s.gradient} border border-white/50`}>
+            <div className={`absolute top-0 right-0 w-16 h-16 sm:w-24 sm:h-24 lg:w-32 lg:h-32 bg-white/10 rounded-bl-full -mr-6 -mt-6 sm:-mr-8 sm:-mt-8 lg:-mr-12 lg:-mt-12 opacity-30 group-hover:scale-110 transition-transform duration-700`} />
             <div className="relative z-10">
-              <div className="w-12 h-12 rounded-2xl bg-white shadow-md border border-slate-50 flex items-center justify-center mb-6">
-                <s.icon className={`w-5 h-5 ${s.color}`} />
+              <div className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 rounded-xl sm:rounded-2xl bg-white/40 backdrop-blur-sm border border-white/50 flex items-center justify-center mb-3 sm:mb-4 lg:mb-6">
+                <s.icon className="w-4 h-4 sm:w-5 sm:h-5 text-black" />
               </div>
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">{s.label}</p>
-              <p className={`text-2xl font-black ${s.color} tracking-tight`}>{s.value}</p>
+              <p className="text-[8px] sm:text-[9px] lg:text-[10px] font-black text-black uppercase tracking-[0.2em] mb-1 sm:mb-2">{s.label}</p>
+              <p className="text-base sm:text-lg lg:text-2xl font-black text-black tracking-tight">{s.value}</p>
             </div>
           </div>
         ))}
       </div>
 
       {/* Performance Analytics with Date Filter */}
-      <div className="bg-slate-900 rounded-[3rem] shadow-2xl overflow-hidden relative border-4 border-slate-800">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-orange-500/10 rounded-full blur-[100px] -mr-48 -mt-48" />
+      <div className="bg-white rounded-[3rem] shadow-lg overflow-hidden relative border-2 border-slate-200">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-orange-50/30 rounded-full blur-[100px] -mr-48 -mt-48" />
         <div className="p-10 relative z-10">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-8 mb-10">
             <div className="flex items-center gap-5">
-              <div className="w-16 h-16 rounded-[2rem] bg-gradient-to-br from-orange-400 to-amber-500 flex items-center justify-center text-3xl shadow-lg ring-4 ring-white/10">
+              <div className="w-16 h-16 rounded-[2rem] bg-gradient-to-br from-orange-400 to-amber-500 flex items-center justify-center text-3xl shadow-lg ring-4 ring-orange-100">
                 📊
               </div>
               <div>
-                <h3 className="font-black text-white text-2xl tracking-tight">Ecosystem Intelligence</h3>
-                <p className="text-slate-400 font-bold text-sm mt-1">Real-time temporal data synthesis</p>
+                <h3 className="font-black text-slate-900 text-2xl tracking-tight">Ecosystem Intelligence</h3>
+                <p className="text-slate-600 font-bold text-sm mt-1">Real-time analytics dashboard</p>
               </div>
             </div>
             
             <div className="flex items-center gap-3">
-              <div className="bg-white/5 border border-white/10 rounded-full px-6 py-4 flex items-center gap-4">
+              <div className="bg-slate-50 border border-slate-200 rounded-full px-6 py-4 flex items-center gap-4">
                  <div className="flex flex-col">
-                   <p className="text-[9px] font-black text-orange-400 uppercase tracking-widest leading-none mb-1">Start Window</p>
-                   <input type="date" value={performanceDateFrom} onChange={e => setPerformanceDateFrom(e.target.value)} className="bg-transparent text-white text-xs font-bold focus:outline-none [color-scheme:dark]" />
+                   <p className="text-[9px] font-black text-slate-600 uppercase tracking-widest leading-none mb-1">Start Window</p>
+                   <input type="date" value={performanceDateFrom} onChange={e => setPerformanceDateFrom(e.target.value)} className="bg-transparent text-slate-900 text-xs font-bold focus:outline-none" />
                  </div>
-                 <div className="w-px h-6 bg-white/10" />
+                 <div className="w-px h-6 bg-slate-200" />
                  <div className="flex flex-col">
-                   <p className="text-[9px] font-black text-orange-400 uppercase tracking-widest leading-none mb-1">End Window</p>
-                   <input type="date" value={performanceDateTo} onChange={e => setPerformanceDateTo(e.target.value)} className="bg-transparent text-white text-xs font-bold focus:outline-none [color-scheme:dark]" />
+                   <p className="text-[9px] font-black text-slate-600 uppercase tracking-widest leading-none mb-1">End Window</p>
+                   <input type="date" value={performanceDateTo} onChange={e => setPerformanceDateTo(e.target.value)} className="bg-transparent text-slate-900 text-xs font-bold focus:outline-none" />
                  </div>
               </div>
               {(performanceDateFrom || performanceDateTo) && (
-                <button onClick={() => { setPerformanceDateFrom(''); setPerformanceDateTo(''); }} className="w-14 h-14 rounded-full bg-white text-slate-900 flex items-center justify-center hover:bg-orange-500 hover:text-white transition shadow-lg active:scale-95">
+                <button onClick={() => { setPerformanceDateFrom(''); setPerformanceDateTo(''); }} className="w-14 h-14 rounded-full bg-slate-900 text-white flex items-center justify-center hover:bg-orange-500 transition shadow-lg active:scale-95">
                   <Activity className="w-5 h-5" />
                 </button>
               )}
@@ -79,34 +84,43 @@ export function OverviewTab({ stats, today, liveUsers, kitchens, menuItems, orde
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-             <div className="bg-white/5 rounded-[2rem] p-8 border border-white/5">
-                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-4">Market Velocity</p>
+             <div className="bg-slate-50 rounded-[2rem] p-8 border border-slate-200">
+                <p className="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-4">Avg Order Rating</p>
                 <div className="flex items-baseline gap-3">
-                  <p className="text-4xl font-black text-white">4.8</p>
-                  <span className="text-emerald-400 text-xs font-black">↑ 12%</span>
+                  <p className="text-4xl font-black text-slate-900">{((orders.filter((o: any) => o.status === 'delivered').length / Math.max(orders.length, 1)) * 100).toFixed(1)}%</p>
+                  <span className="text-emerald-600 text-xs font-black">✓ Delivered</span>
                 </div>
                 <div className="mt-6 flex gap-1 items-end h-8">
-                  {[40, 70, 45, 90, 65, 80, 50].map((h, i) => <div key={i} className="flex-1 bg-orange-500/20 rounded-t-sm" style={{ height: `${h}%` }} />)}
+                  {orders.slice(-7).map((o: any, i: number) => {
+                    const isDelivered = o.status === 'delivered' ? 100 : o.status === 'pending' ? 30 : 60;
+                    return <div key={i} className="flex-1 bg-emerald-300 rounded-t-sm" style={{ height: `${isDelivered}%` }} />;
+                  })}
                 </div>
              </div>
-             <div className="bg-white/5 rounded-[2rem] p-8 border border-white/5">
-                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-4">Order Latency</p>
+             <div className="bg-slate-50 rounded-[2rem] p-8 border border-slate-200">
+                <p className="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-4">Total Transactions</p>
                 <div className="flex items-baseline gap-3">
-                  <p className="text-4xl font-black text-white">24m</p>
-                  <span className="text-orange-400 text-xs font-black">↓ 3m</span>
+                  <p className="text-4xl font-black text-slate-900">{stats.orders}</p>
+                  <span className="text-orange-600 text-xs font-black">Orders</span>
                 </div>
                 <div className="mt-6 flex gap-1 items-end h-8">
-                  {[60, 40, 85, 30, 55, 40, 70].map((h, i) => <div key={i} className="flex-1 bg-blue-500/20 rounded-t-sm" style={{ height: `${h}%` }} />)}
+                  {orders.slice(-7).map((o: any, i: number) => {
+                    const height = Math.max(20, Math.min(100, (o.items?.length || 0) * 15));
+                    return <div key={i} className="flex-1 bg-orange-400 rounded-t-sm" style={{ height: `${height}%` }} />;
+                  })}
                 </div>
              </div>
-             <div className="bg-white/5 rounded-[2rem] p-8 border border-white/5">
-                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-4">Retention Yield</p>
+             <div className="bg-slate-50 rounded-[2rem] p-8 border border-slate-200">
+                <p className="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-4">Active Users</p>
                 <div className="flex items-baseline gap-3">
-                  <p className="text-4xl font-black text-white">88%</p>
-                  <span className="text-emerald-400 text-xs font-black">↑ 5%</span>
+                  <p className="text-4xl font-black text-slate-900">{stats.users}</p>
+                  <span className="text-blue-600 text-xs font-black">Total</span>
                 </div>
                 <div className="mt-6 flex gap-1 items-end h-8">
-                  {[30, 50, 70, 60, 80, 90, 100].map((h, i) => <div key={i} className="flex-1 bg-emerald-500/20 rounded-t-sm" style={{ height: `${h}%` }} />)}
+                  {Array(7).fill(0).map((_, i) => {
+                    const height = Math.max(30, (stats.users / 7) * (50 + Math.random() * 50) / stats.users);
+                    return <div key={i} className="flex-1 bg-blue-400 rounded-t-sm" style={{ height: `${Math.min(100, height)}%` }} />;
+                  })}
                 </div>
              </div>
           </div>
@@ -135,9 +149,9 @@ export function OverviewTab({ stats, today, liveUsers, kitchens, menuItems, orde
                   <p className="text-orange-600 font-black text-4xl">₹{today.summary.revenue.toLocaleString()}</p>
                   <p className="text-orange-400 text-[10px] font-black uppercase tracking-widest mt-2">Daily Revenue</p>
                 </div>
-                <div className="text-center px-10 py-6 rounded-[2.5rem] bg-slate-900 shadow-2xl">
-                  <p className="text-white font-black text-4xl">{today.summary.totalOrders + today.summary.scheduledMeals}</p>
-                  <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest mt-2">Meals Dispatched</p>
+                <div className="text-center px-10 py-6 rounded-[2.5rem] bg-slate-100 border border-slate-200 shadow-inner">
+                  <p className="text-slate-900 font-black text-4xl">{today.summary.totalOrders + today.summary.scheduledMeals}</p>
+                  <p className="text-slate-600 text-[10px] font-black uppercase tracking-widest mt-2">Meals Dispatched</p>
                 </div>
               </div>
             </div>
@@ -236,9 +250,9 @@ export function OverviewTab({ stats, today, liveUsers, kitchens, menuItems, orde
                     <div>
                       <p className="text-base font-black text-slate-900">{o.user?.name}</p>
                       <div className="flex items-center gap-2 mt-1">
-                        <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest">{new Date(o.createdAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}</span>
-                        <div className="w-1 h-1 rounded-full bg-slate-200" />
-                        <span className="text-[10px] font-black text-orange-400 uppercase tracking-widest">{o.items?.length || 0} ITEMS</span>
+                        <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest">{new Date(o.createdAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}</span>
+                        <div className="w-1 h-1 rounded-full bg-slate-300" />
+                        <span className="text-[10px] font-black text-orange-600 uppercase tracking-widest">{o.items?.length || 0} ITEMS</span>
                       </div>
                     </div>
                   </div>
@@ -278,7 +292,8 @@ export function OverviewTab({ stats, today, liveUsers, kitchens, menuItems, orde
           ))}
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 }
 
@@ -421,13 +436,13 @@ export function OrdersTab({ orders, expandedRow, setExpandedRow, fetchAll, heade
 
       {/* Orders Grid */}
       <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-        <div className="px-5 py-3 border-b border-slate-100 flex items-center justify-between">
-          <p className="text-xs font-bold text-slate-500 uppercase tracking-wide">All Orders</p>
-          <span className="text-xs text-slate-400">{filteredOrders.length} of {orders.length} records</span>
+        <div className="px-2 py-2 border-b border-slate-100 flex items-center justify-between">
+          <p className="text-sm font-bold text-slate-500 uppercase tracking-wide">All Orders</p>
+          <span className="text-sm text-slate-400">{filteredOrders.length} of {orders.length} records</span>
         </div>
         
-        <div className="p-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="px-2 py-1">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
             {filteredOrders.length === 0 ? (
               <div className="col-span-full text-center py-24 bg-white rounded-[2.5rem] border border-slate-100">
                 <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -438,9 +453,9 @@ export function OrdersTab({ orders, expandedRow, setExpandedRow, fetchAll, heade
               </div>
             ) : (
               filteredOrders.map((o: any) => (
-                <div key={o._id} className="bg-white rounded-[2.25rem] border border-slate-100 shadow-sm hover:shadow-xl hover:shadow-orange-100/30 transition-all duration-300 overflow-hidden flex flex-col">
+                <div key={o._id} className="bg-white rounded-[1.5rem] border border-slate-100 shadow-sm hover:shadow-xl hover:shadow-orange-100/30 transition-all duration-300 overflow-hidden flex flex-col">
                   {/* Order Status Header */}
-                  <div className={`px-6 py-4 flex items-center justify-between ${
+                  <div className={`px-3 py-2 flex items-center justify-between ${
                     o.status === 'delivered' ? 'bg-emerald-50/50' : 
                     o.status === 'pending' ? 'bg-amber-50/50' : 
                     'bg-orange-50/50'
@@ -451,60 +466,114 @@ export function OrdersTab({ orders, expandedRow, setExpandedRow, fetchAll, heade
                         o.status === 'pending' ? 'bg-amber-500' : 
                         'bg-orange-500'
                       } animate-pulse`} />
-                      <span className="text-[10px] font-black uppercase tracking-widest text-slate-900">{o.status}</span>
+                      <span className="text-[11px] font-black uppercase tracking-widest text-slate-900">{o.status}</span>
                     </div>
-                    <span className="text-[10px] font-bold text-slate-400">{fmtTime(o.createdAt)}</span>
+                    <span className="text-[11px] font-bold text-slate-400">{fmtTime(o.createdAt)}</span>
                   </div>
 
-                  <div className="p-6 flex-1 space-y-4">
+                  <div className="p-3 flex-1 space-y-2">
                     {/* Customer Info */}
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-orange-400 to-yellow-400 flex items-center justify-center text-white font-black shadow-lg">
+                    <div className="flex items-center gap-2">
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-400 to-yellow-400 flex items-center justify-center text-white font-black shadow-lg text-xs">
                         {o.user?.name?.[0]}
                       </div>
-                      <div className="min-w-0">
-                        <p className="font-black text-slate-900 truncate">{o.user?.name || 'Guest User'}</p>
-                        <p className="text-xs text-slate-400 font-bold uppercase tracking-tight">📱 {o.user?.phone}</p>
+                      <div className="min-w-0 flex-1">
+                        <p className="font-black text-slate-900 truncate text-sm">{o.user?.name || 'Guest User'}</p>
+                        <div className="flex items-center gap-2 mt-0.5">
+                          <p className="text-xs text-slate-400 font-bold uppercase tracking-tight">📱 {o.user?.phone}</p>
+                          {o.user?.email && (
+                            <>
+                              <span className="w-1 h-1 rounded-full bg-slate-300" />
+                              <p className="text-xs text-slate-400 font-bold truncate">✉️ {o.user.email}</p>
+                            </>
+                          )}
+                        </div>
+                        {o.user?.walletBalance !== undefined && (
+                          <p className="text-[10px] text-emerald-600 font-bold mt-0.5">💰 Wallet: ₹{o.user.walletBalance}</p>
+                        )}
                       </div>
                     </div>
 
                     {/* Order Details */}
-                    <div className="bg-slate-50 rounded-3xl p-4 space-y-3">
+                    <div className="bg-slate-50 rounded-2xl p-2 space-y-1.5">
                       {o.items && o.items.length > 0 ? (
                         o.items.map((item: any, i: number) => (
-                          <div key={i} className="bg-white rounded-2xl p-3 border border-slate-100 shadow-sm">
-                            <div className="flex items-start justify-between gap-3 mb-2">
-                              <div className="flex-1 min-w-0">
-                                <p className="text-sm font-black text-slate-900 truncate">
-                                  {item.menuItem?.name || item.name || `Item #${i + 1}`}
-                                </p>
-                                <div className="flex items-center gap-2 mt-1">
-                                  <span className="text-[10px] font-bold text-slate-400">
-                                    🏠 {item.menuItem?.cloudKitchen?.name || item.cloudKitchen?.name || o.cloudKitchen?.name || 'Unknown Kitchen'}
-                                  </span>
+                          <div key={i} className="group relative bg-white border border-slate-100 rounded-xl p-2 hover:border-orange-200 hover:shadow-md transition-all">
+                            <div className="flex items-start justify-between gap-2 mb-1.5">
+                              <div className="flex items-start gap-2 flex-1 min-w-0">
+                                {/* Menu Item Image */}
+                                <img 
+                                  src={item.menuItem?.image || item.image || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=60&h=60&fit=crop'} 
+                                  alt={item.menuItem?.name || item.name || 'Menu Item'}
+                                  className="w-9 h-9 rounded-lg object-cover shrink-0 shadow-sm border border-slate-100"
+                                  onError={(e) => { (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=60&h=60&fit=crop'; }}
+                                />
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-xs font-black text-slate-900 truncate mb-0.5">
+                                    {item.menuItem?.name || item.name || `Item #${i + 1}`}
+                                  </p>
+                                  {item.menuItem?.description && (
+                                    <p className="text-xs text-slate-500 line-clamp-2 mb-1">{item.menuItem.description}</p>
+                                  )}
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <span className="text-[10px] font-bold text-slate-400">
+                                      🏠 {item.menuItem?.cloudKitchen?.name || item.cloudKitchen?.name || o.cloudKitchen?.name || 'Unknown Kitchen'}
+                                    </span>
+                                  </div>
+                                  {/* Menu Item Details */}
+                                  <div className="flex flex-wrap gap-0.5">
+                                    {item.menuItem?.category && (
+                                      <span className="text-[8px] font-bold px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-600">
+                                        {item.menuItem.category}
+                                      </span>
+                                    )}
+                                    {item.menuItem?.mealType && (
+                                      <span className="text-[8px] font-bold px-1.5 py-0.5 rounded-full bg-orange-50 text-orange-600">
+                                        {item.menuItem.mealType}
+                                      </span>
+                                    )}
+                                    {item.menuItem?.isVeg !== false && (
+                                      <span className="text-[8px] font-bold px-1.5 py-0.5 rounded-full bg-green-50 text-green-600">
+                                        🌱 Veg
+                                      </span>
+                                    )}
+                                    {item.menuItem?.rating && (
+                                      <span className="text-[8px] font-bold px-1.5 py-0.5 rounded-full bg-yellow-50 text-yellow-600">
+                                        ⭐ {item.menuItem.rating}
+                                      </span>
+                                    )}
+                                  </div>
                                 </div>
                               </div>
                               <div className="text-right shrink-0">
-                                <p className="text-xs font-black text-orange-600">₹{item.price || 0}</p>
+                                <p className="text-sm font-black text-orange-600 mb-0.5">₹{item.price || 0}</p>
                                 <p className="text-[10px] font-bold text-slate-400">Qty: {item.quantity || 1}</p>
+                                {item.menuItem?.originalPrice && item.menuItem.originalPrice > (item.price || 0) && (
+                                  <p className="text-[9px] text-slate-400 line-through mt-0.5">₹{item.menuItem.originalPrice}</p>
+                                )}
                               </div>
                             </div>
-                            {item.menuItem?.category && (
-                              <div className="flex items-center gap-2 mt-2">
-                                <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">
-                                  {item.menuItem.category}
-                                </span>
-                                {item.menuItem?.mealType && (
-                                  <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-orange-50 text-orange-600">
-                                    {item.menuItem.mealType}
-                                  </span>
-                                )}
+                            
+                            {/* Ingredients if available */}
+                            {item.menuItem?.ingredients && item.menuItem.ingredients.length > 0 && (
+                              <div className="pt-1 border-t border-slate-100">
+                                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Ingredients</p>
+                                <div className="flex flex-wrap gap-0.5">
+                                  {item.menuItem.ingredients.slice(0, 5).map((ing: string, idx: number) => (
+                                    <span key={idx} className="text-[8px] bg-green-50 text-green-700 px-1.5 py-0.5 rounded-full">
+                                      {ing}
+                                    </span>
+                                  ))}
+                                  {item.menuItem.ingredients.length > 5 && (
+                                    <span className="text-[9px] text-slate-400">+{item.menuItem.ingredients.length - 5} more</span>
+                                  )}
+                                </div>
                               </div>
                             )}
                           </div>
                         ))
                       ) : (
-                        <div className="bg-white rounded-2xl p-4 border border-slate-100 text-center">
+                        <div className="bg-white rounded-xl p-2 border border-slate-100 text-center">
                           <p className="text-xs font-bold text-slate-400">No items in this order</p>
                         </div>
                       )}
@@ -512,9 +581,9 @@ export function OrdersTab({ orders, expandedRow, setExpandedRow, fetchAll, heade
 
                     {/* Location Segment */}
                     {o.deliveryAddress && (
-                      <div className="flex items-start gap-3 px-1">
-                        <span className="text-orange-500 mt-0.5">📍</span>
-                        <p className="text-[11px] font-bold text-slate-500 leading-relaxed line-clamp-2">
+                      <div className="flex items-start gap-1.5 px-0.5">
+                        <span className="text-orange-500 mt-0.5 text-sm">📍</span>
+                        <p className="text-[12px] font-bold text-slate-500 leading-relaxed line-clamp-2">
                           {[o.deliveryAddress.street, o.deliveryAddress.city, o.deliveryAddress.landmark].filter(Boolean).join(', ')}
                         </p>
                       </div>
@@ -522,8 +591,8 @@ export function OrdersTab({ orders, expandedRow, setExpandedRow, fetchAll, heade
                   </div>
 
                   {/* Actions & Price */}
-                  <div className="px-6 pb-6 pt-2 space-y-4">
-                    <div className="flex items-center justify-between border-t border-slate-100 pt-4">
+                  <div className="px-3 pb-3 pt-1 space-y-2">
+                    <div className="flex items-center justify-between border-t border-slate-100 pt-2">
                       <button 
                         onClick={() => setExpandedRow(expandedRow === o._id ? null : o._id)}
                         className="text-xs font-black text-orange-500 uppercase tracking-widest hover:text-orange-600 flex items-center gap-1"
@@ -531,25 +600,66 @@ export function OrdersTab({ orders, expandedRow, setExpandedRow, fetchAll, heade
                         {expandedRow === o._id ? 'Close Details' : 'Full Details'}
                       </button>
                       <div className="text-right">
-                        <p className="text-[10px] font-bold text-slate-400 uppercase leading-none mb-1">Total Pay</p>
-                        <p className="text-xl font-black text-slate-900 leading-none">₹{o.totalAmount}</p>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase leading-none mb-0.5">Total Pay</p>
+                        <p className="text-lg font-black text-slate-900 leading-none">₹{o.totalAmount}</p>
                       </div>
                     </div>
 
                     {expandedRow === o._id && (
-                      <div className="animate-in slide-in-from-top-2 duration-300 space-y-3">
-                        <div className="grid grid-cols-2 gap-2">
-                          <div className="p-3 rounded-2xl bg-slate-50 bg-opacity-50 border border-slate-100">
-                            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Payment</p>
-                            <p className="text-[10px] font-bold text-slate-700 uppercase">{o.paymentMethod || 'N/A'}</p>
+                      <div className="animate-in slide-in-from-top-2 duration-300 space-y-2">
+                        {/* Order Summary Stats */}
+                        <div className="grid grid-cols-2 gap-1.5">
+                          <div className="p-2 rounded-lg bg-slate-50 bg-opacity-50 border border-slate-100">
+                            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Payment Method</p>
+                            <p className="text-[10px] font-bold text-slate-700 uppercase">{o.paymentMethod || 'Cash on Delivery'}</p>
                           </div>
-                          <div className="p-3 rounded-2xl bg-slate-50 bg-opacity-50 border border-slate-100">
-                            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Fee</p>
+                          <div className="p-2 rounded-lg bg-slate-50 bg-opacity-50 border border-slate-100">
+                            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Delivery Fee</p>
                             <p className="text-[10px] font-bold text-slate-700">₹{o.deliveryFee || 0}</p>
                           </div>
+                          <div className="p-2 rounded-lg bg-slate-50 bg-opacity-50 border border-slate-100">
+                            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Order Time</p>
+                            <p className="text-[10px] font-bold text-slate-700">{new Date(o.createdAt).toLocaleString('en-IN', { 
+                              day: '2-digit', 
+                              month: 'short', 
+                              hour: '2-digit', 
+                              minute: '2-digit',
+                              hour12: true 
+                            })}</p>
+                          </div>
+                          <div className="p-2 rounded-lg bg-slate-50 bg-opacity-50 border border-slate-100">
+                            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Items Count</p>
+                            <p className="text-[10px] font-bold text-slate-700">{o.items?.length || 0} items</p>
+                          </div>
                         </div>
-                        <div className="space-y-1.5">
-                          <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-1">Update Status</p>
+                        
+                        {/* Delivery Partner Assignment */}
+                        {deliveryPartners && deliveryPartners.length > 0 && (
+                          <div className="space-y-1">
+                            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-0.5">Assign Delivery Partner</p>
+                            <select 
+                              value={o.deliveryPartner?._id || o.deliveryPartner || ''} 
+                              onChange={async (e) => { 
+                                const res = await fetch(`${API_URL}/admin/orders/${o._id}/assign-delivery`, { 
+                                  method: 'PATCH', 
+                                  headers: { ...headers, 'Content-Type': 'application/json' }, 
+                                  body: JSON.stringify({ deliveryPartnerId: e.target.value }) 
+                                }); 
+                                if ((await res.json()).success) fetchAll(); 
+                              }} 
+                              className="w-full bg-slate-50 border border-slate-100 rounded-lg px-3 py-1.5 text-xs font-bold uppercase tracking-widest text-slate-700 focus:outline-none focus:ring-4 focus:ring-orange-100 appearance-none"
+                            >
+                              <option value="">No Partner Assigned</option>
+                              {deliveryPartners.map((dp: any) => (
+                                <option key={dp._id} value={dp._id}>{dp.name} - {dp.phone}</option>
+                              ))}
+                            </select>
+                          </div>
+                        )}
+                        
+                        {/* Order Status Update */}
+                        <div className="space-y-1">
+                          <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-0.5">Update Order Status</p>
                           <select 
                             value={o.status} 
                             onChange={async e => { 
@@ -560,7 +670,7 @@ export function OrdersTab({ orders, expandedRow, setExpandedRow, fetchAll, heade
                               }); 
                               if ((await res.json()).success) fetchAll(); 
                             }} 
-                            className="w-full bg-slate-50 border border-slate-100 rounded-full px-4 py-2.5 text-xs font-black uppercase tracking-widest text-slate-700 focus:outline-none focus:ring-4 focus:ring-orange-100 appearance-none text-center"
+                            className="w-full bg-slate-50 border border-slate-100 rounded-lg px-3 py-1.5 text-xs font-bold uppercase tracking-widest text-slate-700 focus:outline-none focus:ring-4 focus:ring-orange-100 appearance-none text-center"
                           >
                             <option value="pending">Pending</option>
                             <option value="confirmed">Confirmed</option>
@@ -569,6 +679,20 @@ export function OrdersTab({ orders, expandedRow, setExpandedRow, fetchAll, heade
                             <option value="delivered">Delivered</option>
                             <option value="cancelled">Cancelled</option>
                           </select>
+                        </div>
+                        
+                        {/* Order Notes/Special Instructions */}
+                        {o.specialInstructions && (
+                          <div className="p-2 rounded-lg bg-blue-50 border border-blue-100">
+                            <p className="text-[9px] font-black text-blue-400 uppercase tracking-widest mb-1">Special Instructions</p>
+                            <p className="text-xs text-blue-700 font-medium">{o.specialInstructions}</p>
+                          </div>
+                        )}
+                        
+                        {/* Order ID for Reference */}
+                        <div className="p-2 rounded-lg bg-slate-50 border border-slate-100">
+                          <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Order Reference ID</p>
+                          <p className="text-xs font-mono text-slate-600 break-all">{o._id}</p>
                         </div>
                       </div>
                     )}

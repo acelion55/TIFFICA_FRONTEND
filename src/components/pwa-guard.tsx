@@ -5,18 +5,27 @@ import { usePathname, useRouter } from 'next/navigation';
 import { isPWA } from '@/lib/pwaDetect';
 
 const PWA_ONLY_ROUTES = [
-  '/login',
-  '/signup',
   '/profile',
-  '/orders',
-  '/addresses',
+  '/addresses', 
   '/notifications',
+  '/checkout',
+  '/plan'
+];
+
+// Routes that browser users can access
+const BROWSER_ALLOWED_ROUTES = [
+  '/login',
+  '/signup', 
+  '/forgot-password',
+  '/',
+  '/about',
+  '/contact',
+  '/blog',
+  '/menu',
   '/schedule',
   '/subscriptions',
-  '/checkout',
   '/reorder',
-  '/plan',
-  '/forgot-password'
+  '/admin'
 ];
 
 export default function PWAGuard({ children }: { children: React.ReactNode }) {
@@ -33,9 +42,11 @@ export default function PWAGuard({ children }: { children: React.ReactNode }) {
 
     const isPWAMode = isPWA();
     const isProtectedRoute = PWA_ONLY_ROUTES.some(route => pathname.startsWith(route));
+    const isBrowserAllowed = BROWSER_ALLOWED_ROUTES.some(route => pathname.startsWith(route));
 
+    // Only redirect if it's a PWA-only route and not in PWA mode
     if (isProtectedRoute && !isPWAMode) {
-      router.push('/');
+      router.push('/login'); // Redirect to login instead of home
     }
   }, [pathname, router, isClient]);
 
@@ -43,7 +54,9 @@ export default function PWAGuard({ children }: { children: React.ReactNode }) {
 
   const isPWAMode = isPWA();
   const isProtectedRoute = PWA_ONLY_ROUTES.some(route => pathname.startsWith(route));
+  const isBrowserAllowed = BROWSER_ALLOWED_ROUTES.some(route => pathname.startsWith(route));
 
+  // Show app download message only for PWA-only routes accessed via browser
   if (isProtectedRoute && !isPWAMode) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4">
@@ -53,10 +66,10 @@ export default function PWAGuard({ children }: { children: React.ReactNode }) {
             This feature is only available in our app. Please install Tiffica app to continue.
           </p>
           <button
-            onClick={() => router.push('/')}
+            onClick={() => router.push('/login')}
             className="bg-orange-500 text-white px-6 py-3 rounded-lg"
           >
-            Go to Home
+            Login to Continue
           </button>
         </div>
       </div>

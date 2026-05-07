@@ -13,6 +13,9 @@ const config: Config = {
           orange: '#FF6B35',
         },
       },
+      fontFamily: {
+        sans: ['Inter', 'system-ui', 'sans-serif'],
+      },
     },
   },
   plugins: [],

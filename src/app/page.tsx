@@ -1,8 +1,9 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
+import { isPWA } from '@/lib/pwaDetect';
 import Link from 'next/link';
 import { ArrowRight, CheckCircle, Clock, Shield, Star, MapPin, Play, Utensils, Award, Smile, Coffee, Download, Loader2 } from 'lucide-react';
 import { useInstallApp } from '@/hooks/useInstallApp';
@@ -12,6 +13,7 @@ import { AppDownloadModal } from '@/components/AppDownloadModal';
 export default function LandingPage() {
   const { token, loading, user } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
   const { handleInstall, isInstalling, isPWAMode } = useInstallApp();
   const { isMobile, showModal, setShowModal, handleOrderClick, handleDownloadApp } = useOrderAction();
 
@@ -25,6 +27,17 @@ export default function LandingPage() {
     }
   }, [loading, token, user, router]);
 
+  // Redirect browser users to login for now
+  useEffect(() => {
+    if (!loading && !token && typeof window !== 'undefined' && !isPWA()) {
+      // Only redirect if not already on login/signup pages
+      const currentPath = window.location.pathname;
+      if (currentPath !== '/login' && currentPath !== '/signup') {
+        router.push('/login');
+      }
+    }
+  }, [loading, token, router]);
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
@@ -34,6 +47,11 @@ export default function LandingPage() {
   }
 
   if (token) return null;
+
+  // Hide landing page for browser users - they get redirected to login
+  if (typeof window !== 'undefined' && !isPWA()) {
+    return null;
+  }
 
   return (
     <div className="bg-white selection:bg-primary selection:text-white pb-20">

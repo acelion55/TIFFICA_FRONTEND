@@ -1,13 +1,12 @@
-const CACHE_VERSION = 'v1.0.1'; // Increment this version when you deploy updates
+const CACHE_VERSION = 'v1.0.2'; // Increment this version when you deploy updates
 const CACHE_NAME = `tiffica-cache-${CACHE_VERSION}`;
 
-// Assets to cache
+// Assets to cache - only existing files
 const urlsToCache = [
   '/',
   '/home',
   '/manifest.json',
-  '/icon-192.svg',
-  '/icon-512.svg'
+  '/logo.jpeg'
 ];
 
 self.addEventListener('install', event => {
@@ -16,9 +15,20 @@ self.addEventListener('install', event => {
     caches.open(CACHE_NAME)
       .then(cache => {
         console.log('[SW] Caching app shell');
-        return cache.addAll(urlsToCache);
+        // Cache files one by one to avoid failures
+        return Promise.all(
+          urlsToCache.map(url => {
+            return cache.add(url).catch(err => {
+              console.warn('[SW] Failed to cache:', url, err);
+              return Promise.resolve(); // Continue even if one fails
+            });
+          })
+        );
       })
       .then(() => self.skipWaiting()) // Force activation immediately
+      .catch(err => {
+        console.error('[SW] Cache installation failed:', err);
+      })
   );
 });
 
@@ -97,8 +107,8 @@ self.addEventListener('push', event => {
   event.waitUntil(
     self.registration.showNotification(data.title, {
       body: data.body,
-      icon: '/icon-192.svg',
-      badge: '/icon-192.svg',
+      icon: '/logo.jpeg',
+      badge: '/logo.jpeg',
       tag: data.notifId || 'tiffica-notif',
       data: { url: '/home' },
       vibrate: [200, 100, 200],

@@ -75,6 +75,8 @@ export default function AdminDashboard() {
     if (!token) return;
     setLoading(true); setError('');
     try {
+      console.log('📋 Admin fetchAll started...');
+      
       const [sRes, uRes, oRes, mRes, kRes, subRes, todayRes, dpRes, schedRes] = await Promise.all([
         fetch(`${API_URL}/admin/stats`, { headers }),
         fetch(`${API_URL}/admin/users`, { headers }),
@@ -86,8 +88,38 @@ export default function AdminDashboard() {
         fetch(`${API_URL}/admin/delivery-partners`, { headers }),
         fetch(`${API_URL}/admin/schedules`, { headers }),
       ]);
+      
+      console.log('📋 API responses status:', {
+        stats: sRes.status,
+        users: uRes.status,
+        orders: oRes.status,
+        menu: mRes.status,
+        kitchens: kRes.status,
+        subscriptions: subRes.status,
+        today: todayRes.status,
+        deliveryPartners: dpRes.status,
+        schedules: schedRes.status
+      });
+      
       if (sRes.status === 403) { setError('Access denied. Admin only.'); setLoading(false); return; }
-      const [s, u, o, m, k, sub, t, dp, sched] = await Promise.all([sRes.json(), uRes.json(), oRes.json(), mRes.json(), kRes.json(), subRes.json(), todayRes.json(), dpRes.json(), schedRes.json()]);
+      
+      const [s, u, o, m, k, sub, t, dp, sched] = await Promise.all([
+        sRes.json(), uRes.json(), oRes.json(), mRes.json(), kRes.json(), 
+        subRes.json(), todayRes.json(), dpRes.json(), schedRes.json()
+      ]);
+      
+      console.log('📋 API responses data:', {
+        stats: s.success ? 'OK' : s.error,
+        users: u.success ? `${u.users?.length || 0} users` : u.error,
+        orders: o.success ? `${o.orders?.length || 0} orders` : o.error,
+        menu: m.success ? `${m.items?.length || 0} items` : m.error,
+        kitchens: k.success ? `${k.kitchens?.length || 0} kitchens` : k.error,
+        subscriptions: sub.success ? `${sub.subscriptions?.length || 0} subs` : sub.error,
+        today: t.success ? 'OK' : t.error,
+        deliveryPartners: dp.success ? `${dp.partners?.length || 0} partners` : dp.error,
+        schedules: sched.success ? `${sched.schedules?.length || 0} schedules` : sched.error
+      });
+      
       if (s.stats) setStats(s.stats);
       if (u.users) {
         // Check for new users and play sound
@@ -98,7 +130,7 @@ export default function AdminDashboard() {
         setUsers(u.users);
         setLastUserCount(u.users.length);
       }
-      if (o.orders) {
+      if (o.success && o.orders) {
         // Check for new orders and play sound
         if (lastOrderCount > 0 && o.orders.length > lastOrderCount && soundEnabled) {
           const newOrderCount = o.orders.length - lastOrderCount;
@@ -106,6 +138,10 @@ export default function AdminDashboard() {
         }
         setOrders(o.orders);
         setLastOrderCount(o.orders.length);
+        console.log('✅ Orders loaded in admin:', o.orders.length);
+      } else {
+        console.error('❌ Orders API error:', o.error || 'Unknown error');
+        setOrders([]);
       }
       if (m.items) setMenuItems(m.items);
       if (k.kitchens) setKitchens(k.kitchens);
@@ -129,7 +165,10 @@ export default function AdminDashboard() {
         setScheduleOrders(sched.schedules || []);
         setLastScheduleCount((sched.schedules || []).length);
       }
-    } catch { setError('Failed to load data. Check server connection.'); }
+    } catch (error) { 
+      console.error('❌ Admin fetchAll error:', error);
+      setError('Failed to load data. Check server connection.'); 
+    }
     setLoading(false);
     try { const r = await fetch(`${API_URL}/homestyles`); const d = await r.json(); if (d.success && d.data) { setHomestyle(d.data); setHsVideos(d.data.videoLinks || []); } } catch {}
     try { const r = await fetch(`${API_URL}/notifications/admin`, { headers }); const d = await r.json(); if (d.success) setNotifications(d.notifications || []); } catch {}
@@ -145,7 +184,7 @@ export default function AdminDashboard() {
       const d = await r.json(); 
       if (d.success) setUserPerformance(d.users || []); 
     } catch {}
-  }, [token, performanceDateFrom, performanceDateTo]);
+  }, [token, performanceDateFrom, performanceDateTo, lastUserCount, lastOrderCount, lastSubscriptionCount, lastScheduleCount, soundEnabled]);
 
   useEffect(() => { 
     if (!token) { 
@@ -394,6 +433,12 @@ export default function AdminDashboard() {
     { id: 'kitchens', label: 'Kitchens', icon: Store, count: kitchens.length },
     { id: 'stats', label: 'Analytics', icon: BarChart2 },
     { id: 'schedules', label: 'Schedule', icon: CreditCard, count: scheduleOrders.length },
+    { id: 'users', label: 'Users', icon: Users, count: users.length },
+    { id: 'subscriptions', label: 'Subscriptions', icon: CreditCard, count: subscriptions.length },
+    { id: 'notifications', label: 'Notifications', icon: Bell, count: notifications.length },
+    { id: 'legal', label: 'Legal Pages', icon: FileText },
+    { id: 'homestyles', label: 'Media', icon: Home },
+    { id: 'coupons', label: 'Coupons', icon: Tag, count: coupons.length },
   ];
 
   const handleTabChange = (newTab: Tab) => {
@@ -669,10 +714,10 @@ export default function AdminDashboard() {
               </button>
             </div>
             <div className="p-4 space-y-2">
-              {tabs.filter(t => !['orders', 'menu', 'kitchens', 'stats', 'schedules'].includes(t.id)).map(t => (
+              {tabs.filter(t => !['orders', 'menu', 'kitchens', 'stats'].includes(t.id)).map(t => (
                 <button
                   key={t.id}
-                  onClick={() => handleTabChange(t.id)}
+                  onClick={() => { handleTabChange(t.id); setShowMoreMenu(false); }}
                   className={`w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl text-left transition-all ${
                     tab === t.id ? 'bg-orange-50 text-orange-600 border-2 border-orange-200' : 'bg-slate-50 text-slate-700 hover:bg-slate-100'
                   }`}
