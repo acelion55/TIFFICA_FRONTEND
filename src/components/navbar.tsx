@@ -1,16 +1,15 @@
 'use client';
 
 import Link from 'next/link';
-import { ShoppingBag, UtensilsCrossed, Store, Truck, TrendingUp } from 'lucide-react';
+import { Home, Calendar, CreditCard, RotateCcw, ShoppingBag, UtensilsCrossed, Store, Truck, TrendingUp } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 
 const userNavItems = [
-  { href: '/home',          label: 'HOME',         icon: 'home' },
-  { href: '/schedule',      label: 'SCHEDULE',     icon: 'calendar' },
-  { href: '/analytics',     label: 'ANALYTICS',    icon: 'trending', isCenter: true },
-  { href: '/subscriptions', label: 'SUBSCRIPTION', icon: 'wallet' },
-  { href: '/reorder',       label: 'REORDER',      icon: 'refresh' },
+  { href: '/home',          label: 'HOME',         icon: Home },
+  { href: '/schedule',      label: 'SCHEDULE',     icon: Calendar },
+  { href: '/subscriptions', label: 'SUBSCRIPTION', icon: CreditCard },
+  { href: '/reorder',       label: 'REORDER',      icon: RotateCcw },
 ];
 
 const adminNavItems = [
@@ -46,11 +45,7 @@ export default function Navbar() {
             >
               {typeof Icon === 'string' ? (
                 <div className={`text-2xl ${isActive ? 'text-orange-500' : 'text-gray-400'}`}>
-                  {Icon === 'home' && '🏠'}
-                  {Icon === 'calendar' && '📅'}
-                  {Icon === 'trending' && '📈'}
-                  {Icon === 'wallet' && '💳'}
-                  {Icon === 'refresh' && '🔄'}
+                  {/* Fallback for any remaining string icons */}
                 </div>
               ) : (
                 <Icon

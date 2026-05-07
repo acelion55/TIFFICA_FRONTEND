@@ -4,12 +4,13 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { useSwipe } from '@/hooks/useSwipe';
-import { Users, ShoppingBag, UtensilsCrossed, CreditCard, Store, BarChart2, LogOut, RefreshCw, Home, Bell, FileText, Tag, Activity } from 'lucide-react';
+import { Users, ShoppingBag, UtensilsCrossed, CreditCard, Store, BarChart2, LogOut, RefreshCw, Home, Bell, FileText, Tag, Activity, Volume2, VolumeX } from 'lucide-react';
 import {
   OverviewTab, UsersTab, OrdersTab, MenuTab, KitchensTab,
   SubscriptionsTab, NotificationsTab, LegalTab, HomestyleTab, CouponsTab, ScheduleOrdersTab,
 } from './AdminContent';
 import { CouponModal } from './CouponModal';
+import { notificationSound, showAdminNotification } from '@/lib/notificationSound';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005/api';
 type Tab = 'stats' | 'users' | 'orders' | 'menu' | 'kitchens' | 'subscriptions' | 'schedules' | 'homestyles' | 'notifications' | 'legal' | 'coupons';
@@ -43,13 +44,17 @@ export default function AdminDashboard() {
   const [hsSaving, setHsSaving] = useState(false);
   const [kitchenModal, setKitchenModal] = useState<{ open: boolean; data: any }>({ open: false, data: null });
   const [menuModal, setMenuModal] = useState<{ open: boolean; data: any }>({ open: false, data: null });
+  const [menuFormDirty, setMenuFormDirty] = useState(false);
   const [userModal, setUserModal] = useState<{ open: boolean; data: any }>({ open: false, data: null });
   const [selectedUserRole, setSelectedUserRole] = useState('user');
   const [saving, setSaving] = useState(false);
   const [imgUploading, setImgUploading] = useState(false);
   const [imgPreview, setImgPreview] = useState<string>('');
   const [orderSearch, setOrderSearch] = useState('');
-  const [dateFilter, setDateFilter] = useState('');
+  const [dateFilter, setDateFilter] = useState(() => {
+    const today = new Date();
+    return today.toISOString().split('T')[0];
+  });
   const [performanceDateFrom, setPerformanceDateFrom] = useState('');
   const [performanceDateTo, setPerformanceDateTo] = useState('');
   const [coupons, setCoupons] = useState<any[]>([]);
@@ -57,6 +62,12 @@ export default function AdminDashboard() {
   const [couponModal, setCouponModal] = useState<{ open: boolean; data: any }>({ open: false, data: null });
   const [deliveryPartners, setDeliveryPartners] = useState<any[]>([]);
   const [showMoreMenu, setShowMoreMenu] = useState(false);
+  const [soundEnabled, setSoundEnabled] = useState(true);
+  const [lastOrderCount, setLastOrderCount] = useState(0);
+  const [lastScheduleCount, setLastScheduleCount] = useState(0);
+  const [lastUserCount, setLastUserCount] = useState(0);
+  const [lastSubscriptionCount, setLastSubscriptionCount] = useState(0);
+  const [recentNotifications, setRecentNotifications] = useState<Array<{id: string, type: string, message: string, time: Date}>>([]);
 
   const headers = { Authorization: `Bearer ${token}` };
 
@@ -78,14 +89,46 @@ export default function AdminDashboard() {
       if (sRes.status === 403) { setError('Access denied. Admin only.'); setLoading(false); return; }
       const [s, u, o, m, k, sub, t, dp, sched] = await Promise.all([sRes.json(), uRes.json(), oRes.json(), mRes.json(), kRes.json(), subRes.json(), todayRes.json(), dpRes.json(), schedRes.json()]);
       if (s.stats) setStats(s.stats);
-      if (u.users) setUsers(u.users);
-      if (o.orders) setOrders(o.orders);
+      if (u.users) {
+        // Check for new users and play sound
+        if (lastUserCount > 0 && u.users.length > lastUserCount && soundEnabled) {
+          const newUserCount = u.users.length - lastUserCount;
+          showAdminNotification('NEW_USER', `user(s) registered`, newUserCount);
+        }
+        setUsers(u.users);
+        setLastUserCount(u.users.length);
+      }
+      if (o.orders) {
+        // Check for new orders and play sound
+        if (lastOrderCount > 0 && o.orders.length > lastOrderCount && soundEnabled) {
+          const newOrderCount = o.orders.length - lastOrderCount;
+          showAdminNotification('NEW_ORDER', `order(s) received`, newOrderCount);
+        }
+        setOrders(o.orders);
+        setLastOrderCount(o.orders.length);
+      }
       if (m.items) setMenuItems(m.items);
       if (k.kitchens) setKitchens(k.kitchens);
-      if (sub.subscriptions) setSubscriptions(sub.subscriptions);
+      if (sub.subscriptions) {
+        // Check for new subscriptions and play sound
+        if (lastSubscriptionCount > 0 && sub.subscriptions.length > lastSubscriptionCount && soundEnabled) {
+          const newSubCount = sub.subscriptions.length - lastSubscriptionCount;
+          showAdminNotification('NEW_SUBSCRIPTION', `subscription(s) purchased`, newSubCount);
+        }
+        setSubscriptions(sub.subscriptions);
+        setLastSubscriptionCount(sub.subscriptions.length);
+      }
       if (t.success) { setToday(t); setLiveUsers(t.liveUsers || 0); }
       if (dp.success) setDeliveryPartners(dp.partners || []);
-      if (sched.success) setScheduleOrders(sched.schedules || []);
+      if (sched.success) {
+        // Check for new schedule orders and play sound
+        if (lastScheduleCount > 0 && (sched.schedules || []).length > lastScheduleCount && soundEnabled) {
+          const newScheduleCount = (sched.schedules || []).length - lastScheduleCount;
+          showAdminNotification('NEW_SCHEDULE', `schedule order(s) received`, newScheduleCount);
+        }
+        setScheduleOrders(sched.schedules || []);
+        setLastScheduleCount((sched.schedules || []).length);
+      }
     } catch { setError('Failed to load data. Check server connection.'); }
     setLoading(false);
     try { const r = await fetch(`${API_URL}/homestyles`); const d = await r.json(); if (d.success && d.data) { setHomestyle(d.data); setHsVideos(d.data.videoLinks || []); } } catch {}
@@ -117,8 +160,73 @@ export default function AdminDashboard() {
     
     if (user && (user.role === 'admin' || user.role === 'kitchen-owner')) {
       fetchAll();
+      
+      // Request notification permission
+      if (Notification.permission === 'default') {
+        Notification.requestPermission();
+      }
+      
+      // Set up auto-refresh for new orders (every 30 seconds)
+      const interval = setInterval(() => {
+        fetchAll();
+      }, 30000);
+      
+      return () => clearInterval(interval);
     }
   }, [token, user, router]);
+
+  // Handle escape key and prevent back navigation when modal is open with unsaved changes
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && menuModal.open) {
+        if (menuFormDirty && !confirm('❌ Discard all changes?\n\nAre you sure you want to exit without saving?')) {
+          e.preventDefault();
+          return;
+        }
+        setMenuModal({ open: false, data: null });
+        setImgPreview('');
+        setMenuFormDirty(false);
+      }
+    };
+
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (menuModal.open && menuFormDirty) {
+        e.preventDefault();
+        e.returnValue = 'You have unsaved changes. Are you sure you want to leave?';
+        return e.returnValue;
+      }
+    };
+
+    const handlePopState = (e: PopStateEvent) => {
+      if (menuModal.open && menuFormDirty) {
+        if (!confirm('❌ Discard all changes?\n\nAre you sure you want to exit without saving?')) {
+          e.preventDefault();
+          window.history.pushState(null, '', window.location.href);
+          return;
+        }
+      }
+      if (menuModal.open) {
+        setMenuModal({ open: false, data: null });
+        setImgPreview('');
+        setMenuFormDirty(false);
+      }
+    };
+
+    if (menuModal.open) {
+      // Push a new state when modal opens
+      window.history.pushState(null, '', window.location.href);
+      
+      document.addEventListener('keydown', handleKeyDown);
+      window.addEventListener('beforeunload', handleBeforeUnload);
+      window.addEventListener('popstate', handlePopState);
+      
+      return () => {
+        document.removeEventListener('keydown', handleKeyDown);
+        window.removeEventListener('beforeunload', handleBeforeUnload);
+        window.removeEventListener('popstate', handlePopState);
+      };
+    }
+  }, [menuModal.open, menuFormDirty]);
 
   const uploadVideo = async (file: File): Promise<string> => {
     setHsVideoUploading(true);
@@ -266,6 +374,7 @@ export default function AdminDashboard() {
     if (data.success) { 
       setMenuModal({ open: false, data: null }); 
       setImgPreview(''); 
+      setMenuFormDirty(false);
       fetchAll(); 
     } else {
       alert(data.error || 'Failed to save menu item');
@@ -280,17 +389,11 @@ export default function AdminDashboard() {
     { id: 'menu', label: 'Kitchen Menu', icon: UtensilsCrossed, count: menuItems.length },
     { id: 'orders', label: 'Active Orders', icon: ShoppingBag, count: orders.length },
   ] : [
-    { id: 'stats', label: 'Dashboard', icon: BarChart2 },
-    { id: 'users', label: 'Customers', icon: Users, count: users.length },
-    { id: 'orders', label: 'Order Hub', icon: ShoppingBag, count: orders.length },
-    { id: 'menu', label: 'Kitchen Menu', icon: UtensilsCrossed, count: menuItems.length },
+    { id: 'orders', label: 'Orders', icon: ShoppingBag, count: orders.length },
+    { id: 'menu', label: 'Menu', icon: UtensilsCrossed, count: menuItems.length },
     { id: 'kitchens', label: 'Kitchens', icon: Store, count: kitchens.length },
-    { id: 'subscriptions', label: 'Subscriptions', icon: CreditCard, count: subscriptions.length },
-    { id: 'schedules', label: 'Schedule Hub', icon: CreditCard, count: scheduleOrders.length },
-    { id: 'coupons', label: 'Offers', icon: Tag, count: coupons.length },
-    { id: 'homestyles', label: 'Video Showcase', icon: Home },
-    { id: 'notifications', label: 'Alerts', icon: Bell, count: notifications.length },
-    { id: 'legal', label: 'Compliance', icon: FileText },
+    { id: 'stats', label: 'Analytics', icon: BarChart2 },
+    { id: 'schedules', label: 'Schedule', icon: CreditCard, count: scheduleOrders.length },
   ];
 
   const handleTabChange = (newTab: Tab) => {
@@ -416,12 +519,37 @@ export default function AdminDashboard() {
                 <span className="text-[11px] font-black text-emerald-700 uppercase tracking-wider">{liveUsers} Ready</span>
               </div>
             )}
+            {recentNotifications.length > 0 && (
+              <div className="hidden md:flex items-center gap-2 px-4 py-2 rounded-full bg-orange-50 border border-orange-100">
+                <Bell className="w-3 h-3 text-orange-500 animate-pulse" />
+                <span className="text-[11px] font-black text-orange-700 uppercase tracking-wider">{recentNotifications.length} New</span>
+              </div>
+            )}
             <button 
               onClick={fetchAll} 
               disabled={loading} 
               className="w-10 h-10 flex items-center justify-center rounded-full bg-white border border-slate-100 text-slate-600 hover:text-orange-500 hover:border-orange-100 hover:bg-orange-50 transition shadow-sm"
             >
               <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+            </button>
+            <button 
+              onClick={() => {
+                setSoundEnabled(!soundEnabled);
+                if (soundEnabled) {
+                  notificationSound.disable();
+                } else {
+                  notificationSound.enable();
+                  notificationSound.play(); // Test sound
+                }
+              }}
+              className={`w-10 h-10 flex items-center justify-center rounded-full border transition shadow-sm ${
+                soundEnabled 
+                  ? 'bg-orange-500 border-orange-500 text-white hover:bg-orange-600' 
+                  : 'bg-white border-slate-100 text-slate-400 hover:text-slate-600'
+              }`}
+              title={soundEnabled ? 'Sound ON - Click to disable' : 'Sound OFF - Click to enable'}
+            >
+              {soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
             </button>
           </div>
         </header>
@@ -498,24 +626,24 @@ export default function AdminDashboard() {
       {/* ── MOBILE NAV BAR (Floating Pill Design) ── */}
       <div className="md:hidden fixed bottom-6 left-6 right-6 z-40">
         <div className="bg-slate-900/90 backdrop-blur-2xl px-2 py-2 rounded-full shadow-[0_20px_50px_rgba(0,0,0,0.3)] border border-white/10 flex items-center justify-around">
-          {/* Home */}
-          <button onClick={() => handleTabChange('stats')} className={`flex items-center justify-center w-12 h-12 rounded-full transition-all ${tab === 'stats' ? 'bg-orange-500 text-white shadow-lg shadow-orange-500/50' : 'text-slate-500 hover:text-white'}`}>
-            <BarChart2 className="w-5 h-5" />
-          </button>
-          
           {/* Orders */}
           <button onClick={() => handleTabChange('orders')} className={`flex items-center justify-center w-12 h-12 rounded-full transition-all ${tab === 'orders' ? 'bg-orange-500 text-white shadow-lg shadow-orange-500/50' : 'text-slate-500 hover:text-white'}`}>
             <ShoppingBag className="w-5 h-5" />
           </button>
-
-          {/* Central Action (FAB style) */}
-          <div className="w-14 h-14 bg-white rounded-full flex items-center justify-center -mt-8 shadow-2xl shadow-orange-500/20 border-4 border-[#fcfcfc]" style={{ background: 'linear-gradient(135deg, #f97316, #facc15)' }}>
-             <Activity className="w-6 h-6 text-white" />
-          </div>
           
           {/* Menu */}
           <button onClick={() => handleTabChange('menu')} className={`flex items-center justify-center w-12 h-12 rounded-full transition-all ${tab === 'menu' ? 'bg-orange-500 text-white shadow-lg shadow-orange-500/50' : 'text-slate-500 hover:text-white'}`}>
             <UtensilsCrossed className="w-5 h-5" />
+          </button>
+
+          {/* Central Action (FAB style) - Analytics */}
+          <button onClick={() => handleTabChange('stats')} className="w-14 h-14 rounded-full flex items-center justify-center -mt-8 shadow-2xl shadow-orange-500/20 border-4 border-[#fcfcfc]" style={{ background: 'linear-gradient(135deg, #f97316, #facc15)' }}>
+            <BarChart2 className="w-6 h-6 text-white" />
+          </button>
+          
+          {/* Kitchens */}
+          <button onClick={() => handleTabChange('kitchens')} className={`flex items-center justify-center w-12 h-12 rounded-full transition-all ${tab === 'kitchens' ? 'bg-orange-500 text-white shadow-lg shadow-orange-500/50' : 'text-slate-500 hover:text-white'}`}>
+            <Store className="w-5 h-5" />
           </button>
           
           {/* More Menu */}
@@ -541,7 +669,7 @@ export default function AdminDashboard() {
               </button>
             </div>
             <div className="p-4 space-y-2">
-              {tabs.filter(t => !['stats', 'orders', 'menu'].includes(t.id)).map(t => (
+              {tabs.filter(t => !['orders', 'menu', 'kitchens', 'stats', 'schedules'].includes(t.id)).map(t => (
                 <button
                   key={t.id}
                   onClick={() => handleTabChange(t.id)}
@@ -684,7 +812,14 @@ export default function AdminDashboard() {
 
       {/* ── MENU MODAL ── */}
       {menuModal.open && (
-        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-md z-50 flex items-center justify-center p-6 overflow-y-auto">
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-md z-50 flex items-center justify-center p-6 overflow-y-auto" onClick={(e) => {
+          if (e.target === e.currentTarget) {
+            if (menuFormDirty && !confirm('❌ Discard all changes?\n\nAre you sure you want to exit without saving?')) return;
+            setMenuModal({ open: false, data: null });
+            setImgPreview('');
+            setMenuFormDirty(false);
+          }
+        }}>
           <div className="bg-white rounded-[3rem] w-full max-w-2xl p-10 my-8 shadow-2xl animate-in zoom-in-95 duration-300">
             <div className="flex flex-col items-center mb-8">
               <div className="w-16 h-16 rounded-[1.5rem] bg-orange-100 flex items-center justify-center text-orange-500 mb-4">
@@ -703,7 +838,7 @@ export default function AdminDashboard() {
                     <div className="py-4 bg-white border border-slate-200 rounded-full text-center text-[10px] font-black uppercase tracking-widest text-orange-500 shadow-sm hover:border-orange-200 transition">
                       {imgUploading ? 'Uploading…' : '📷 Capture Image'}
                     </div>
-                    <input type="file" accept="image/*" className="hidden" onChange={async e => { const f = e.target.files?.[0]; if (!f) return; try { const url = await uploadImage(f); setImgPreview(url); } catch { alert('Upload failed'); } }} disabled={imgUploading} />
+                    <input type="file" accept="image/*" className="hidden" onChange={async e => { const f = e.target.files?.[0]; if (!f) return; try { const url = await uploadImage(f); setImgPreview(url); setMenuFormDirty(true); } catch { alert('Upload failed'); } }} disabled={imgUploading} />
                   </label>
                   {(imgPreview || menuModal.data?.image) && <input type="hidden" name="imageUrl" value={imgPreview || menuModal.data?.image || ''} />}
                 </div>
@@ -741,19 +876,33 @@ export default function AdminDashboard() {
               <div className="space-y-3">
                 <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-4">Meal Type Vectors</p>
                 <div className="grid grid-cols-2 gap-2">
-                  {['Breakfast', 'Lunch', 'Dinner', 'Instant'].map(type => (
-                    <label key={type} className={`flex items-center justify-center py-3 rounded-full border-2 transition font-black text-[10px] uppercase tracking-widest cursor-pointer ${
-                      menuModal.data?.mealTypes?.includes(type) || menuModal.data?.mealType === type ? 'bg-orange-500 border-orange-500 text-white shadow-lg shadow-orange-100' : 'bg-slate-50 border-slate-50 text-slate-400 hover:border-orange-200'
-                    }`}>
-                      <input 
-                        type="checkbox" 
-                        name={`mealType_${type}`}
-                        className="hidden"
-                        defaultChecked={menuModal.data?.mealTypes?.includes(type) || menuModal.data?.mealType === type}
-                      />
-                      {type}
-                    </label>
-                  ))}
+                  {['Breakfast', 'Lunch', 'Dinner', 'Instant'].map(type => {
+                    const isChecked = menuModal.data?.mealTypes?.includes(type) || menuModal.data?.mealType === type;
+                    return (
+                      <label key={type} className={`flex items-center justify-center py-3 rounded-full border-2 transition font-black text-[10px] uppercase tracking-widest cursor-pointer ${
+                        isChecked ? 'bg-orange-500 border-orange-500 text-white shadow-lg shadow-orange-100' : 'bg-slate-50 border-slate-50 text-slate-400 hover:border-orange-200'
+                      }`}>
+                        <input 
+                          type="checkbox" 
+                          name={`mealType_${type}`}
+                          className="sr-only"
+                          defaultChecked={isChecked}
+                          onChange={(e) => {
+                            const label = e.target.closest('label');
+                            if (e.target.checked) {
+                              label?.classList.remove('bg-slate-50', 'border-slate-50', 'text-slate-400');
+                              label?.classList.add('bg-orange-500', 'border-orange-500', 'text-white', 'shadow-lg', 'shadow-orange-100');
+                            } else {
+                              label?.classList.remove('bg-orange-500', 'border-orange-500', 'text-white', 'shadow-lg', 'shadow-orange-100');
+                              label?.classList.add('bg-slate-50', 'border-slate-50', 'text-slate-400');
+                            }
+                            setMenuFormDirty(true);
+                          }}
+                        />
+                        {type}
+                      </label>
+                    );
+                  })}
                 </div>
               </div>
 
@@ -787,26 +936,56 @@ export default function AdminDashboard() {
                   <label className={`flex items-center justify-center py-3 rounded-full border-2 transition font-black text-[10px] uppercase tracking-widest cursor-pointer ${
                     menuModal.data?.isSpecial ? 'bg-purple-500 border-purple-500 text-white' : 'bg-slate-50 border-slate-50 text-slate-400'
                   }`}>
-                    <input type="checkbox" name="isSpecial" className="hidden" defaultChecked={menuModal.data?.isSpecial} />
+                    <input type="checkbox" name="isSpecial" className="sr-only" defaultChecked={menuModal.data?.isSpecial} onChange={(e) => {
+                      const label = e.target.closest('label');
+                      if (e.target.checked) {
+                        label?.classList.remove('bg-slate-50', 'border-slate-50', 'text-slate-400');
+                        label?.classList.add('bg-purple-500', 'border-purple-500', 'text-white');
+                      } else {
+                        label?.classList.remove('bg-purple-500', 'border-purple-500', 'text-white');
+                        label?.classList.add('bg-slate-50', 'border-slate-50', 'text-slate-400');
+                      }
+                      setMenuFormDirty(true);
+                    }} />
                     ✨ Special
                   </label>
                   <label className={`flex items-center justify-center py-3 rounded-full border-2 transition font-black text-[10px] uppercase tracking-widest cursor-pointer ${
                     menuModal.data?.isTodaySpecial ? 'bg-amber-500 border-amber-500 text-white' : 'bg-slate-50 border-slate-50 text-slate-400'
                   }`}>
-                    <input type="checkbox" name="isTodaySpecial" className="hidden" defaultChecked={menuModal.data?.isTodaySpecial} />
+                    <input type="checkbox" name="isTodaySpecial" className="sr-only" defaultChecked={menuModal.data?.isTodaySpecial} onChange={(e) => {
+                      const label = e.target.closest('label');
+                      if (e.target.checked) {
+                        label?.classList.remove('bg-slate-50', 'border-slate-50', 'text-slate-400');
+                        label?.classList.add('bg-amber-500', 'border-amber-500', 'text-white');
+                      } else {
+                        label?.classList.remove('bg-amber-500', 'border-amber-500', 'text-white');
+                        label?.classList.add('bg-slate-50', 'border-slate-50', 'text-slate-400');
+                      }
+                      setMenuFormDirty(true);
+                    }} />
                     ⭐ Today
                   </label>
                   <label className={`flex items-center justify-center py-3 rounded-full border-2 transition font-black text-[10px] uppercase tracking-widest cursor-pointer ${
-                    menuModal.data?.isAvailable ? 'bg-emerald-500 border-emerald-500 text-white' : 'bg-slate-50 border-slate-50 text-slate-400'
+                    menuModal.data?.isAvailable !== false ? 'bg-emerald-500 border-emerald-500 text-white' : 'bg-slate-50 border-slate-50 text-slate-400'
                   }`}>
-                    <input type="checkbox" name="isAvailable" className="hidden" defaultChecked={menuModal.data?.isAvailable !== false} />
+                    <input type="checkbox" name="isAvailable" className="sr-only" defaultChecked={menuModal.data?.isAvailable !== false} onChange={(e) => {
+                      const label = e.target.closest('label');
+                      if (e.target.checked) {
+                        label?.classList.remove('bg-slate-50', 'border-slate-50', 'text-slate-400');
+                        label?.classList.add('bg-emerald-500', 'border-emerald-500', 'text-white');
+                      } else {
+                        label?.classList.remove('bg-emerald-500', 'border-emerald-500', 'text-white');
+                        label?.classList.add('bg-slate-50', 'border-slate-50', 'text-slate-400');
+                      }
+                      setMenuFormDirty(true);
+                    }} />
                     ✅ Available
                   </label>
                 </div>
               </div>
               
               <div className="flex gap-4 pt-6 sticky bottom-0 bg-white">
-                <button type="button" onClick={() => { setMenuModal({ open: false, data: null }); setImgPreview(''); }} className="flex-1 py-4 bg-slate-50 text-slate-400 rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-slate-100 transition">Abort</button>
+                <button type="button" onClick={() => { if (menuFormDirty && !confirm('❌ Discard all changes?\n\nAre you sure you want to exit without saving?')) return; setMenuModal({ open: false, data: null }); setImgPreview(''); setMenuFormDirty(false); }} className="flex-1 py-4 bg-slate-50 text-slate-400 rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-slate-100 transition">Abort</button>
                 <button type="submit" disabled={saving || imgUploading} className="flex-1 py-4 bg-slate-900 text-white rounded-full text-[10px] font-black uppercase tracking-widest shadow-xl shadow-slate-200 transition disabled:opacity-50">
                   {saving ? 'Syncing…' : 'Register Entry'}
                 </button>

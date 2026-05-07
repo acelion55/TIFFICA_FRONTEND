@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { ShoppingBag, ChevronDown, ChevronUp, Clock, CheckCircle2, XCircle, Truck } from 'lucide-react';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005/api';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api';
 
 const STATUS_STYLES: Record<string, string> = {
   pending: 'bg-yellow-100 text-yellow-700',
@@ -34,7 +34,7 @@ export default function OrdersPage() {
 
   useEffect(() => {
     if (!token) { router.push('/login'); return; }
-    fetch(`${API_URL}/orders`, { headers: { Authorization: `Bearer ${token}` } })
+    fetch(`${API_URL}/orders/my-orders`, { headers: { Authorization: `Bearer ${token}` } })
       .then(r => r.json())
       .then(d => setOrders(d.orders || []))
       .catch(() => {})
