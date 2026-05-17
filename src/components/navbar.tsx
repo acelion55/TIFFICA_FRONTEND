@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { Home, Calendar, CreditCard, RotateCcw, ShoppingBag, UtensilsCrossed, Store, TrendingUp, MoreHorizontal, User, Bell, X, Tag, FileText } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
+import { useCart } from '@/context/CartContext';
 import { useState, useEffect } from 'react';
 import { isPWA } from '@/lib/pwaDetect';
 

@@ -11,11 +11,12 @@ interface PayOptions {
   userEmail?: string;
   userPhone?: string;
   onSuccess: (paymentId: string, amount: number) => void;
-  onFailure?: (err: any) => void;
+  onFailure?: (err: unknown) => void;
+  onError?: (error: { message?: string }) => void;
 }
 
 export async function openRazorpay(opts: PayOptions) {
-  const { amount, description, token, userName, userEmail, userPhone, onSuccess, onFailure } = opts;
+  const { amount, description, token, userName, userEmail, userPhone, onSuccess, onFailure, onError } = opts;
 
   // 1. Create Razorpay order on backend
   const res = await fetch(`${API_URL}/payments/create-order`, {
@@ -54,6 +55,11 @@ export async function openRazorpay(opts: PayOptions) {
     modal: {
       ondismiss: () => onFailure?.('dismissed'),
     },
+  });
+
+  rzp.on('payment.failed', (response: { error?: { description?: string } }) => {
+    onError?.({ message: response?.error?.description || 'Payment failed' });
+    onFailure?.(response);
   });
 
   rzp.open();

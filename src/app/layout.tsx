@@ -1,5 +1,6 @@
-import type { Metadata, Viewport } from "next";
+import type { Viewport } from "next";
 import "./globals.css";
+import { DEFAULT_SITE_METADATA, SITE_URL } from "@/lib/seo";
 import { AuthProvider } from "@/context/AuthContext";
 import { LocationProvider } from "@/context/LocationContext";
 import { CartProvider } from "@/context/CartContext";
@@ -14,15 +15,11 @@ import CouponPopup from "@/components/CouponPopup";
 import RoleRedirect from "@/components/role-redirect";
 import PWAUpdater from "@/components/pwa-updater";
 import PWAGuard from "@/components/pwa-guard";
+import PWAInstallBanner from "@/components/pwa-install-banner";
 
-export const metadata: Metadata = {
-  title: "Tiffica - Best Tiffin Service in Jaipur, Ajmer & Beawar | Home Cooked Meals",
-  description: "Order the best affordable tiffin service in Jaipur, Ajmer, and Beawar. Fresh, homemade meals delivered daily to areas like Gopalpura, Malviya Nagar, Vaishali Nagar, and Chang Gate. Healthy, hygienic, and delicious.",
-  keywords: "best tiffin service in jaipur, best tiffin center in beawar, best tiffin service in ajmer, tiffin delivery gopalpura jaipur, home cooked meals beawar, healthy tiffin ajmer, daily tiffin jaipur, Malviya Nagar, Mansarovar, C-Scheme, Vaishali Nagar, Pratap Nagar, Jhotwara, Raja Park, Chang Gate Beawar, Mewari Gate, Diggi Mohalla, Panchsheel Ajmer, Adarsh Nagar Ajmer",
-  metadataBase: new URL('https://tiffica.vercel.app'),
-  alternates: {
-    canonical: '/',
-  },
+export const metadata = {
+  ...DEFAULT_SITE_METADATA,
+  metadataBase: new URL(SITE_URL),
   manifest: '/manifest.json',
   icons: {
     icon: '/logo.jpeg',
@@ -32,33 +29,10 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
-    title: 'Tiffica - Best Tiffin Service',
+    title: 'Tiffica - Best Tiffin Service Jaipur',
   },
   verification: {
     google: 'M3G7DutCabpv_Z7J0SU969bNVe3zw2tOuTuw-0UH9gM',
-  },
-  openGraph: {
-    title: 'Tiffica - Best Tiffin Service in Jaipur, Ajmer & Beawar',
-    description: 'Order the best affordable tiffin service in Jaipur, Ajmer, and Beawar. Fresh, homemade meals delivered daily.',
-    url: 'https://tiffica.vercel.app',
-    siteName: 'Tiffica',
-    locale: 'en_IN',
-    type: 'website',
-    images: ['/logo.jpeg'],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'Tiffica - Best Tiffin Service in Jaipur, Ajmer & Beawar',
-    description: 'Order the best affordable tiffin service in Jaipur, Ajmer, and Beawar. Fresh, homemade meals delivered daily.',
-    images: ['/logo.jpeg'],
-  },
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: {
-      index: true,
-      follow: true,
-    },
   },
 };
 
@@ -72,7 +46,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     '@type': 'FoodEstablishment',
     name: 'Tiffica',
     description: 'Best tiffin service in Jaipur offering fresh, home-cooked meals delivered daily',
-    url: 'https://tiffica.vercel.app',
+    url: SITE_URL,
     telephone: '+91-XXXXXXXXXX',
     address: {
       '@type': 'PostalAddress',
@@ -108,8 +82,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   <LocationProvider>
                     <RoleRedirect />
                     <PWAGuard>
+                      <SiteHeader />
                       <AppShell>{children}</AppShell>
                       <SiteFooter />
+                      <PWAInstallBanner />
                     </PWAGuard>
                     <LocationModal />
                     <CouponPopup />

@@ -192,13 +192,13 @@ export default function AnalyticsPage() {
 
   if (isAdmin) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-amber-50 pb-24 text-black">
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 pb-24">
         {/* Header */}
-        <div className="bg-gradient-to-r from-orange-200 to-amber-200 text-black px-6 pt-8 pb-12 rounded-b-[3rem] shadow-2xl">
+        <div className="bg-gradient-to-r from-orange-600 to-amber-600 text-white px-6 pt-8 pb-12 rounded-b-[3rem] shadow-2xl">
           <div className="flex items-center justify-between mb-6">
             <div>
               <h1 className="text-3xl font-black tracking-tight">Admin Dashboard</h1>
-              <p className="text-black text-sm font-bold mt-1">Complete Business Overview</p>
+              <p className="text-orange-100 text-sm font-bold mt-1">Complete Business Overview</p>
             </div>
             <button
               onClick={() => { logout(); router.push('/login'); }}
@@ -211,19 +211,19 @@ export default function AnalyticsPage() {
           {/* Quick Stats */}
           <div className="grid grid-cols-2 gap-4">
             <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/20">
-              <p className="text-black text-xs font-bold uppercase tracking-wider mb-1">Total Orders</p>
+              <p className="text-orange-100 text-xs font-bold uppercase tracking-wider mb-1">Total Orders</p>
               <p className="text-3xl font-black">{analytics?.totalOrders || 0}</p>
             </div>
             <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/20">
-              <p className="text-black text-xs font-bold uppercase tracking-wider mb-1">Total Revenue</p>
+              <p className="text-orange-100 text-xs font-bold uppercase tracking-wider mb-1">Total Revenue</p>
               <p className="text-3xl font-black">₹{analytics?.totalRevenue?.toLocaleString() || 0}</p>
             </div>
             <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/20">
-              <p className="text-black text-xs font-bold uppercase tracking-wider mb-1">Total Users</p>
+              <p className="text-orange-100 text-xs font-bold uppercase tracking-wider mb-1">Total Users</p>
               <p className="text-3xl font-black">{analytics?.totalUsers || 0}</p>
             </div>
             <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/20">
-              <p className="text-black text-xs font-bold uppercase tracking-wider mb-1">Active Users</p>
+              <p className="text-orange-100 text-xs font-bold uppercase tracking-wider mb-1">Active Users</p>
               <p className="text-3xl font-black">{analytics?.activeUsers || 0}</p>
             </div>
           </div>
@@ -232,11 +232,11 @@ export default function AnalyticsPage() {
         {/* Main Content */}
         <div className="px-6 -mt-8 space-y-6">
           {/* Revenue Trend */}
-          <div className="bg-white rounded-3xl p-6 shadow-2xl border border-slate-200">
+          <div className="bg-gradient-to-br from-slate-800 to-slate-700 rounded-3xl p-6 shadow-2xl border border-slate-600">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h3 className="text-lg font-black text-slate-900">This Month Revenue</h3>
-                <p className="text-xs text-black font-bold">Your revenue overview</p>
+                <h3 className="text-lg font-black text-white">This Month Revenue</h3>
+                <p className="text-xs text-slate-400 font-bold">Your revenue overview</p>
               </div>
               <div className={`flex items-center gap-1 px-3 py-1.5 rounded-full ${
                 Number(analytics?.revenueTrend) >= 0 ? 'bg-emerald-500/20 text-emerald-300' : 'bg-red-500/20 text-red-300'
@@ -246,50 +246,50 @@ export default function AnalyticsPage() {
               </div>
             </div>
             <div className="flex items-baseline gap-2">
-              <p className="text-4xl font-black text-orange-600">₹{analytics?.monthlyRevenue?.toLocaleString() || 0}</p>
-              <p className="text-sm text-black font-bold">revenue this month</p>
+              <p className="text-4xl font-black text-orange-400">₹{analytics?.monthlyRevenue?.toLocaleString() || 0}</p>
+              <p className="text-sm text-slate-400 font-bold">revenue this month</p>
             </div>
           </div>
 
           {/* Stats Grid */}
           <div className="grid grid-cols-2 gap-4">
-            <div className="bg-white rounded-2xl p-5 shadow-lg border border-slate-200">
+            <div className="bg-slate-800 rounded-2xl p-5 shadow-lg border border-slate-700">
               <div className="w-10 h-10 rounded-xl bg-blue-500/20 flex items-center justify-center mb-3">
                 <ShoppingBag className="w-5 h-5 text-blue-400" />
               </div>
-              <p className="text-2xl font-black text-slate-900">{analytics?.deliveredOrders || 0}</p>
-              <p className="text-xs text-black font-bold uppercase tracking-wider mt-1">Delivered</p>
+              <p className="text-2xl font-black text-white">{analytics?.deliveredOrders || 0}</p>
+              <p className="text-xs text-slate-400 font-bold uppercase tracking-wider mt-1">Delivered</p>
             </div>
 
-            <div className="bg-white rounded-2xl p-5 shadow-lg border border-slate-200">
+            <div className="bg-slate-800 rounded-2xl p-5 shadow-lg border border-slate-700">
               <div className="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center mb-3">
                 <Calendar className="w-5 h-5 text-amber-400" />
               </div>
-              <p className="text-2xl font-black text-slate-900">{analytics?.pendingOrders || 0}</p>
-              <p className="text-xs text-black font-bold uppercase tracking-wider mt-1">Pending</p>
+              <p className="text-2xl font-black text-white">{analytics?.pendingOrders || 0}</p>
+              <p className="text-xs text-slate-400 font-bold uppercase tracking-wider mt-1">Pending</p>
             </div>
 
-            <div className="bg-white rounded-2xl p-5 shadow-lg border border-slate-200">
+            <div className="bg-slate-800 rounded-2xl p-5 shadow-lg border border-slate-700">
               <div className="w-10 h-10 rounded-xl bg-purple-500/20 flex items-center justify-center mb-3">
                 <Users className="w-5 h-5 text-purple-400" />
               </div>
-              <p className="text-2xl font-black text-slate-900">₹{analytics?.avgOrderValue || 0}</p>
-              <p className="text-xs text-black font-bold uppercase tracking-wider mt-1">Avg Order</p>
+              <p className="text-2xl font-black text-white">₹{analytics?.avgOrderValue || 0}</p>
+              <p className="text-xs text-slate-400 font-bold uppercase tracking-wider mt-1">Avg Order</p>
             </div>
 
-            <div className="bg-white rounded-2xl p-5 shadow-lg border border-slate-200">
+            <div className="bg-slate-800 rounded-2xl p-5 shadow-lg border border-slate-700">
               <div className="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center mb-3">
                 <Zap className="w-5 h-5 text-emerald-400" />
               </div>
-              <p className="text-2xl font-black text-slate-900">{analytics?.recentOrders || 0}</p>
-              <p className="text-xs text-black font-bold uppercase tracking-wider mt-1">Last 7 Days</p>
+              <p className="text-2xl font-black text-white">{analytics?.recentOrders || 0}</p>
+              <p className="text-xs text-slate-400 font-bold uppercase tracking-wider mt-1">Last 7 Days</p>
             </div>
           </div>
 
           {/* Recent Orders */}
-          <div className="bg-white rounded-3xl p-6 shadow-2xl border border-slate-200">
+          <div className="bg-slate-800 rounded-3xl p-6 shadow-2xl border border-slate-700">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-black text-slate-900">Recent Orders</h3>
+              <h3 className="text-lg font-black text-white">Recent Orders</h3>
               <span className="text-xs font-bold text-orange-400 bg-orange-500/20 px-3 py-1 rounded-full">
                 {analytics?.orders?.length || 0} orders
               </span>
@@ -298,12 +298,12 @@ export default function AnalyticsPage() {
             {analytics?.orders && analytics.orders.length > 0 ? (
               <div className="space-y-3">
                 {analytics.orders.map((order: any) => (
-                  <div key={order._id} className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-200">
+                  <div key={order._id} className="flex items-center justify-between p-4 bg-slate-700/50 rounded-2xl border border-slate-600">
                     <div className="flex-1">
-                      <p className="text-sm font-bold text-slate-900">
+                      <p className="text-sm font-bold text-white">
                         Order #{order._id?.slice(-6).toUpperCase()}
                       </p>
-                      <p className="text-xs text-black font-medium mt-0.5">
+                      <p className="text-xs text-slate-400 font-medium mt-0.5">
                         {order.items?.length || 0} items • {new Date(order.createdAt).toLocaleDateString('en-IN')}
                       </p>
                     </div>
@@ -322,7 +322,7 @@ export default function AnalyticsPage() {
               </div>
             ) : (
               <div className="text-center py-8">
-                <p className="text-black text-sm font-medium">No recent orders</p>
+                <p className="text-slate-400 text-sm font-medium">No recent orders</p>
               </div>
             )}
           </div>
@@ -334,11 +334,11 @@ export default function AnalyticsPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-amber-50 pb-24">
       {/* Header */}
-      <div className="bg-gradient-to-r from-orange-200 to-amber-200 text-black px-6 pt-8 pb-12 rounded-b-[3rem] shadow-xl">
+      <div className="bg-gradient-to-r from-orange-500 to-amber-500 text-white px-6 pt-8 pb-12 rounded-b-[3rem] shadow-xl">
         <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-3xl font-black tracking-tight">Your Analytics</h1>
-            <p className="text-black text-sm font-bold mt-1">Track your food journey</p>
+            <p className="text-orange-100 text-sm font-bold mt-1">Track your food journey</p>
           </div>
           <div className="w-14 h-14 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center">
             <Activity className="w-7 h-7" />
@@ -348,11 +348,11 @@ export default function AnalyticsPage() {
         {/* Quick Stats */}
         <div className="grid grid-cols-2 gap-4">
           <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/20">
-            <p className="text-black text-xs font-bold uppercase tracking-wider mb-1">Total Orders</p>
+            <p className="text-orange-100 text-xs font-bold uppercase tracking-wider mb-1">Total Orders</p>
             <p className="text-3xl font-black">{analytics?.totalOrders || 0}</p>
           </div>
           <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/20">
-            <p className="text-black text-xs font-bold uppercase tracking-wider mb-1">Total Spent</p>
+            <p className="text-orange-100 text-xs font-bold uppercase tracking-wider mb-1">Total Spent</p>
             <p className="text-3xl font-black">₹{analytics?.totalSpent?.toLocaleString() || 0}</p>
           </div>
         </div>
@@ -365,7 +365,7 @@ export default function AnalyticsPage() {
           <div className="flex items-center justify-between mb-4">
             <div>
               <h3 className="text-lg font-black text-slate-900">This Month</h3>
-              <p className="text-xs text-black font-bold">Your spending overview</p>
+              <p className="text-xs text-slate-400 font-bold">Your spending overview</p>
             </div>
             <div className={`flex items-center gap-1 px-3 py-1.5 rounded-full ${
               Number(analytics?.spendingTrend) >= 0 ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600'
@@ -376,7 +376,7 @@ export default function AnalyticsPage() {
           </div>
           <div className="flex items-baseline gap-2">
             <p className="text-4xl font-black text-orange-600">₹{analytics?.monthlySpent?.toLocaleString() || 0}</p>
-            <p className="text-sm text-black font-bold">spent this month</p>
+            <p className="text-sm text-slate-400 font-bold">spent this month</p>
           </div>
         </div>
 
@@ -387,7 +387,7 @@ export default function AnalyticsPage() {
               <ShoppingBag className="w-5 h-5 text-blue-600" />
             </div>
             <p className="text-2xl font-black text-slate-900">{analytics?.deliveredOrders || 0}</p>
-            <p className="text-xs text-black font-bold uppercase tracking-wider mt-1">Delivered</p>
+            <p className="text-xs text-slate-400 font-bold uppercase tracking-wider mt-1">Delivered</p>
           </div>
 
           <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100">
@@ -395,7 +395,7 @@ export default function AnalyticsPage() {
               <Calendar className="w-5 h-5 text-amber-600" />
             </div>
             <p className="text-2xl font-black text-slate-900">{analytics?.pendingOrders || 0}</p>
-            <p className="text-xs text-black font-bold uppercase tracking-wider mt-1">Pending</p>
+            <p className="text-xs text-slate-400 font-bold uppercase tracking-wider mt-1">Pending</p>
           </div>
 
           <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100">
@@ -403,7 +403,7 @@ export default function AnalyticsPage() {
               <Wallet className="w-5 h-5 text-purple-600" />
             </div>
             <p className="text-2xl font-black text-slate-900">{analytics?.activeSubscriptions || 0}</p>
-            <p className="text-xs text-black font-bold uppercase tracking-wider mt-1">Active Plans</p>
+            <p className="text-xs text-slate-400 font-bold uppercase tracking-wider mt-1">Active Plans</p>
           </div>
 
           <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100">
@@ -411,15 +411,15 @@ export default function AnalyticsPage() {
               <Award className="w-5 h-5 text-emerald-600" />
             </div>
             <p className="text-2xl font-black text-slate-900">₹{analytics?.avgOrderValue || 0}</p>
-            <p className="text-xs text-black font-bold uppercase tracking-wider mt-1">Avg Order</p>
+            <p className="text-xs text-slate-400 font-bold uppercase tracking-wider mt-1">Avg Order</p>
           </div>
         </div>
 
         {/* Wallet Balance */}
-        <div className="bg-white rounded-3xl p-6 shadow-xl text-black border border-slate-200">
+        <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-3xl p-6 shadow-xl text-white">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <p className="text-black text-xs font-bold uppercase tracking-wider mb-1">Wallet Balance</p>
+              <p className="text-slate-400 text-xs font-bold uppercase tracking-wider mb-1">Wallet Balance</p>
               <p className="text-4xl font-black">₹{analytics?.walletBalance?.toLocaleString() || 0}</p>
             </div>
             <div className="w-14 h-14 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center">
@@ -452,7 +452,7 @@ export default function AnalyticsPage() {
                       {order.items?.[0]?.menuItem?.name || 'Order'} 
                       {order.items?.length > 1 && ` +${order.items.length - 1} more`}
                     </p>
-                    <p className="text-xs text-black font-medium mt-0.5">
+                    <p className="text-xs text-slate-400 font-medium mt-0.5">
                       {new Date(order.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
                     </p>
                   </div>
@@ -471,7 +471,7 @@ export default function AnalyticsPage() {
             </div>
           ) : (
             <div className="text-center py-8">
-              <p className="text-black text-sm font-medium">No recent orders</p>
+              <p className="text-slate-400 text-sm font-medium">No recent orders</p>
             </div>
           )}
         </div>

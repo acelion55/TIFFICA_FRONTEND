@@ -1,7 +1,8 @@
 import { MetadataRoute } from 'next';
+import { SEO_PAGE_SLUGS } from '@/data/seo-pages';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = 'https://tiffica.vercel.app';
+  const baseUrl = 'https://tiffica.xyz';
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005/api';
 
   // Public static routes
@@ -36,7 +37,20 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: 'weekly',
       priority: 0.9,
     },
+    {
+      url: `${baseUrl}/jaipur-tiffin`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 0.95,
+    },
   ];
+
+  const seoLandingRoutes: MetadataRoute.Sitemap = SEO_PAGE_SLUGS.map((slug) => ({
+    url: `${baseUrl}/jaipur-tiffin/${slug}`,
+    lastModified: new Date(),
+    changeFrequency: 'weekly' as const,
+    priority: 0.85,
+  }));
 
   // Dynamic blog routes
   let blogRoutes: MetadataRoute.Sitemap = [];
@@ -82,5 +96,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     console.error('Error fetching menu items for sitemap:', error);
   }
 
-  return [...staticRoutes, ...blogRoutes, ...menuRoutes];
+  return [...staticRoutes, ...seoLandingRoutes, ...blogRoutes, ...menuRoutes];
 }

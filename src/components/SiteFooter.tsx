@@ -5,9 +5,16 @@ import { Mail, Phone, Instagram, Twitter, Facebook, ArrowRight, ArrowUpRight, Gl
 import { useInstallApp } from '@/hooks/useInstallApp';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
+import { motion } from 'framer-motion';
+
+import { SEO_PAGES } from '@/data/seo-pages';
 
 // Routes where footer should be shown (web pages only)
-const FOOTER_ROUTES = ['/', '/about', '/contact', '/blog', '/menu', '/terms', '/privacy', '/faq'];
+const FOOTER_ROUTES = ['/', '/about', '/contact', '/blog', '/menu', '/terms', '/privacy', '/faq', '/jaipur-tiffin'];
+
+const FOOTER_AREA_LINKS = SEO_PAGES.filter((p) => p.category === 'area' || p.category === 'near');
+const FOOTER_SERVICE_LINKS = SEO_PAGES.filter((p) => p.category === 'service').slice(0, 8);
+const FOOTER_BUDGET_LINKS = SEO_PAGES.filter((p) => p.category === 'budget');
 
 export default function SiteFooter() {
   const { handleInstall, isInstalling, isPWAMode } = useInstallApp();
@@ -106,7 +113,8 @@ export default function SiteFooter() {
                 { name: 'Our Story', href: '/about' },
                 { name: 'Daily Menu', href: '/menu' },
                 { name: 'Food Blog', href: '/blog' },
-                { name: 'Contact', href: '/contact' }
+                { name: 'Contact', href: '/contact' },
+                { name: 'All Jaipur Pages', href: '/jaipur-tiffin' },
               ].map(link => (
                 <li key={link.name}>
                   <Link href={link.href} className="text-lg font-black uppercase tracking-tight text-white/50 hover:text-primary transition-colors flex items-center gap-2 group">
@@ -117,8 +125,55 @@ export default function SiteFooter() {
             </ul>
           </div>
 
+          {/* Column: Jaipur areas */}
+          <div className="lg:col-span-2">
+            <h5 className="font-black text-xs uppercase tracking-[0.3em] mb-10 text-primary italic">Jaipur Areas</h5>
+            <ul className="space-y-4">
+              {FOOTER_AREA_LINKS.map((p) => (
+                <li key={p.slug}>
+                  <Link
+                    href={`/jaipur-tiffin/${p.slug}`}
+                    className="text-[11px] font-black uppercase tracking-tight text-white/40 hover:text-primary transition-colors leading-snug block"
+                  >
+                    {p.area ? `${p.area}` : p.h1.replace('Tiffin Service Near ', '').replace(', Jaipur', '')}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Column: Services & budget */}
+          <div className="lg:col-span-2">
+            <h5 className="font-black text-xs uppercase tracking-[0.3em] mb-6 text-primary italic">Tiffin Plans</h5>
+            <ul className="space-y-3 mb-8">
+              {FOOTER_SERVICE_LINKS.map((p) => (
+                <li key={p.slug}>
+                  <Link
+                    href={`/jaipur-tiffin/${p.slug}`}
+                    className="text-[11px] font-black uppercase tracking-tight text-white/40 hover:text-primary transition-colors leading-snug block"
+                  >
+                    {p.h1.length > 42 ? `${p.h1.slice(0, 40)}…` : p.h1}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+            <h5 className="font-black text-xs uppercase tracking-[0.3em] mb-4 text-primary italic">Under ₹100</h5>
+            <ul className="space-y-3">
+              {FOOTER_BUDGET_LINKS.slice(0, 5).map((p) => (
+                <li key={p.slug}>
+                  <Link
+                    href={`/jaipur-tiffin/${p.slug}`}
+                    className="text-[11px] font-black uppercase tracking-tight text-white/40 hover:text-primary transition-colors leading-snug block"
+                  >
+                    {p.area || 'Jaipur'}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
           {/* Column 3: Contact */}
-          <div className="lg:col-span-3">
+          <div className="lg:col-span-2">
             <h5 className="font-black text-xs uppercase tracking-[0.3em] mb-10 text-primary italic">Get in Touch</h5>
             <div className="space-y-8">
               <div className="group cursor-pointer">
@@ -131,7 +186,7 @@ export default function SiteFooter() {
               </div>
               <div className="flex items-center gap-3 text-white/40">
                 <Globe size={16} />
-                <span className="text-xs font-black uppercase tracking-widest">Jaipur, Ajmer & Beawar</span>
+                <span className="text-xs font-black uppercase tracking-widest">Jaipur — Vaishali Nagar, Malviya Nagar & more</span>
               </div>
             </div>
           </div>
@@ -153,9 +208,24 @@ export default function SiteFooter() {
         </div>
 
         {/* Massive Logo Background Text */}
-        <div className="relative mb-24 select-none opacity-[0.05]">
-          <h1 className="text-[25vw] font-black leading-none text-center tracking-tighter uppercase whitespace-nowrap">
-            TIFFICA
+        <div className="relative mb-24 select-none opacity-[0.6]">
+          <h1 className="text-[25vw] font-black leading-none text-center tracking-tighter uppercase whitespace-nowrap overflow-hidden">
+            {['T', 'I', 'F', 'F', 'I', 'C', 'A'].map((letter, index) => (
+              <motion.span
+                key={index}
+                initial={{ y: 100, opacity: 0 }}
+                whileInView={{ y: 0, opacity: 1 }}
+                viewport={{ once: true }}
+                transition={{
+                  duration: 0.5,
+                  delay: index * 0.1,
+                  ease: [0.22, 1, 0.36, 1]
+                }}
+                className="inline-block"
+              >
+                {letter}
+              </motion.span>
+            ))}
           </h1>
         </div>
 

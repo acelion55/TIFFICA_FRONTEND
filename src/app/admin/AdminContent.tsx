@@ -38,11 +38,11 @@ export function OverviewTab({ stats, today, liveUsers, kitchens, menuItems, orde
           <div key={s.label} className={`rounded-2xl sm:rounded-[2.5rem] p-4 sm:p-6 lg:p-8 shadow-sm hover:shadow-lg transition-all duration-300 group relative overflow-hidden bg-gradient-to-br ${s.gradient} border border-white/50`}>
             <div className={`absolute top-0 right-0 w-16 h-16 sm:w-24 sm:h-24 lg:w-32 lg:h-32 bg-white/10 rounded-bl-full -mr-6 -mt-6 sm:-mr-8 sm:-mt-8 lg:-mr-12 lg:-mt-12 opacity-30 group-hover:scale-110 transition-transform duration-700`} />
             <div className="relative z-10">
-              <div className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 rounded-xl sm:rounded-2xl bg-white/40 backdrop-blur-sm border border-white/50 flex items-center justify-center mb-3 sm:mb-4 lg:mb-6">
-                <s.icon className="w-4 h-4 sm:w-5 sm:h-5 text-black" />
+              <div className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 rounded-xl sm:rounded-2xl bg-white/20 backdrop-blur-sm border border-white/30 flex items-center justify-center mb-3 sm:mb-4 lg:mb-6">
+                <s.icon className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
               </div>
-              <p className="text-[8px] sm:text-[9px] lg:text-[10px] font-black text-black uppercase tracking-[0.2em] mb-1 sm:mb-2">{s.label}</p>
-              <p className="text-base sm:text-lg lg:text-2xl font-black text-black tracking-tight">{s.value}</p>
+              <p className="text-[8px] sm:text-[9px] lg:text-[10px] font-black text-white/70 uppercase tracking-[0.2em] mb-1 sm:mb-2">{s.label}</p>
+              <p className="text-base sm:text-lg lg:text-2xl font-black text-white tracking-tight">{s.value}</p>
             </div>
           </div>
         ))}

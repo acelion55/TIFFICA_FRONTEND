@@ -89,42 +89,126 @@ export default function SiteHeader() {
           </div>
 
           {/* Mobile Toggle */}
-          <button className="md:hidden text-foreground" onClick={() => setIsOpen(!isOpen)}>
-            {isOpen ? <X size={28} /> : <Menu size={28} />}
+          <button 
+            className="md:hidden text-foreground p-2 rounded-lg hover:bg-gray-100 transition-colors" 
+            onClick={() => {
+              console.log('Hamburger clicked, current state:', isOpen);
+              setIsOpen(!isOpen);
+            }}
+            aria-label="Toggle menu"
+          >
+            {isOpen ? <X size={24} strokeWidth={2.5} /> : <Menu size={24} strokeWidth={2.5} />}
           </button>
         </div>
       </div>
 
-      {/* Mobile Menu */}
+      
+
+      {/* Mobile Menu Overlay */}
       {isOpen && (
-        <div className="md:hidden absolute top-full left-0 right-0 bg-white shadow-2xl animate-in slide-in-from-top duration-300">
-          <div className="flex flex-col p-6 gap-6">
-            {NAV_LINKS.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className="text-lg font-black uppercase tracking-widest text-foreground hover:text-primary"
-              >
-                {link.name}
-              </Link>
-            ))}
-            <hr className="border-gray-100" />
-            {!token ? (
-              <div className="flex flex-col gap-4">
-                <Link href="/login" className="text-center font-bold text-gray-500 py-2">
-                  LOGIN
-                </Link>
-                <Link href="/signup" className="bg-primary text-white text-center py-4 rounded-pill font-black text-lg shadow-xl shadow-primary/20">
-                  GET STARTED NOW
-                </Link>
+        <>
+          {/* Backdrop */}
+          <div 
+            className="md:hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-[999] animate-in fade-in duration-300"
+            onClick={() => setIsOpen(false)}
+          />
+          
+          {/* Mobile Menu Panel */}
+          <div className="md:hidden fixed top-0 left-0 right-0 bg-white shadow-2xl z-[1000] animate-in slide-in-from-top duration-300 border-b border-gray-200">
+            {/* Header */}
+            <div className="flex items-center justify-between p-4 border-b border-gray-100">
+              <div className="flex items-center gap-2">
+                <img 
+                  src="/logo.jpeg" 
+                  alt="Tiffica Logo" 
+                  className="w-8 h-8 rounded-full object-cover"
+                />
+                <span className="text-lg font-black tracking-tighter text-foreground">
+                  TIFFICA
+                </span>
               </div>
-            ) : (
-              <Link href="/home" className="bg-primary text-white text-center py-4 rounded-pill font-black text-lg">
-                GOTO DASHBOARD
-              </Link>
-            )}
+              <button 
+                onClick={() => setIsOpen(false)}
+                className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                aria-label="Close menu"
+              >
+                <X size={24} strokeWidth={2.5} />
+              </button>
+            </div>
+            
+            {/* Menu Content */}
+            <div className="flex flex-col p-4 gap-1 max-h-[80vh] overflow-y-auto">
+              {/* Navigation Links */}
+              <div className="space-y-1 mb-6">
+                {NAV_LINKS.map((link) => (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    onClick={() => setIsOpen(false)}
+                    className={`block px-4 py-3 rounded-xl text-base font-bold uppercase tracking-wide transition-all hover:bg-gray-50 ${
+                      pathname === link.href 
+                        ? 'text-primary bg-orange-50 border border-orange-100' 
+                        : 'text-foreground hover:text-primary'
+                    }`}
+                  >
+                    {link.name}
+                  </Link>
+                ))}
+              </div>
+              
+              {/* Divider */}
+              <hr className="border-gray-200 my-4" />
+              
+              {/* Auth Buttons */}
+              {!token ? (
+                <div className="space-y-3">
+                  <Link 
+                    href="/login" 
+                    onClick={() => setIsOpen(false)}
+                    className="block text-center font-bold text-gray-600 py-3 px-4 rounded-xl hover:bg-gray-50 transition-colors"
+                  >
+                    LOGIN TO ACCOUNT
+                  </Link>
+                  <Link 
+                    href="/signup" 
+                    onClick={() => setIsOpen(false)}
+                    className="block bg-gradient-to-r from-primary to-secondary text-white text-center py-4 px-6 rounded-2xl font-black text-base shadow-xl shadow-primary/20 hover:shadow-primary/30 hover:scale-[1.02] transition-all"
+                  >
+                    🚀 GET STARTED NOW
+                  </Link>
+                </div>
+              ) : (
+                <Link 
+                  href="/home" 
+                  onClick={() => setIsOpen(false)}
+                  className="block bg-gradient-to-r from-primary to-secondary text-white text-center py-4 px-6 rounded-2xl font-black text-base shadow-xl"
+                >
+                  📱 GOTO DASHBOARD
+                </Link>
+              )}
+              
+              {/* App Download Prompt */}
+              <div className="mt-6 p-4 bg-gradient-to-r from-orange-50 to-amber-50 rounded-2xl border border-orange-100">
+                <div className="text-center">
+                  <p className="text-sm font-bold text-gray-700 mb-2">📱 Better on Mobile App</p>
+                  <p className="text-xs text-gray-500 mb-3">Install our app for faster ordering & offline access</p>
+                  <button 
+                    onClick={() => {
+                      setIsOpen(false);
+                      // Trigger PWA install
+                      if ('serviceWorker' in navigator) {
+                        alert('Look for "Add to Home Screen" in your browser menu!');
+                      }
+                    }}
+                    className="w-full bg-white text-orange-600 py-2 px-4 rounded-xl font-bold text-sm border border-orange-200 hover:bg-orange-50 transition-colors"
+                  >
+                    📲 Install App
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
+        </>
       )}
     </header>
   );

@@ -109,8 +109,8 @@ export default function CheckoutPage() {
             }
           } catch (e) {
             console.error('❌ Order save failed:', e);
-            const errorMessage = e instanceof Error ? e.message : 'Unknown error';
-            addToast(`⚠️ Payment successful but order save failed: ${errorMessage}`, 'error');
+            const msg = e instanceof Error ? e.message : 'Unknown error';
+            addToast(`⚠️ Payment successful but order save failed: ${msg}`, 'error');
           }
 
           clearCart();
@@ -118,6 +118,11 @@ export default function CheckoutPage() {
         },
         onFailure: () => {
           addToast('❌ Payment failed. Please try again.', 'error');
+          setPaying(false);
+        },
+        onError: (error) => {
+          console.error('🚫 Payment error:', error);
+          addToast(`❌ Payment error: ${error.message || 'Unknown error'}`, 'error');
           setPaying(false);
         },
       });

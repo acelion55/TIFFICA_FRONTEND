@@ -12,7 +12,7 @@ import { useEffect, useState } from 'react';
 
 const HIDE_SHELL_ROUTES = ['/login', '/signup', '/forgot-password', '/onboarding', '/admin', '/delivery-partner'];
 const SHOW_WALLETBAR_ROUTES = ['/home', '/search', '/menu', '/subscriptions', '/schedule', '/reorder', '/profile', '/plan', '/subscribe', '/addresses'];
-const HIDE_CARTBAR_ROUTES = ['/checkout', '/schedule/menu'];
+const HIDE_CARTBAR_ROUTES = ['/schedule/menu'];
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname  = usePathname();
@@ -32,6 +32,15 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   }, []);
 
   const totalItems = cart.reduce((sum, i) => sum + i.quantity, 0);
+  
+  // Debug logging for cart
+  console.log('🛒 Cart Debug:', {
+    cartItems: cart.length,
+    totalItems,
+    total,
+    hideCartBar,
+    pathname
+  });
 
   if (hideShell) return <>{children}</>;
 
@@ -43,8 +52,8 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       </main>
 
       {/* Cart Bar */}
-      {totalItems > 0 && !hideCartBar && isPWAMode && (
-        <div className="fixed bottom-[72px] left-4 right-4 z-[60]">
+      {totalItems > 0 && !hideCartBar && (
+        <div className="fixed bottom-16 left-4 right-4 z-[60] mb-2">
           <button
             onClick={() => router.push('/checkout')}
             className="w-full flex items-center justify-between bg-gray-900 text-white px-5 py-4 rounded-2xl shadow-2xl active:scale-95 transition"

@@ -5,7 +5,6 @@ import { useAuth } from '@/context/AuthContext';
 import { Bell, X, Volume2, VolumeX } from 'lucide-react';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005/api';
-const ADMIN_WS_URL = process.env.NEXT_PUBLIC_ADMIN_NOTIFICATIONS_WS_URL;
 
 interface AdminNotification {
   _id: string;
@@ -25,11 +24,8 @@ export default function AdminNotifications() {
   const [showPanel, setShowPanel] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [isSubscribed, setIsSubscribed] = useState(false);
-  const [wsConnected, setWsConnected] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
   const wsRef = useRef<WebSocket | null>(null);
-  const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const reconnectAttemptsRef = useRef(0);
 
   // Check if user is admin
   const isAdmin = user?.role === 'admin';
@@ -53,10 +49,6 @@ export default function AdminNotifications() {
     fetchNotifications();
 
     return () => {
-      if (reconnectTimerRef.current) {
-        clearTimeout(reconnectTimerRef.current);
-        reconnectTimerRef.current = null;
-      }
       if (wsRef.current) {
         wsRef.current.close();
       }
@@ -64,14 +56,10 @@ export default function AdminNotifications() {
   }, [isAdmin, token]);
 
   const setupWebSocket = () => {
-    if (!token || !ADMIN_WS_URL) return;
+    if (!token) return;
 
-    wsRef.current = new WebSocket(ADMIN_WS_URL);
-
-    wsRef.current.onopen = () => {
-      setWsConnected(true);
-      reconnectAttemptsRef.current = 0;
-    };
+    const wsUrl = API_URL.replace('http', 'ws').replace('/api', '');
+    wsRef.current = new WebSocket(`${wsUrl}/admin-notifications`);
 
     wsRef.current.onmessage = (event) => {
       try {
@@ -82,23 +70,13 @@ export default function AdminNotifications() {
       }
     };
 
-    wsRef.current.onerror = () => {
-      setWsConnected(false);
+    wsRef.current.onerror = (error) => {
+      console.error('WebSocket error:', error);
     };
 
-    wsRef.current.onclose = (event) => {
-      setWsConnected(false);
-
-      // Avoid reconnect loops after cleanup/unmount.
-      if (event.code === 1000) return;
-
-      if (reconnectAttemptsRef.current >= 3) {
-        console.warn('Admin notifications WebSocket unavailable. Falling back to API polling.');
-        return;
-      }
-
-      reconnectAttemptsRef.current += 1;
-      reconnectTimerRef.current = setTimeout(setupWebSocket, 5000);
+    wsRef.current.onclose = () => {
+      // Reconnect after 5 seconds
+      setTimeout(setupWebSocket, 5000);
     };
   };
 
@@ -291,7 +269,7 @@ export default function AdminNotifications() {
           <div className="p-3 border-b border-gray-100 bg-gray-50">
             <div className="flex items-center justify-between text-xs">
               <span className="text-gray-600">
-                {wsConnected || isSubscribed ? '🟢 Connected' : '🔴 Disconnected'}
+                {isSubscribed ? '🟢 Connected' : '🔴 Disconnected'}
               </span>
               <button
                 onClick={testNotification}

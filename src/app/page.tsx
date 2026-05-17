@@ -9,6 +9,7 @@ import { ArrowRight, CheckCircle, Clock, Shield, Star, MapPin, Play, Utensils, A
 import { useInstallApp } from '@/hooks/useInstallApp';
 import { useOrderAction } from '@/hooks/useOrderAction';
 import { AppDownloadModal } from '@/components/AppDownloadModal';
+import { motion } from 'framer-motion';
 
 export default function LandingPage() {
   const { token, loading, user } = useAuth();
@@ -17,6 +18,8 @@ export default function LandingPage() {
   const { handleInstall, isInstalling, isPWAMode } = useInstallApp();
   const { isMobile, showModal, setShowModal, handleOrderClick, handleDownloadApp } = useOrderAction();
 
+  // Don't redirect browser users - show marketing content
+  // Only redirect if user is already logged in
   useEffect(() => {
     if (!loading && token) {
       if (user?.role === 'admin' || user?.role === 'kitchen-owner') {
@@ -26,17 +29,6 @@ export default function LandingPage() {
       }
     }
   }, [loading, token, user, router]);
-
-  // Redirect browser users to login for now
-  useEffect(() => {
-    if (!loading && !token && typeof window !== 'undefined' && !isPWA()) {
-      // Only redirect if not already on login/signup pages
-      const currentPath = window.location.pathname;
-      if (currentPath !== '/login' && currentPath !== '/signup') {
-        router.push('/login');
-      }
-    }
-  }, [loading, token, router]);
 
   if (loading) {
     return (
@@ -48,11 +40,7 @@ export default function LandingPage() {
 
   if (token) return null;
 
-  // Hide landing page for browser users - they get redirected to login
-  if (typeof window !== 'undefined' && !isPWA()) {
-    return null;
-  }
-
+  // Show marketing content for all users (browser and PWA)
   return (
     <div className="bg-white selection:bg-primary selection:text-white pb-20">
       {/* Hero Section */}
@@ -64,21 +52,41 @@ export default function LandingPage() {
         </div>
 
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="inline-flex items-center gap-2 bg-gray-100 rounded-pill px-4 py-2 mb-8 animate-in slide-in-from-bottom duration-500">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="inline-flex items-center gap-2 bg-gray-100 rounded-pill px-4 py-2 mb-8"
+          >
             <span className="bg-primary text-white text-[10px] font-black px-2 py-0.5 rounded-pill">NEW</span>
             <span className="text-xs font-bold text-muted uppercase tracking-widest">Premium Tiffin Experience in Jaipur</span>
-          </div>
+          </motion.div>
           
-          <h1 className="text-mega uppercase tracking-tighter mb-8 animate-in slide-in-from-bottom duration-700">
+          <motion.h1 
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+            className="text-mega uppercase tracking-tighter mb-8"
+          >
             Taste of <span className="text-primary italic">Home</span>,<br /> 
             Delivered <span className="text-secondary">Fresh</span>.
-          </h1>
+          </motion.h1>
           
-          <p className="text-xl sm:text-2xl text-muted max-w-2xl mx-auto mb-12 font-medium animate-in slide-in-from-bottom duration-1000">
-            Order the best affordable tiffin in Jaipur, Ajmer & Beawar. Healthy, home-cooked meals tailored for professionals and students.
-          </p>
+          <motion.p 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.4 }}
+            className="text-xl sm:text-2xl text-muted max-w-2xl mx-auto mb-12 font-medium"
+          >
+            Order the best affordable tiffin in Jaipur — Vaishali Nagar, Malviya Nagar, Jagatpura, Mahesh Nagar & Mansarovar. Healthy home-cooked meals for students and professionals.
+          </motion.p>
 
-          <div className="flex flex-col sm:flex-row gap-6 justify-center items-center animate-in slide-in-from-bottom duration-1000">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.6 }}
+            className="flex flex-col sm:flex-row gap-6 justify-center items-center"
+          >
             <button 
               onClick={handleOrderClick}
               disabled={isInstalling || isMobile === null}
@@ -102,7 +110,7 @@ export default function LandingPage() {
               </div>
               VIEW MENU
             </Link>
-          </div>
+          </motion.div>
         </div>
 
         {/* Decorative Floating Elements */}
@@ -121,7 +129,7 @@ export default function LandingPage() {
             <div className="w-12 h-12 bg-yellow-100 rounded-2xl flex items-center justify-center text-2xl">🚚</div>
             <div>
               <p className="font-black text-sm uppercase">Quick Delivery</p>
-              <p className="text-xs text-muted">Jaipur, Ajmer & Beawar</p>
+              <p className="text-xs text-muted">Jaipur delivery zones</p>
             </div>
           </div>
         </div>
@@ -132,10 +140,16 @@ export default function LandingPage() {
       {/* How It Works Section */}
       <section className="py-32 bg-gray-50 overflow-hidden">
         <div className="max-w-7xl mx-auto px-4">
-          <div className="text-center mb-24">
+          <motion.div 
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-24"
+          >
             <h2 className="text-6xl font-black tracking-tighter uppercase mb-4">How it <span className="text-primary italic">Works</span>.</h2>
             <p className="text-sm font-black text-primary uppercase tracking-[0.3em]">Our Simple Process</p>
-          </div>
+          </motion.div>
 
           <div className="grid lg:grid-cols-4 gap-8 relative">
             {/* Connector Line (Desktop) */}
@@ -145,16 +159,23 @@ export default function LandingPage() {
               { step: '01', title: 'Pick a Plan', desc: 'Choose from Daily, Weekly, or Monthly subscriptions that suit your lifestyle.', icon: Coffee },
               { step: '02', title: 'Select Menu', desc: 'Customize your food preferences. We offer North Indian, Rajasthani, and Diet-specific meals.', icon: Utensils },
               { step: '03', title: 'We Cook', desc: 'Our expert home-chefs prepare your meal with fresh ingredients and maximum hygiene.', icon: Award },
-              { step: '04', title: 'Doorstep Delivery', desc: 'Enjoy your hot, delicious, homemade meal delivered right to your door in Jaipur, Ajmer & Beawar.', icon: Smile },
+              { step: '04', title: 'Doorstep Delivery', desc: 'Enjoy your hot, delicious, homemade meal delivered across Jaipur — Vaishali Nagar, Malviya Nagar, Jagatpura & more.', icon: Smile },
             ].map((item, i) => (
-              <div key={i} className="relative z-10 bg-white p-10 rounded-[48px] shadow-sm hover:shadow-xl transition-all group">
+              <motion.div 
+                key={i} 
+                initial={{ opacity: 0, y: 50 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: i * 0.1 }}
+                className="relative z-10 bg-white p-10 rounded-[48px] shadow-sm hover:shadow-xl transition-all group"
+              >
                 <div className="w-16 h-16 bg-primary text-white rounded-2xl flex items-center justify-center mb-8 font-black text-2xl shadow-lg group-hover:scale-110 transition-transform">
                   <item.icon size={32} />
                 </div>
                 <p className="text-xs font-black text-primary mb-2 uppercase tracking-widest">{item.step}.</p>
                 <h3 className="text-2xl font-black mb-4 tracking-tight uppercase">{item.title}</h3>
                 <p className="text-muted font-medium leading-relaxed">{item.desc}</p>
-              </div>
+              </motion.div>
             ))}
           </div>
         </div>
@@ -164,36 +185,58 @@ export default function LandingPage() {
       <section className="py-32 overflow-hidden">
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex flex-col lg:flex-row items-center gap-20">
-            <div className="flex-1 relative">
+            <motion.div 
+              initial={{ opacity: 0, x: -50 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.8 }}
+              className="flex-1 relative"
+            >
               <div className="absolute -inset-4 bg-orange-yellow rounded-[64px] rotate-3 -z-10" />
               <img 
                 src="https://images.unsplash.com/photo-1556910103-1c02745aae4d?q=80&w=1000&auto=format&fit=crop" 
                 alt="Chef at Work" 
                 className="rounded-[60px] shadow-2xl w-full aspect-[4/3] object-cover"
               />
-            </div>
-            <div className="flex-1">
+            </motion.div>
+            <motion.div 
+              initial={{ opacity: 0, x: 50 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.8 }}
+              className="flex-1"
+            >
               <h2 className="text-6xl font-black tracking-tighter mb-8 uppercase leading-[0.9]">
-                REAL <span className="text-primary underline decoration-secondary underline-offset-8">HOME CHEFS</span>. REAL TASTE.
+                OUR OWN <span className="text-primary underline decoration-secondary underline-offset-8">CLOUD KITCHEN</span>. REAL TASTE.
               </h2>
-              <p className="text-sm font-black text-primary uppercase tracking-[0.3em] mb-6">Authenticity Guaranteed</p>
+              <p className="text-sm font-black text-primary uppercase tracking-[0.3em] mb-6">Quality Guaranteed</p>
               <p className="text-xl text-muted font-medium leading-loose mb-10">
-                At Tiffica, we don't use commercial clouds. We partner with passionate home-chefs across Jaipur, Ajmer & Beawar who understand that food is not just nutrition—it's an emotion. Each chef is vetted for hygiene and taste consistency.
+                At Tiffica, we operate our own state-of-the-art cloud kitchen in Jaipur. We understand that food is not just nutrition—it's an emotion. Every meal is prepared fresh with home-style recipes, maintaining the highest standards of cleanliness and hygiene.
               </p>
               <div className="grid grid-cols-2 gap-8 mb-12">
-                <div>
-                  <p className="text-4xl font-black text-foreground">150+</p>
-                  <p className="text-xs font-black text-primary uppercase tracking-widest mt-1">Verified Chefs</p>
-                </div>
-                <div>
-                  <p className="text-4xl font-black text-foreground">25+</p>
-                  <p className="text-xs font-black text-primary uppercase tracking-widest mt-1">Regional Cuisines</p>
-                </div>
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  whileInView={{ opacity: 1, scale: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, delay: 0.2 }}
+                >
+                  <p className="text-4xl font-black text-foreground">100%</p>
+                  <p className="text-xs font-black text-primary uppercase tracking-widest mt-1">Clean Kitchen</p>
+                </motion.div>
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  whileInView={{ opacity: 1, scale: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, delay: 0.3 }}
+                >
+                  <p className="text-4xl font-black text-foreground">Fresh</p>
+                  <p className="text-xs font-black text-primary uppercase tracking-widest mt-1">Daily Cooking</p>
+                </motion.div>
               </div>
               <Link href="/about" className="inline-flex items-center gap-3 text-lg font-black hover:text-primary transition-colors">
-                LEARN MORE ABOUT OUR CHEFS <ArrowRight />
+                LEARN MORE ABOUT US <ArrowRight />
               </Link>
-            </div>
+            </motion.div>
           </div>
         </div>
       </section>
@@ -202,10 +245,16 @@ export default function LandingPage() {
       <section className="py-32 bg-black text-white rounded-[80px] mx-4 overflow-hidden relative">
         <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10" />
         <div className="max-w-7xl mx-auto px-4 relative z-10">
-          <div className="text-center mb-24">
+          <motion.div 
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-24"
+          >
             <h2 className="text-6xl font-black tracking-tighter uppercase mb-4">What Our <span className="text-primary italic">Community</span> Says.</h2>
             <p className="text-sm font-black text-primary uppercase tracking-[0.3em]">Word on the Street</p>
-          </div>
+          </motion.div>
 
           <div className="grid lg:grid-cols-3 gap-8">
             {[
@@ -228,7 +277,14 @@ export default function LandingPage() {
                 avatar: 'https://i.pravatar.cc/150?u=3'
               },
             ].map((t, i) => (
-              <div key={i} className="bg-white/5 border border-white/10 p-12 rounded-[56px] backdrop-blur-sm group hover:bg-white/10 transition-all">
+              <motion.div 
+                key={i} 
+                initial={{ opacity: 0, y: 50 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6, delay: i * 0.15 }}
+                className="bg-white/5 border border-white/10 p-12 rounded-[56px] backdrop-blur-sm group hover:bg-white/10 transition-all"
+              >
                 <div className="flex gap-1 mb-8">
                   {[1, 2, 3, 4, 5].map(s => <Star key={s} size={16} className="text-primary fill-current" />)}
                 </div>
@@ -240,7 +296,7 @@ export default function LandingPage() {
                     <p className="text-[10px] font-black text-primary uppercase tracking-widest">{t.role}</p>
                   </div>
                 </div>
-              </div>
+              </motion.div>
             ))}
           </div>
         </div>
@@ -249,18 +305,31 @@ export default function LandingPage() {
       {/* FAQ Simple Section */}
       <section className="py-32">
         <div className="max-w-4xl mx-auto px-4">
-          <div className="text-center mb-20">
+          <motion.div 
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-20"
+          >
             <h2 className="text-5xl font-black tracking-tighter uppercase mb-4">FREQUENTLY ASKED</h2>
             <p className="text-sm font-black text-primary uppercase tracking-[0.3em]">Got Questions?</p>
-          </div>
+          </motion.div>
           <div className="space-y-6">
             {[
               { q: 'Is the food spicy?', a: 'We offer customizable spice levels. You can choose Mild, Medium, or Spicy in your profile settings.' },
               { q: 'Can I cancel my subscription?', a: 'Yes, you can pause or cancel your subscription at any time directly through the Tiffica dashboard.' },
-              { q: 'Where do you deliver?', a: 'We deliver across Jaipur, Ajmer & Beawar including major areas like Malviya Nagar, Mansarovar, Vaishali Nagar in Jaipur, and key localities in Ajmer and Beawar.' },
+              { q: 'Where do you deliver?', a: 'We deliver across Jaipur including Vaishali Nagar, Malviya Nagar, Jagatpura, Mahesh Nagar, Mansarovar, and nearby localities.' },
               { q: 'Is the packaging eco-friendly?', a: 'We use high-quality, recyclable materials to ensure we minimize our environmental footprint.' },
             ].map((f, i) => (
-              <div key={i} className="bg-gray-50 px-10 py-8 rounded-[32px] hover:bg-primary/5 transition-colors group cursor-pointer">
+              <motion.div 
+                key={i} 
+                initial={{ opacity: 0, x: -30 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: i * 0.1 }}
+                className="bg-gray-50 px-10 py-8 rounded-[32px] hover:bg-primary/5 transition-colors group cursor-pointer"
+              >
                 <div className="flex justify-between items-center mb-4">
                   <h4 className="text-xl font-black uppercase tracking-tight">{f.q}</h4>
                   <div className="w-8 h-8 rounded-pill border border-gray-200 flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-all">
@@ -270,7 +339,7 @@ export default function LandingPage() {
                 <p className="text-muted font-medium hidden group-hover:block animate-in fade-in transition-all">
                   {f.a}
                 </p>
-              </div>
+              </motion.div>
             ))}
           </div>
         </div>
@@ -279,27 +348,51 @@ export default function LandingPage() {
       {/* Premium CTA Section */}
       <section className="py-24 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
-          <div className="bg-gradient-to-br from-slate-900 to-black rounded-[4rem] p-12 md:p-24 relative overflow-hidden text-center shadow-2xl">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8 }}
+            className="bg-gradient-to-br from-slate-900 to-black rounded-[4rem] p-12 md:p-24 relative overflow-hidden text-center shadow-2xl"
+          >
             {/* Background patterns */}
             <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#f97316_1px,transparent_1px)] [background-size:20px_20px]" />
             <div className="absolute -top-[20%] -right-[10%] w-[50%] h-[80%] bg-primary/20 blur-[100px] rounded-full" />
             
-            <h2 className="text-4xl md:text-7xl font-black text-white tracking-tighter uppercase mb-6 relative z-10 leading-none">
+            <motion.h2 
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              className="text-4xl md:text-7xl font-black text-white tracking-tighter uppercase mb-6 relative z-10 leading-none"
+            >
               READY TO TASTE <br /> <span className="text-primary italic"> AUTHENTICITY</span>?
-            </h2>
-            <p className="text-xl text-slate-400 mb-12 max-w-2xl mx-auto font-medium relative z-10 leading-relaxed">
-              Join thousands of happy customers in Jaipur, Ajmer & Beawar. Experience the joy of healthy, homemade meals delivered right to your doorstep.
-            </p>
+            </motion.h2>
+            <motion.p 
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.4 }}
+              className="text-xl text-slate-400 mb-12 max-w-2xl mx-auto font-medium relative z-10 leading-relaxed"
+            >
+              Join thousands of happy customers in Jaipur. Experience the joy of healthy, homemade meals delivered right to your doorstep.
+            </motion.p>
             
-            <div className="flex flex-col sm:flex-row gap-6 justify-center items-center relative z-10">
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.6 }}
+              className="flex flex-col sm:flex-row gap-6 justify-center items-center relative z-10"
+            >
               <button onClick={handleOrderClick} disabled={isMobile === null} className="w-full sm:w-auto bg-primary text-white px-10 py-5 rounded-full font-black text-xl shadow-2xl shadow-primary/40 hover:scale-105 transition-all text-center disabled:opacity-70 disabled:cursor-not-allowed">
                 GET STARTED NOW
               </button>
               <Link href="/login" className="w-full sm:w-auto backdrop-blur-md bg-black text-white border border-white/20 px-10 py-5 rounded-full font-black text-xl hover:bg-white hover:text-black transition-all text-center">
                 MEMBER LOGIN
               </Link>
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
         </div>
       </section>
 
@@ -309,46 +402,6 @@ export default function LandingPage() {
         onClose={() => setShowModal(false)}
         onDownload={handleDownloadApp}
       />
-
-      {/* Footer (Already there) */}
-      <footer className="pt-20 border-t border-gray-100">
-        <div className="max-w-7xl mx-auto px-4 grid md:grid-cols-4 gap-12 pb-20">
-          <div className="col-span-2">
-            <Link href="/" className="flex items-center gap-2 mb-6">
-              <img 
-                src="/logo.jpeg" 
-                alt="Tiffica Logo" 
-                className="w-8 h-8 rounded-full object-cover"
-              />
-              <span className="text-xl font-black tracking-tighter text-foreground">TIFFICA</span>
-            </Link>
-            <p className="text-muted max-w-xs font-medium uppercase text-xs tracking-widest leading-relaxed">
-              Serving Jaipur, Ajmer & Beawar with health and hygiene on a platter.
-            </p>
-          </div>
-          <div>
-            <h5 className="font-black text-xs uppercase tracking-[0.3em] mb-6">Company</h5>
-            <ul className="flex flex-col gap-3">
-              <li><Link href="/about" className="text-sm font-bold text-muted hover:text-primary">About Us</Link></li>
-              <li><Link href="/blog" className="text-sm font-bold text-muted hover:text-primary">Food Blog</Link></li>
-              <li><Link href="/contact" className="text-sm font-bold text-muted hover:text-primary">Contact</Link></li>
-            </ul>
-          </div>
-          <div>
-            <h5 className="font-black text-xs uppercase tracking-[0.3em] mb-6">Support</h5>
-            <ul className="flex flex-col gap-3">
-              <li><Link href="/faq" className="text-sm font-bold text-muted hover:text-primary">FAQs</Link></li>
-              <li><Link href="/privacy" className="text-sm font-bold text-muted hover:text-primary">Privacy Policy</Link></li>
-              <li><Link href="/terms" className="text-sm font-bold text-muted hover:text-primary">Terms of Service</Link></li>
-            </ul>
-          </div>
-        </div>
-        <div className="bg-gray-50 py-8 text-center px-4">
-          <p className="text-[10px] font-black text-gray-400 tracking-[0.4em] uppercase">
-            © 2024 TIFFICA — SERVING JAIPUR, AJMER & BEAWAR
-          </p>
-        </div>
-      </footer>
     </div>
   );
 }

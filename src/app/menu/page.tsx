@@ -1,32 +1,47 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { ArrowRight, ShoppingCart, Info, Star, Clock, Flame, ShieldCheck } from 'lucide-react';
 
-const MENU_CATEGORIES = ['All', 'North Indian', 'Rajasthani', 'Diet Plans', 'Breakfast', 'Snacks'];
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api';
 
-const MOCK_MENU = [
-  { id: 1, name: 'Executive Thali', category: 'North Indian', price: 99, rating: 4.8, img: 'https://images.unsplash.com/photo-1546833999-b9f581a1996d?q=80&w=1000&auto=format&fit=crop', details: 'Paneer Sabzi, Dal Tadka, 3 Roti, Rice, Salad & Achar' },
-  { id: 2, name: 'Dal Baati Churma', category: 'Rajasthani', price: 149, rating: 4.9, img: 'https://images.unsplash.com/photo-1589302168068-964664d93dc0?q=80&w=1000&auto=format&fit=crop', details: '4 Baati, Panchmel Dal, Desi Ghee Churma, Garlic Chutney & Chaas' },
-  { id: 3, name: 'Keto Power Bowl', category: 'Diet Plans', price: 129, rating: 4.7, img: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?q=80&w=1000&auto=format&fit=crop', details: 'Grilled Paneer, Sautéed Broccoli, Zucchini Noodles & Nuts' },
-  { id: 4, name: 'Stuffed Paratha', category: 'Breakfast', price: 79, rating: 4.9, img: 'https://images.unsplash.com/photo-1627308595229-7830a5c91f9f?q=80&w=1000&auto=format&fit=crop', details: '2 Aloo/Pyaz Paratha served with fresh Curd and Pickle' },
-  { id: 5, name: 'Pindi Chole Bhature', category: 'North Indian', price: 119, rating: 4.6, img: 'https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?q=80&w=1000&auto=format&fit=crop', details: 'Authentic Amritsari Chole with 2 fluffy Bhature & Salad' },
-  { id: 6, name: 'Bajra Roti & Gatte', category: 'Rajasthani', price: 109, rating: 4.8, img: 'https://images.unsplash.com/photo-1601050690597-df0568f70950?q=80&w=1000&auto=format&fit=crop', details: '2 Bajra Roti with Traditional Gatte ki Sabzi & Lehsun Chutney' },
-  { id: 7, name: 'Paneer Butter Masala', category: 'North Indian', price: 139, rating: 4.9, img: 'https://images.unsplash.com/photo-1631452180519-c014fe946bc7?q=80&w=1000&auto=format&fit=crop', details: 'Rich and creamy Paneer served with 2 Laccha Paratha' },
-  { id: 8, name: 'Quinoa Salad', category: 'Diet Plans', price: 159, rating: 4.5, img: 'https://images.unsplash.com/photo-1543339308-43e59d6b73a6?q=80&w=1000&auto=format&fit=crop', details: 'Quinoa, Chickpeas, Bell Peppers, and Lemon vinaigrette dressing' },
-  { id: 9, name: 'Poha Jalebi', category: 'Breakfast', price: 59, rating: 4.8, img: 'https://images.unsplash.com/photo-1621348160394-b118fb5eddd6?q=80&w=1000&auto=format&fit=crop', details: 'Indori style Poha served with 2 hot Jalebis' },
-  { id: 10, name: 'Mix Veg Pakora', category: 'Snacks', price: 69, rating: 4.7, img: 'https://images.unsplash.com/photo-1601050690597-df0568f70950?q=80&w=1000&auto=format&fit=crop', details: 'Crispy fried vegetable fritters with mint chutney' },
-  { id: 11, name: 'Ker Sangri Special', category: 'Rajasthani', price: 169, rating: 5.0, img: 'https://images.unsplash.com/photo-1589302168068-964664d93dc0?q=80&w=1000&auto=format&fit=crop', details: 'Authentic desert vegetable specialty served with 2 Missi Roti' },
-  { id: 12, name: 'Brown Rice & Dal', category: 'Diet Plans', price: 99, rating: 4.6, img: 'https://images.unsplash.com/photo-1546833999-b9f581a1996d?q=80&w=1000&auto=format&fit=crop', details: 'Organic Brown Rice served with protein-rich Moong Dal' },
-];
+interface MenuItem {
+  _id: string;
+  name: string;
+  price: number;
+  originalPrice?: number;
+  discount?: number;
+  image?: string;
+  description?: string;
+  category?: string;
+  mealType?: string;
+  mealTypes?: string | string[];
+  rating?: number;
+}
 
 export default function PublicMenu() {
-  const [activeTab, setActiveTab] = useState('All');
+  const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const filteredMenu = activeTab === 'All' 
-    ? MOCK_MENU 
-    : MOCK_MENU.filter(m => m.category === activeTab);
+  useEffect(() => {
+    const fetchMenuItems = async () => {
+      try {
+        setLoading(true);
+        const res = await fetch(`${API_URL}/menu`);
+        if (res.ok) {
+          const data = await res.json();
+          setMenuItems(data.items || []);
+        }
+      } catch (err) {
+        console.error('Failed to fetch menu items:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMenuItems();
+  }, []);
 
   return (
     <div className="bg-white pt-32 pb-20">
@@ -41,56 +56,71 @@ export default function PublicMenu() {
         </div>
 
         {/* Tabs */}
-        <div className="flex flex-wrap justify-center gap-4 mb-20">
-          {MENU_CATEGORIES.map(cat => (
-            <button
-              key={cat}
-              onClick={() => setActiveTab(cat)}
-              className={`px-8 py-3 rounded-pill text-sm font-black uppercase tracking-widest transition-all ${activeTab === cat ? 'bg-primary text-white shadow-xl shadow-primary/20 scale-110' : 'bg-gray-100 text-muted hover:bg-gray-200'}`}
-            >
-              {cat}
-            </button>
-          ))}
-        </div>
 
         {/* Menu Grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-x-12 gap-y-20 mb-32">
-          {filteredMenu.map(item => (
-            <div key={item.id} className="group flex flex-col relative">
-              <div className="aspect-square relative overflow-hidden rounded-[56px] mb-8 shadow-sm group-hover:shadow-2xl group-hover:-translate-y-2 transition-all duration-500">
-                <img src={item.img} alt={item.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
-                <div className="absolute top-8 left-8 flex flex-col gap-2">
-                  <span className="bg-white/90 backdrop-blur-md px-4 py-2 rounded-pill text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 shadow-lg">
-                    <Star size={12} className="text-yellow-500 fill-current" /> {item.rating}
-                  </span>
-                  {item.price > 120 && (
-                    <span className="bg-primary text-white px-4 py-2 rounded-pill text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 shadow-lg">
-                      <Flame size={12} /> BESTSELLER
-                    </span>
-                  )}
-                </div>
-              </div>
-              <div className="px-4">
-                <div className="flex justify-between items-start mb-4">
-                  <div>
-                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary mb-1 italic">{item.category}</p>
-                    <h3 className="text-3xl font-black tracking-tighter uppercase">{item.name}</h3>
+        {loading ? (
+          <div className="text-center py-20">
+            <p className="text-lg text-muted">Loading menu...</p>
+          </div>
+        ) : menuItems.length > 0 ? (
+          <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-x-12 md:gap-y-20 mb-32">
+            {menuItems.map(item => (
+              <div key={item._id} className="group flex flex-col relative">
+                <div className="aspect-square relative overflow-hidden rounded-2xl md:rounded-[56px] mb-4 md:mb-8 shadow-sm group-hover:shadow-2xl group-hover:-translate-y-2 transition-all duration-500">
+                  <img 
+                    src={item.image || 'https://images.unsplash.com/photo-1546833999-b9f581a1996d?q=80&w=1000&auto=format&fit=crop'} 
+                    alt={item.name} 
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
+                  />
+                  <div className="absolute top-2 md:top-8 left-2 md:left-8 flex flex-col gap-1 md:gap-2">
+                    {item.rating && (
+                      <span className="bg-white/90 backdrop-blur-md px-2 md:px-4 py-1 md:py-2 rounded-pill text-[8px] md:text-[10px] font-black uppercase tracking-widest flex items-center gap-1 md:gap-1.5 shadow-lg">
+                        <Star size={10} className="md:w-3 md:h-3 text-yellow-500 fill-current" /> {item.rating}
+                      </span>
+                    )}
+                    {item.discount && item.discount > 0 && (
+                      <span className="bg-primary text-white px-2 md:px-4 py-1 md:py-2 rounded-pill text-[8px] md:text-[10px] font-black uppercase tracking-widest flex items-center gap-1 md:gap-1.5 shadow-lg">
+                        <Flame size={10} className="md:w-3 md:h-3" /> {item.discount}% OFF
+                      </span>
+                    )}
                   </div>
-                  <p className="text-3xl font-black tracking-tighter text-foreground">₹{item.price}</p>
                 </div>
-                <p className="text-muted font-medium text-sm mb-8 leading-relaxed italic">{item.details}</p>
-                <div className="flex gap-4">
-                   <Link href="/signup" className="flex-1 bg-black text-white py-4 rounded-pill font-black text-xs uppercase tracking-widest flex items-center justify-center gap-3 hover:bg-primary transition-colors">
-                     <ShoppingCart size={18} /> Add to Subscription
-                   </Link>
-                   <button className="w-14 h-14 border-2 border-gray-100 rounded-pill flex items-center justify-center hover:border-primary transition-colors">
-                     <Info size={18} className="text-muted" />
-                   </button>
+                <div className="px-2 md:px-4">
+                  <div className="flex justify-between items-start mb-2 md:mb-4">
+                    <div>
+                      <h3 className="text-sm md:text-3xl font-black tracking-tighter uppercase leading-tight">{item.name}</h3>
+                    </div>
+                    <div className="text-right">
+                      {item.originalPrice && item.discount ? (
+                        <div className="flex flex-col items-end gap-1">
+                          <p className="text-xs md:text-sm text-gray-400 line-through">₹{item.originalPrice}</p>
+                          <p className="text-lg md:text-3xl font-black tracking-tighter text-foreground">₹{item.price}</p>
+                        </div>
+                      ) : (
+                        <p className="text-lg md:text-3xl font-black tracking-tighter text-foreground">₹{item.price}</p>
+                      )}
+                    </div>
+                  </div>
+                  {item.description && (
+                    <p className="text-muted font-medium text-xs md:text-sm mb-4 md:mb-8 leading-relaxed italic line-clamp-2">{item.description}</p>
+                  )}
+                  <div className="flex gap-2 md:gap-4">
+                    <Link href="/" className="flex-1 bg-black text-white py-2 md:py-4 rounded-full md:rounded-pill font-black text-[10px] md:text-xs uppercase tracking-widest flex items-center justify-center gap-2 md:gap-3 hover:bg-primary transition-colors">
+                      <ShoppingCart size={12} className="md:w-4 md:h-4" /> Buy Now
+                    </Link>
+                    <button className="w-8 md:w-14 h-8 md:h-14 border-2 border-gray-100 rounded-full flex items-center justify-center hover:border-primary transition-colors">
+                      <Info size={12} className="md:w-4 md:h-4 text-muted" />
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-20">
+            <p className="text-lg text-muted">No menu items available at the moment.</p>
+          </div>
+        )}
 
         {/* Quality Promises */}
         <div className="grid md:grid-cols-3 gap-12 mb-32">
