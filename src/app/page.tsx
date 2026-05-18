@@ -18,10 +18,11 @@ export default function LandingPage() {
   const { handleInstall, isInstalling, isPWAMode } = useInstallApp();
   const { isMobile, showModal, setShowModal, handleOrderClick, handleDownloadApp } = useOrderAction();
 
-  // Don't redirect browser users - show marketing content
-  // Only redirect if user is already logged in
+  // Only redirect to dashboard if in PWA mode.
+  // Browser users should stay on the landing page to browse marketing content.
   useEffect(() => {
-    if (!loading && token) {
+    const isPWAMode = isPWA();
+    if (!loading && token && isPWAMode) {
       if (user?.role === 'admin' || user?.role === 'kitchen-owner') {
         router.push('/admin');
       } else {

@@ -71,8 +71,15 @@ export default function Navbar() {
 
   if (!isClient) return null;
 
+  // Hide bottom navbar on mobile browsers. Only show in PWA mode or if Desktop.
+  // This prevents double navigation (Top Header + Bottom Nav) on the public website.
+  const isPWAMode = isPWA();
+  const isMobile = typeof window !== 'undefined' && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+  
+  if (!token && isMobile && !isPWAMode) return null;
+
   // Don't show navbar if no token and not PWA (browser users get different experience)
-  if (!token && !isPWA()) return null;
+  if (!token && !isPWAMode) return null;
   
   // Show browser navigation for non-authenticated users
   if (!token) {

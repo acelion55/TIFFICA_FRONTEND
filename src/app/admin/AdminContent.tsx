@@ -1,6 +1,6 @@
 'use client';
 import React from 'react';
-import { ChevronDown, ChevronUp, Search, Trash2, Plus, Activity, Tag, TrendingUp, Award, Users, ShoppingBag, UtensilsCrossed, CreditCard, ChevronRight, Calendar } from 'lucide-react';
+import { ChevronDown, ChevronUp, Search, Trash2, Plus, Activity, Tag, TrendingUp, Award, Users, ShoppingBag, UtensilsCrossed, CreditCard, ChevronRight, Calendar, ArrowUpDown, Mail, Phone, MapPin, Truck } from 'lucide-react';
 import AdminNotifications from '@/components/AdminNotifications';
 
 const SC: Record<string, string> = {
@@ -388,6 +388,8 @@ export function UsersTab({ users, search, setSearch, expandedRow, setExpandedRow
 }
 
 export function OrdersTab({ orders, expandedRow, setExpandedRow, fetchAll, headers, API_URL, search, setSearch, dateFilter, setDateFilter, deliveryPartners }: any) {
+  const [sortOrder, setSortOrder] = React.useState<'asc' | 'desc'>('desc');
+
   const filteredOrders = orders.filter((o: any) => {
     const matchesSearch = !search || 
       o.user?.name?.toLowerCase().includes(search.toLowerCase()) ||
@@ -401,21 +403,30 @@ export function OrdersTab({ orders, expandedRow, setExpandedRow, fetchAll, heade
     return matchesSearch && matchesDate;
   });
 
+  const sortedOrders = [...filteredOrders].sort((a, b) => {
+    const dateA = new Date(a.createdAt).getTime();
+    const dateB = new Date(b.createdAt).getTime();
+    return sortOrder === 'desc' ? dateB - dateA : dateA - dateB;
+  });
+
+  const toggleSort = () => setSortOrder(prev => prev === 'desc' ? 'asc' : 'desc');
+
   return (
     <div className="space-y-6">
+      {/* Search and Filters */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
         <div className="flex-1 flex items-center gap-4 bg-white rounded-full border border-slate-200 px-6 py-3.5 shadow-sm focus-within:border-orange-200 focus-within:ring-4 focus-within:ring-orange-50 transition-all">
           <Search className="w-5 h-5 text-slate-400 shrink-0" />
           <input 
             value={search} 
             onChange={e => setSearch(e.target.value)} 
-            placeholder="Search by name, email, phone or order ID…" 
+            placeholder="Search by name, ID, or phone..." 
             className="flex-1 text-sm font-bold focus:outline-none text-slate-700 placeholder:text-slate-400 bg-transparent" 
           />
         </div>
         <div className="flex items-center gap-4 bg-white rounded-full border border-slate-200 px-6 py-3.5 shadow-sm">
           <div className="flex flex-col">
-            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Temporal Filter</p>
+            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Date Selector</p>
             <input 
               type="date" 
               value={dateFilter} 
@@ -424,219 +435,158 @@ export function OrdersTab({ orders, expandedRow, setExpandedRow, fetchAll, heade
             />
           </div>
           {dateFilter && (
-            <button 
-              onClick={() => setDateFilter('')}
-              className="w-8 h-8 rounded-full bg-orange-50 text-orange-500 flex items-center justify-center hover:bg-orange-500 hover:text-white transition"
-            >
+            <button onClick={() => setDateFilter('')} className="text-orange-500 hover:text-orange-600 transition">
               <Trash2 className="w-4 h-4" />
             </button>
           )}
         </div>
       </div>
 
-      {/* Orders Grid */}
-      <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-        <div className="px-2 py-2 border-b border-slate-100 flex items-center justify-between">
-          <p className="text-sm font-bold text-slate-500 uppercase tracking-wide">All Orders</p>
-          <span className="text-sm text-slate-400">{filteredOrders.length} of {orders.length} records</span>
+      {/* Tabular List Section */}
+      <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden">
+        {/* Table Header - Hidden on mobile if preferred, but styled for both */}
+        <div className="hidden md:grid grid-cols-12 gap-4 px-8 py-5 bg-slate-50/50 border-b border-slate-100 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
+          <div className="col-span-2 flex items-center gap-2 cursor-pointer hover:text-slate-900 transition" onClick={toggleSort}>
+            Date <ArrowUpDown className="w-3 h-3" />
+          </div>
+          <div className="col-span-3">Customer</div>
+          <div className="col-span-2">Amount</div>
+          <div className="col-span-3 text-center">Status</div>
+          <div className="col-span-2 text-right">Details</div>
         </div>
-        
-        <div className="px-2 py-1">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
-            {filteredOrders.length === 0 ? (
-              <div className="col-span-full text-center py-24 bg-white rounded-[2.5rem] border border-slate-100">
-                <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <ShoppingBag className="w-8 h-8 text-slate-300" />
-                </div>
-                <p className="text-xl font-black text-slate-900">No Orders Found</p>
-                <p className="text-slate-400 text-sm mt-2">Adjust your filters to see more results</p>
+
+        <div className="divide-y divide-slate-50">
+          {sortedOrders.length === 0 ? (
+            <div className="py-20 text-center">
+              <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                <ShoppingBag className="w-10 h-10 text-slate-200" />
               </div>
-            ) : (
-              filteredOrders.map((o: any) => (
-                <div key={o._id} className="bg-white rounded-[1.5rem] border border-slate-100 shadow-sm hover:shadow-xl hover:shadow-orange-100/30 transition-all duration-300 overflow-hidden flex flex-col">
-                  {/* Order Status Header */}
-                  <div className={`px-3 py-2 flex items-center justify-between ${
-                    o.status === 'delivered' ? 'bg-emerald-50/50' : 
-                    o.status === 'pending' ? 'bg-amber-50/50' : 
-                    'bg-orange-50/50'
-                  }`}>
-                    <div className="flex items-center gap-2">
-                      <span className={`w-2 h-2 rounded-full ${
-                        o.status === 'delivered' ? 'bg-emerald-500' : 
-                        o.status === 'pending' ? 'bg-amber-500' : 
-                        'bg-orange-500'
-                      } animate-pulse`} />
-                      <span className="text-[11px] font-black uppercase tracking-widest text-slate-900">{o.status}</span>
-                    </div>
-                    <span className="text-[11px] font-bold text-slate-400">{fmtTime(o.createdAt)}</span>
+              <p className="font-black text-slate-400 uppercase text-xs tracking-widest">No order data found</p>
+            </div>
+          ) : (
+            sortedOrders.map((o: any) => (
+              <div key={o._id} className={`group transition-all ${expandedRow === o._id ? 'bg-orange-50/10' : 'hover:bg-slate-50/50'}`}>
+                {/* Main Row Content */}
+                <div 
+                  className="grid grid-cols-1 md:grid-cols-12 gap-4 px-6 md:px-8 py-6 items-center cursor-pointer"
+                  onClick={() => setExpandedRow(expandedRow === o._id ? null : o._id)}
+                >
+                  {/* Date Column */}
+                  <div className="col-span-2">
+                    <p className="text-xs font-black text-slate-900">{new Date(o.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}</p>
+                    <p className="text-[10px] font-bold text-slate-400 mt-1 uppercase">{new Date(o.createdAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })}</p>
                   </div>
 
-                  <div className="p-3 flex-1 space-y-2">
-                    {/* Customer Info */}
-                    <div className="flex items-center gap-2">
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-400 to-yellow-400 flex items-center justify-center text-white font-black shadow-lg text-xs">
-                        {o.user?.name?.[0]}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="font-black text-slate-900 truncate text-sm">{o.user?.name || 'Guest User'}</p>
-                        <div className="flex items-center gap-2 mt-0.5">
-                          <p className="text-xs text-slate-400 font-bold uppercase tracking-tight">📱 {o.user?.phone}</p>
-                          {o.user?.email && (
-                            <>
-                              <span className="w-1 h-1 rounded-full bg-slate-300" />
-                              <p className="text-xs text-slate-400 font-bold truncate">✉️ {o.user.email}</p>
-                            </>
-                          )}
-                        </div>
-                        {o.user?.walletBalance !== undefined && (
-                          <p className="text-[10px] text-emerald-600 font-bold mt-0.5">💰 Wallet: ₹{o.user.walletBalance}</p>
-                        )}
-                      </div>
+                  {/* Customer Column */}
+                  <div className="col-span-3 flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-slate-900 to-slate-700 flex items-center justify-center text-white font-black text-xs shadow-lg shadow-slate-100 group-hover:scale-105 transition-transform">
+                      {o.user?.name?.[0] || '?'}
                     </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-black text-slate-900 truncate uppercase">{o.user?.name || 'Guest'}</p>
+                      <p className="text-[10px] font-bold text-slate-400 truncate tracking-tight">{o.user?.phone}</p>
+                    </div>
+                  </div>
 
-                    {/* Order Details */}
-                    <div className="bg-slate-50 rounded-2xl p-2 space-y-1.5">
-                      {o.items && o.items.length > 0 ? (
-                        o.items.map((item: any, i: number) => (
-                          <div key={i} className="group relative bg-white border border-slate-100 rounded-xl p-2 hover:border-orange-200 hover:shadow-md transition-all">
-                            <div className="flex items-start justify-between gap-2 mb-1.5">
-                              <div className="flex items-start gap-2 flex-1 min-w-0">
-                                {/* Menu Item Image */}
-                                <img 
-                                  src={item.menuItem?.image || item.image || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=60&h=60&fit=crop'} 
-                                  alt={item.menuItem?.name || item.name || 'Menu Item'}
-                                  className="w-9 h-9 rounded-lg object-cover shrink-0 shadow-sm border border-slate-100"
-                                  onError={(e) => { (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=60&h=60&fit=crop'; }}
-                                />
-                                <div className="flex-1 min-w-0">
-                                  <p className="text-xs font-black text-slate-900 truncate mb-0.5">
-                                    {item.menuItem?.name || item.name || `Item #${i + 1}`}
-                                  </p>
-                                  {item.menuItem?.description && (
-                                    <p className="text-xs text-slate-500 line-clamp-2 mb-1">{item.menuItem.description}</p>
-                                  )}
-                                  <div className="flex items-center gap-2 mb-1">
-                                    <span className="text-[10px] font-bold text-slate-400">
-                                      🏠 {item.menuItem?.cloudKitchen?.name || item.cloudKitchen?.name || o.cloudKitchen?.name || 'Unknown Kitchen'}
-                                    </span>
-                                  </div>
-                                  {/* Menu Item Details */}
-                                  <div className="flex flex-wrap gap-0.5">
-                                    {item.menuItem?.category && (
-                                      <span className="text-[8px] font-bold px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-600">
-                                        {item.menuItem.category}
-                                      </span>
-                                    )}
-                                    {item.menuItem?.mealType && (
-                                      <span className="text-[8px] font-bold px-1.5 py-0.5 rounded-full bg-orange-50 text-orange-600">
-                                        {item.menuItem.mealType}
-                                      </span>
-                                    )}
-                                    {item.menuItem?.isVeg !== false && (
-                                      <span className="text-[8px] font-bold px-1.5 py-0.5 rounded-full bg-green-50 text-green-600">
-                                        🌱 Veg
-                                      </span>
-                                    )}
-                                    {item.menuItem?.rating && (
-                                      <span className="text-[8px] font-bold px-1.5 py-0.5 rounded-full bg-yellow-50 text-yellow-600">
-                                        ⭐ {item.menuItem.rating}
-                                      </span>
-                                    )}
-                                  </div>
-                                </div>
-                              </div>
-                              <div className="text-right shrink-0">
-                                <p className="text-sm font-black text-orange-600 mb-0.5">₹{item.price || 0}</p>
-                                <p className="text-[10px] font-bold text-slate-400">Qty: {item.quantity || 1}</p>
-                                {item.menuItem?.originalPrice && item.menuItem.originalPrice > (item.price || 0) && (
-                                  <p className="text-[9px] text-slate-400 line-through mt-0.5">₹{item.menuItem.originalPrice}</p>
-                                )}
-                              </div>
+                  {/* Price Column */}
+                  <div className="col-span-2">
+                    <p className="text-sm font-black text-emerald-600">₹{o.totalAmount || 0}</p>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">{o.items?.length || 0} Items</p>
+                  </div>
+
+                  {/* Status Column */}
+                  <div className="col-span-3 flex justify-center">
+                    <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border shadow-sm ${
+                      o.status === 'delivered' ? 'bg-green-50 border-green-100 text-green-600' :
+                      o.status === 'pending' ? 'bg-amber-50 border-amber-100 text-amber-600' :
+                      o.status === 'out_for_delivery' ? 'bg-indigo-50 border-indigo-100 text-indigo-600' :
+                      'bg-orange-50 border-orange-100 text-orange-600'
+                    }`}>
+                      {o.status.replace(/_/g, ' ')}
+                    </span>
+                  </div>
+
+                  {/* Toggle Column */}
+                  <div className="col-span-2 flex justify-end">
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${
+                      expandedRow === o._id ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-400 group-hover:bg-orange-500 group-hover:text-white'
+                    }`}>
+                      {expandedRow === o._id ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Expanded Details */}
+                {expandedRow === o._id && (
+                  <div className="px-6 md:px-8 pb-10 pt-2 animate-in slide-in-from-top-4 duration-300">
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                      {/* Customer Details Column */}
+                      <div className="bg-white rounded-[2rem] p-6 border border-slate-100 shadow-sm relative overflow-hidden group">
+                        <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                          <Users className="w-16 h-16 text-slate-900" />
+                        </div>
+                        <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-6 flex items-center gap-2">
+                          <Users className="w-3 h-3" /> Customer Intelligence
+                        </h4>
+                        <div className="space-y-5">
+                          <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-400"><Mail className="w-5 h-5" /></div>
+                            <div>
+                              <p className="text-[9px] font-black text-slate-400 uppercase">Email Address</p>
+                              <p className="text-xs font-bold text-slate-800">{o.user?.email || 'N/A'}</p>
                             </div>
-                            
-                            {/* Ingredients if available */}
-                            {item.menuItem?.ingredients && item.menuItem.ingredients.length > 0 && (
-                              <div className="pt-1 border-t border-slate-100">
-                                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Ingredients</p>
-                                <div className="flex flex-wrap gap-0.5">
-                                  {item.menuItem.ingredients.slice(0, 5).map((ing: string, idx: number) => (
-                                    <span key={idx} className="text-[8px] bg-green-50 text-green-700 px-1.5 py-0.5 rounded-full">
-                                      {ing}
-                                    </span>
-                                  ))}
-                                  {item.menuItem.ingredients.length > 5 && (
-                                    <span className="text-[9px] text-slate-400">+{item.menuItem.ingredients.length - 5} more</span>
-                                  )}
+                          </div>
+                          <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-400"><Phone className="w-5 h-5" /></div>
+                            <div>
+                              <p className="text-[9px] font-black text-slate-400 uppercase">Registered Mobile</p>
+                              <p className="text-xs font-bold text-slate-800">{o.user?.phone || 'N/A'}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-start gap-4">
+                            <div className="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-400 shrink-0"><MapPin className="w-5 h-5" /></div>
+                            <div>
+                              <p className="text-[9px] font-black text-slate-400 uppercase">Dispatch Target</p>
+                              <p className="text-xs font-bold text-slate-800 leading-relaxed">
+                                {[o.deliveryAddress?.street, o.deliveryAddress?.city, o.deliveryAddress?.landmark].filter(Boolean).join(', ') || 'No Address Data'}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Items & Manifest Column */}
+                      <div className="lg:col-span-2 space-y-6">
+                        <div className="bg-slate-50/50 rounded-[2rem] p-6 border border-slate-100">
+                          <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-6 flex items-center gap-2">
+                            <ShoppingBag className="w-3 h-3" /> Delivery Manifest
+                          </h4>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            {o.items?.map((item: any, i: number) => (
+                              <div key={i} className="bg-white p-4 rounded-2xl border border-slate-100 flex items-center gap-4 shadow-sm hover:shadow-md transition-shadow">
+                                <img 
+                                  src={item.menuItem?.image || item.image || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c'} 
+                                  className="w-14 h-14 rounded-xl object-cover border border-slate-50 shadow-sm"
+                                  onError={(e) => { (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c'; }}
+                                />
+                                <div className="min-w-0 flex-1">
+                                  <p className="text-xs font-black text-slate-900 uppercase truncate">{item.menuItem?.name || item.name || 'Unknown Item'}</p>
+                                  <div className="flex items-center gap-2 mt-1">
+                                    <span className="text-[10px] font-black text-orange-500 bg-orange-50 px-2 py-0.5 rounded-lg">x{item.quantity || 1}</span>
+                                    <span className="text-[10px] font-bold text-slate-400 italic">₹{item.price || 0} / unit</span>
+                                  </div>
                                 </div>
                               </div>
-                            )}
-                          </div>
-                        ))
-                      ) : (
-                        <div className="bg-white rounded-xl p-2 border border-slate-100 text-center">
-                          <p className="text-xs font-bold text-slate-400">No items in this order</p>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Location Segment */}
-                    {o.deliveryAddress && (
-                      <div className="flex items-start gap-1.5 px-0.5">
-                        <span className="text-orange-500 mt-0.5 text-sm">📍</span>
-                        <p className="text-[12px] font-bold text-slate-500 leading-relaxed line-clamp-2">
-                          {[o.deliveryAddress.street, o.deliveryAddress.city, o.deliveryAddress.landmark].filter(Boolean).join(', ')}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Actions & Price */}
-                  <div className="px-3 pb-3 pt-1 space-y-2">
-                    <div className="flex items-center justify-between border-t border-slate-100 pt-2">
-                      <button 
-                        onClick={() => setExpandedRow(expandedRow === o._id ? null : o._id)}
-                        className="text-xs font-black text-orange-500 uppercase tracking-widest hover:text-orange-600 flex items-center gap-1"
-                      >
-                        {expandedRow === o._id ? 'Close Details' : 'Full Details'}
-                      </button>
-                      <div className="text-right">
-                        <p className="text-[10px] font-bold text-slate-400 uppercase leading-none mb-0.5">Total Pay</p>
-                        <p className="text-lg font-black text-slate-900 leading-none">₹{o.totalAmount}</p>
-                      </div>
-                    </div>
-
-                    {expandedRow === o._id && (
-                      <div className="animate-in slide-in-from-top-2 duration-300 space-y-2">
-                        {/* Order Summary Stats */}
-                        <div className="grid grid-cols-2 gap-1.5">
-                          <div className="p-2 rounded-lg bg-slate-50 bg-opacity-50 border border-slate-100">
-                            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Payment Method</p>
-                            <p className="text-[10px] font-bold text-slate-700 uppercase">{o.paymentMethod || 'Cash on Delivery'}</p>
-                          </div>
-                          <div className="p-2 rounded-lg bg-slate-50 bg-opacity-50 border border-slate-100">
-                            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Delivery Fee</p>
-                            <p className="text-[10px] font-bold text-slate-700">₹{o.deliveryFee || 0}</p>
-                          </div>
-                          <div className="p-2 rounded-lg bg-slate-50 bg-opacity-50 border border-slate-100">
-                            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Order Time</p>
-                            <p className="text-[10px] font-bold text-slate-700">{new Date(o.createdAt).toLocaleString('en-IN', { 
-                              day: '2-digit', 
-                              month: 'short', 
-                              hour: '2-digit', 
-                              minute: '2-digit',
-                              hour12: true 
-                            })}</p>
-                          </div>
-                          <div className="p-2 rounded-lg bg-slate-50 bg-opacity-50 border border-slate-100">
-                            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Items Count</p>
-                            <p className="text-[10px] font-bold text-slate-700">{o.items?.length || 0} items</p>
+                            ))}
                           </div>
                         </div>
-                        
-                        {/* Delivery Partner Assignment */}
-                        {deliveryPartners && deliveryPartners.length > 0 && (
-                          <div className="space-y-1">
-                            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-0.5">Assign Delivery Partner</p>
+
+                        {/* Admin Action Control Center */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm">
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                              <Truck className="w-3 h-3" /> Logistics Assignment
+                            </p>
                             <select 
                               value={o.deliveryPartner?._id || o.deliveryPartner || ''} 
                               onChange={async (e) => { 
@@ -647,60 +597,47 @@ export function OrdersTab({ orders, expandedRow, setExpandedRow, fetchAll, heade
                                 }); 
                                 if ((await res.json()).success) fetchAll(); 
                               }} 
-                              className="w-full bg-slate-50 border border-slate-100 rounded-lg px-3 py-1.5 text-xs font-bold uppercase tracking-widest text-slate-700 focus:outline-none focus:ring-4 focus:ring-orange-100 appearance-none"
+                              className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 text-xs font-black uppercase tracking-widest text-slate-700 focus:outline-none focus:ring-4 focus:ring-orange-100 transition-all cursor-pointer"
                             >
-                              <option value="">No Partner Assigned</option>
-                              {deliveryPartners.map((dp: any) => (
-                                <option key={dp._id} value={dp._id}>{dp.name} - {dp.phone}</option>
+                              <option value="">STANDBY</option>
+                              {deliveryPartners?.map((dp: any) => (
+                                <option key={dp._id} value={dp._id}>{dp.name} ({dp.phone})</option>
                               ))}
                             </select>
                           </div>
-                        )}
-                        
-                        {/* Order Status Update */}
-                        <div className="space-y-1">
-                          <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-0.5">Update Order Status</p>
-                          <select 
-                            value={o.status} 
-                            onChange={async e => { 
-                              const res = await fetch(`${API_URL}/admin/orders/${o._id}/status`, { 
-                                method: 'PATCH', 
-                                headers: { ...headers, 'Content-Type': 'application/json' }, 
-                                body: JSON.stringify({ status: e.target.value }) 
-                              }); 
-                              if ((await res.json()).success) fetchAll(); 
-                            }} 
-                            className="w-full bg-slate-50 border border-slate-100 rounded-lg px-3 py-1.5 text-xs font-bold uppercase tracking-widest text-slate-700 focus:outline-none focus:ring-4 focus:ring-orange-100 appearance-none text-center"
-                          >
-                            <option value="pending">Pending</option>
-                            <option value="confirmed">Confirmed</option>
-                            <option value="preparing">Preparing</option>
-                            <option value="out_for_delivery">Out for Delivery</option>
-                            <option value="delivered">Delivered</option>
-                            <option value="cancelled">Cancelled</option>
-                          </select>
-                        </div>
-                        
-                        {/* Order Notes/Special Instructions */}
-                        {o.specialInstructions && (
-                          <div className="p-2 rounded-lg bg-blue-50 border border-blue-100">
-                            <p className="text-[9px] font-black text-blue-400 uppercase tracking-widest mb-1">Special Instructions</p>
-                            <p className="text-xs text-blue-700 font-medium">{o.specialInstructions}</p>
+
+                          <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm">
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                              🛡️ Status Authorization
+                            </p>
+                            <select 
+                              value={o.status} 
+                              onChange={async e => { 
+                                const res = await fetch(`${API_URL}/admin/orders/${o._id}/status`, { 
+                                  method: 'PATCH', 
+                                  headers: { ...headers, 'Content-Type': 'application/json' }, 
+                                  body: JSON.stringify({ status: e.target.value }) 
+                                }); 
+                                if ((await res.json()).success) fetchAll(); 
+                              }} 
+                              className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 text-xs font-black uppercase tracking-widest text-slate-700 focus:outline-none focus:ring-4 focus:ring-orange-100 transition-all cursor-pointer"
+                            >
+                              <option value="pending">PENDING</option>
+                              <option value="confirmed">CONFIRMED</option>
+                              <option value="preparing">PREPARING</option>
+                              <option value="out_for_delivery">OUT FOR DELIVERY</option>
+                              <option value="delivered">DELIVERED</option>
+                              <option value="cancelled">CANCELLED</option>
+                            </select>
                           </div>
-                        )}
-                        
-                        {/* Order ID for Reference */}
-                        <div className="p-2 rounded-lg bg-slate-50 border border-slate-100">
-                          <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Order Reference ID</p>
-                          <p className="text-xs font-mono text-slate-600 break-all">{o._id}</p>
                         </div>
                       </div>
-                    )}
+                    </div>
                   </div>
-                </div>
-              ))
-            )}
-          </div>
+                )}
+              </div>
+            ))
+          )}
         </div>
       </div>
     </div>
