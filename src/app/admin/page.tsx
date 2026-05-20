@@ -4,16 +4,16 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { useSwipe } from '@/hooks/useSwipe';
-import { Users, ShoppingBag, UtensilsCrossed, CreditCard, Store, BarChart2, LogOut, RefreshCw, Home, Bell, FileText, Tag, Activity, Volume2, VolumeX } from 'lucide-react';
+import { Users, ShoppingBag, UtensilsCrossed, CreditCard, Store, BarChart2, LogOut, RefreshCw, Home, Bell, FileText, Tag, Activity, Volume2, VolumeX, TrendingUp } from 'lucide-react';
 import {
   OverviewTab, UsersTab, OrdersTab, MenuTab, KitchensTab,
-  SubscriptionsTab, NotificationsTab, LegalTab, HomestyleTab, CouponsTab, ScheduleOrdersTab,
+  SubscriptionsTab, NotificationsTab, LegalTab, HomestyleTab, CouponsTab, ScheduleOrdersTab, LeadsTab,
 } from './AdminContent';
 import { CouponModal } from './CouponModal';
 import { notificationSound, showAdminNotification } from '@/lib/notificationSound';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005/api';
-type Tab = 'stats' | 'users' | 'orders' | 'menu' | 'kitchens' | 'subscriptions' | 'schedules' | 'homestyles' | 'notifications' | 'legal' | 'coupons';
+type Tab = 'stats' | 'users' | 'orders' | 'menu' | 'kitchens' | 'subscriptions' | 'schedules' | 'homestyles' | 'notifications' | 'legal' | 'coupons' | 'leads';
 interface Stats { users: number; orders: number; menuItems: number; subscriptions: number; totalWalletBalance?: number; }
 
 export default function AdminDashboard() {
@@ -27,7 +27,11 @@ export default function AdminDashboard() {
   const [kitchens, setKitchens] = useState<any[]>([]);
   const [subscriptions, setSubscriptions] = useState<any[]>([]);
   const [scheduleOrders, setScheduleOrders] = useState<any[]>([]);
+  const [leads, setLeads] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [search, setSearch] = useState('');
+  const [leadsSearch, setLeadsSearch] = useState('');
+  const [leadsStatusFilter, setLeadsStatusFilter] = useState('');
   const [search, setSearch] = useState('');
   const [expandedRow, setExpandedRow] = useState<string | null>(null);
   const [error, setError] = useState('');
@@ -77,7 +81,7 @@ export default function AdminDashboard() {
     try {
       console.log('📋 Admin fetchAll started...');
       
-      const [sRes, uRes, oRes, mRes, kRes, subRes, todayRes, dpRes, schedRes] = await Promise.all([
+      const [sRes, uRes, oRes, mRes, kRes, subRes, todayRes, dpRes, schedRes, leadsRes] = await Promise.all([
         fetch(`${API_URL}/admin/stats`, { headers }),
         fetch(`${API_URL}/admin/users`, { headers }),
         fetch(`${API_URL}/admin/orders`, { headers }),
@@ -87,6 +91,7 @@ export default function AdminDashboard() {
         fetch(`${API_URL}/admin/today`, { headers }),
         fetch(`${API_URL}/admin/delivery-partners`, { headers }),
         fetch(`${API_URL}/admin/schedules`, { headers }),
+        fetch(`${API_URL}/leads`, { headers }),
       ]);
       
       console.log('📋 API responses status:', {
@@ -98,14 +103,15 @@ export default function AdminDashboard() {
         subscriptions: subRes.status,
         today: todayRes.status,
         deliveryPartners: dpRes.status,
-        schedules: schedRes.status
+        schedules: schedRes.status,
+        leads: leadsRes.status
       });
       
       if (sRes.status === 403) { setError('Access denied. Admin only.'); setLoading(false); return; }
       
-      const [s, u, o, m, k, sub, t, dp, sched] = await Promise.all([
+      const [s, u, o, m, k, sub, t, dp, sched, leadsData] = await Promise.all([
         sRes.json(), uRes.json(), oRes.json(), mRes.json(), kRes.json(), 
-        subRes.json(), todayRes.json(), dpRes.json(), schedRes.json()
+        subRes.json(), todayRes.json(), dpRes.json(), schedRes.json(), leadsRes.json()
       ]);
       
       console.log('📋 API responses data:', {
@@ -117,7 +123,8 @@ export default function AdminDashboard() {
         subscriptions: sub.success ? `${sub.subscriptions?.length || 0} subs` : sub.error,
         today: t.success ? 'OK' : t.error,
         deliveryPartners: dp.success ? `${dp.partners?.length || 0} partners` : dp.error,
-        schedules: sched.success ? `${sched.schedules?.length || 0} schedules` : sched.error
+        schedules: sched.success ? `${sched.schedules?.length || 0} schedules` : sched.error,
+        leads: leadsData.success ? `${leadsData.data?.length || 0} leads` : leadsData.error
       });
       
       if (s.stats) setStats(s.stats);
@@ -164,6 +171,9 @@ export default function AdminDashboard() {
         }
         setScheduleOrders(sched.schedules || []);
         setLastScheduleCount((sched.schedules || []).length);
+      }
+      if (leadsData.success) {
+        setLeads(leadsData.data || []);
       }
     } catch (error) { 
       console.error('❌ Admin fetchAll error:', error);
@@ -439,6 +449,7 @@ export default function AdminDashboard() {
     { id: 'legal', label: 'Legal Pages', icon: FileText },
     { id: 'homestyles', label: 'Media', icon: Home },
     { id: 'coupons', label: 'Coupons', icon: Tag, count: coupons.length },
+    { id: 'leads', label: 'Sales Leads', icon: TrendingUp, count: leads.length },
   ];
 
   const handleTabChange = (newTab: Tab) => {
@@ -662,6 +673,9 @@ export default function AdminDashboard() {
               )}
               {tab === 'coupons' && isAdmin && (
                 <CouponsTab coupons={coupons} userPerformance={userPerformance} setCouponModal={setCouponModal} performanceDateFrom={performanceDateFrom} setPerformanceDateFrom={setPerformanceDateFrom} performanceDateTo={performanceDateTo} setPerformanceDateTo={setPerformanceDateTo} {...commonProps} />
+              )}
+              {tab === 'leads' && isAdmin && (
+                <LeadsTab leads={leads} expandedRow={expandedRow} setExpandedRow={setExpandedRow} search={leadsSearch} setSearch={setLeadsSearch} statusFilter={leadsStatusFilter} setStatusFilter={setLeadsStatusFilter} {...commonProps} />
               )}
             </div>
           )}

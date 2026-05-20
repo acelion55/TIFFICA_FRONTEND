@@ -46,10 +46,10 @@ export default function SiteFooter() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         {/* Top CTA Section */}
-        <div className="flex flex-col lg:flex-row justify-between items-end gap-12 mb-32 border-b border-white/10 pb-12">
-          <div className="max-w-2xl">
-            <h2 className="text-sm font-black text-primary uppercase tracking-[0.4em] mb-6 animate-pulse">Hungry for better?</h2>
-            <p className="text-6xl sm:text-8xl font-black tracking-tighter uppercase leading-[0.8] mb-0">
+        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-8 lg:gap-12 mb-20 lg:mb-32 border-b border-white/10 pb-8 lg:pb-12">
+          <div className="max-w-2xl w-full">
+            <h2 className="text-xs sm:text-sm font-black text-primary uppercase tracking-[0.4em] mb-4 lg:mb-6 animate-pulse">Hungry for better?</h2>
+            <p className="text-4xl sm:text-6xl lg:text-8xl font-black tracking-tighter uppercase leading-[0.85] lg:leading-[0.8] mb-0">
               JOIN THE <br />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-orange-400">FLAVOR</span> <br />
               REVOLUTION.
@@ -58,38 +58,39 @@ export default function SiteFooter() {
           <button
             onClick={handleInstall}
             disabled={isInstalling}
-            className="group relative inline-flex items-center gap-4 bg-white text-black px-12 py-8 rounded-[32px] font-black text-xl hover:bg-primary hover:text-white transition-all duration-500 shadow-2xl disabled:opacity-70 disabled:cursor-not-allowed"
+            className="group relative inline-flex items-center justify-center gap-3 lg:gap-4 bg-white text-black px-8 py-5 lg:px-12 lg:py-8 rounded-[24px] lg:rounded-[32px] font-black text-base lg:text-xl hover:bg-primary hover:text-white transition-all duration-500 shadow-2xl disabled:opacity-70 disabled:cursor-not-allowed w-full lg:w-auto"
           >
             {isInstalling ? (
               <>
-                <Loader2 className="animate-spin" size={24} />
-                INSTALLING APP...
+                <Loader2 className="animate-spin" size={20} />
+                <span className="text-sm lg:text-xl">INSTALLING APP...</span>
               </>
             ) : isPWAMode ? (
               <>
-                ORDER YOUR FIRST TIFFIN <ArrowUpRight className="group-hover:translate-x-2 group-hover:-translate-y-2 transition-transform" />
+                <span className="text-sm lg:text-xl">ORDER YOUR FIRST TIFFIN</span>
+                <ArrowUpRight className="group-hover:translate-x-2 group-hover:-translate-y-2 transition-transform" size={20} />
               </>
             ) : (
               <>
-                <Download size={24} />
-                ORDER YOUR FIRST TIFFIN
+                <Download size={20} />
+                <span className="text-sm lg:text-xl">ORDER YOUR FIRST TIFFIN</span>
               </>
             )}
           </button>
         </div>
 
         {/* Main Footer Content */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-16 mb-32">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-12 lg:gap-16 mb-20 lg:mb-32">
           {/* Brand Info */}
           <div className="lg:col-span-4">
-            <Link href="/" className="flex items-center gap-2 mb-8 group">
-              <div className="bg-primary rounded-[12px] w-12 h-12 flex items-center justify-center text-white text-2xl group-hover:rotate-12 transition-transform">🍱</div>
-              <span className="text-3xl font-black tracking-tighter text-white">TIFFICA</span>
+            <Link href="/" className="flex items-center gap-2 mb-6 lg:mb-8 group">
+              <div className="bg-primary rounded-[12px] w-10 h-10 lg:w-12 lg:h-12 flex items-center justify-center text-white text-xl lg:text-2xl group-hover:rotate-12 transition-transform">🍱</div>
+              <span className="text-2xl lg:text-3xl font-black tracking-tighter text-white">TIFFICA</span>
             </Link>
-            <p className="text-white/60 font-medium text-lg leading-relaxed mb-10 max-w-sm">
+            <p className="text-white/60 font-medium text-base lg:text-lg leading-relaxed mb-8 lg:mb-10 max-w-sm">
               We're redefining the tiffin experience in Jaipur. No compromises on health, no shortcuts on taste. Pure home-cooked excellence.
             </p>
-            <div className="flex gap-4">
+            <div className="flex gap-3 lg:gap-4">
               {[
                 { Icon: Instagram, label: 'Instagram' },
                 { Icon: Twitter, label: 'Twitter' },
@@ -97,9 +98,9 @@ export default function SiteFooter() {
               ].map((social, i) => (
                 <button
                   key={i}
-                  className="w-14 h-14 rounded-[20px] border border-white/10 flex items-center justify-center hover:bg-white hover:text-black transition-all group scale-100 hover:scale-110"
+                  className="w-12 h-12 lg:w-14 lg:h-14 rounded-[16px] lg:rounded-[20px] border border-white/10 flex items-center justify-center hover:bg-white hover:text-black transition-all group scale-100 hover:scale-110"
                 >
-                  <social.Icon size={24} />
+                  <social.Icon size={20} className="lg:w-6 lg:h-6" />
                 </button>
               ))}
             </div>
@@ -174,19 +175,19 @@ export default function SiteFooter() {
 
           {/* Column 3: Contact */}
           <div className="lg:col-span-2">
-            <h5 className="font-black text-xs uppercase tracking-[0.3em] mb-10 text-primary italic">Get in Touch</h5>
-            <div className="space-y-8">
+            <h5 className="font-black text-xs uppercase tracking-[0.3em] mb-8 lg:mb-10 text-primary italic">Get in Touch</h5>
+            <div className="space-y-6 lg:space-y-8">
               <div className="group cursor-pointer">
                 <p className="text-[10px] font-black uppercase tracking-widest text-white/40 mb-2">Email Support</p>
-                <p className="text-xl font-black tracking-tight text-white group-hover:text-primary transition-colors uppercase">supporttiffica@gmail.com</p>
+                <p className="text-base lg:text-xl font-black tracking-tight text-white group-hover:text-primary transition-colors uppercase break-words">supporttiffica@gmail.com</p>
               </div>
               <div className="group cursor-pointer">
                 <p className="text-[10px] font-black uppercase tracking-widest text-white/40 mb-2">Customer Care</p>
-                <p className="text-xl font-black tracking-tight text-white group-hover:text-primary transition-colors uppercase">+91 82394 56238</p>
+                <p className="text-base lg:text-xl font-black tracking-tight text-white group-hover:text-primary transition-colors uppercase">+91 82394 56238</p>
               </div>
-              <div className="flex items-center gap-3 text-white/40">
-                <Globe size={16} />
-                <span className="text-xs font-black uppercase tracking-widest">Jaipur — Vaishali Nagar, Malviya Nagar & more</span>
+              <div className="flex items-start lg:items-center gap-3 text-white/40">
+                <Globe size={16} className="flex-shrink-0 mt-0.5 lg:mt-0" />
+                <span className="text-xs font-black uppercase tracking-widest leading-relaxed">Jaipur — Vaishali Nagar, Malviya Nagar & more</span>
               </div>
             </div>
           </div>
@@ -208,8 +209,8 @@ export default function SiteFooter() {
         </div>
 
         {/* Massive Logo Background Text */}
-        <div className="relative mb-24 select-none opacity-[0.6]">
-          <h1 className="text-[25vw] font-black leading-none text-center tracking-tighter uppercase whitespace-nowrap overflow-hidden">
+        <div className="relative mb-16 lg:mb-24 select-none opacity-[0.05]">
+          <h1 className="text-[20vw] sm:text-[25vw] font-black leading-none text-center tracking-tighter uppercase whitespace-nowrap overflow-hidden">
             {['T', 'I', 'F', 'F', 'I', 'C', 'A'].map((letter, index) => (
               <motion.span
                 key={index}
@@ -230,20 +231,20 @@ export default function SiteFooter() {
         </div>
 
         {/* Bottom Bar */}
-        <div className="pt-12 border-t border-white/10 flex flex-col md:flex-row justify-between items-center gap-8">
-          <p className="text-[10px] font-black text-white/40 tracking-[0.4em] uppercase">
+        <div className="pt-8 lg:pt-12 border-t border-white/10 flex flex-col md:flex-row justify-between items-center gap-6 lg:gap-8">
+          <p className="text-[9px] lg:text-[10px] font-black text-white/40 tracking-[0.3em] lg:tracking-[0.4em] uppercase text-center md:text-left">
             © 2024 TIFFICA® — THE NEW STANDARD OF TIFFIN SERVICES
           </p>
-          <div className="flex items-center gap-12">
-            <div className="flex gap-8">
-              <Link href="/privacy" className="text-[10px] font-black text-white/40 tracking-widest uppercase hover:text-white transition-colors">Privacy</Link>
-              <Link href="/terms" className="text-[10px] font-black text-white/40 tracking-widest uppercase hover:text-white transition-colors">Terms</Link>
+          <div className="flex items-center gap-8 lg:gap-12">
+            <div className="flex gap-6 lg:gap-8">
+              <Link href="/privacy" className="text-[9px] lg:text-[10px] font-black text-white/40 tracking-widest uppercase hover:text-white transition-colors">Privacy</Link>
+              <Link href="/terms" className="text-[9px] lg:text-[10px] font-black text-white/40 tracking-widest uppercase hover:text-white transition-colors">Terms</Link>
             </div>
             <button
               onClick={scrollToTop}
-              className="w-12 h-12 rounded-full border border-white/20 flex items-center justify-center hover:bg-white hover:text-black transition-all"
+              className="w-10 h-10 lg:w-12 lg:h-12 rounded-full border border-white/20 flex items-center justify-center hover:bg-white hover:text-black transition-all flex-shrink-0"
             >
-              <ArrowUpRight size={20} />
+              <ArrowUpRight size={18} className="lg:w-5 lg:h-5" />
             </button>
           </div>
         </div>

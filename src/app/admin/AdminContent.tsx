@@ -1673,3 +1673,295 @@ export function ScheduleOrdersTab({ scheduleOrders, expandedRow, setExpandedRow,
     </div>
   );
 }
+
+export function LeadsTab({ leads, expandedRow, setExpandedRow, search, setSearch, statusFilter, setStatusFilter, fetchAll, headers, API_URL }: any) {
+  const [page, setPage] = React.useState(1);
+  const itemsPerPage = 10;
+
+  const filteredLeads = leads.filter((lead: any) => {
+    const matchesSearch = !search || 
+      lead.name?.toLowerCase().includes(search.toLowerCase()) ||
+      lead.email?.toLowerCase().includes(search.toLowerCase()) ||
+      lead.number?.includes(search);
+    
+    const matchesStatus = !statusFilter || lead.status === statusFilter;
+    
+    return matchesSearch && matchesStatus;
+  });
+
+  const paginatedLeads = filteredLeads.slice((page - 1) * itemsPerPage, page * itemsPerPage);
+  const totalPages = Math.ceil(filteredLeads.length / itemsPerPage);
+
+  const statusColors: Record<string, string> = {
+    new: 'bg-blue-100 text-blue-700',
+    contacted: 'bg-amber-100 text-amber-700',
+    converted: 'bg-emerald-100 text-emerald-700',
+    'not-interested': 'bg-red-100 text-red-700',
+  };
+
+  const mealTypeColors: Record<string, string> = {
+    Lunch: 'bg-orange-100 text-orange-700',
+    Dinner: 'bg-indigo-100 text-indigo-700',
+    Both: 'bg-purple-100 text-purple-700',
+  };
+
+  const customerTypeEmoji: Record<string, string> = {
+    Student: '🎓',
+    Corporate: '🏢',
+    Employee: '👔',
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Search and Filters */}
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
+        <div className="flex-1 flex items-center gap-4 bg-white rounded-full border border-slate-200 px-6 py-3.5 shadow-sm focus-within:border-orange-200 focus-within:ring-4 focus-within:ring-orange-50 transition-all">
+          <Search className="w-5 h-5 text-slate-400 shrink-0" />
+          <input 
+            value={search} 
+            onChange={e => { setSearch(e.target.value); setPage(1); }} 
+            placeholder="Search by name, email, or phone..." 
+            className="flex-1 text-sm font-bold focus:outline-none text-slate-700 placeholder:text-slate-400 bg-transparent" 
+          />
+        </div>
+        <select 
+          value={statusFilter} 
+          onChange={e => { setStatusFilter(e.target.value); setPage(1); }}
+          className="px-6 py-3.5 bg-white border border-slate-200 rounded-full text-sm font-bold focus:outline-none focus:ring-4 focus:ring-orange-50 transition-all"
+        >
+          <option value="">All Statuses</option>
+          <option value="new">New Leads</option>
+          <option value="contacted">Contacted</option>
+          <option value="converted">Converted</option>
+          <option value="not-interested">Not Interested</option>
+        </select>
+      </div>
+
+      {/* Leads Table */}
+      <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
+        <div className="px-8 py-6 border-b border-slate-50 flex items-center justify-between bg-slate-50/30">
+          <div>
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Sales Leads</p>
+            <p className="text-sm font-bold text-orange-500 mt-1">{filteredLeads.length} leads found</p>
+          </div>
+          <span className="text-[10px] font-black text-slate-400 px-4 py-2 bg-slate-100 rounded-full">Page {page} of {Math.max(1, totalPages)}</span>
+        </div>
+
+        {filteredLeads.length === 0 ? (
+          <div className="text-center py-24">
+            <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 text-4xl">📋</div>
+            <p className="font-black text-slate-900 text-lg">No leads found</p>
+            <p className="text-slate-400 text-sm mt-2">Try adjusting your search or filters</p>
+          </div>
+        ) : (
+          <>
+            <div className="divide-y divide-slate-50">
+              {paginatedLeads.map((lead: any) => (
+                <div key={lead._id} className="group">
+                  <button 
+                    className="w-full flex items-center gap-6 px-8 py-6 hover:bg-slate-50 transition-all text-left" 
+                    onClick={() => setExpandedRow(expandedRow === lead._id ? null : lead._id)}
+                  >
+                    <div className="w-14 h-14 rounded-[1.5rem] bg-gradient-to-br from-orange-400 to-amber-500 flex items-center justify-center text-white font-black text-xl shadow-lg shadow-orange-100 group-hover:scale-105 transition-transform flex-shrink-0">
+                      {lead.name?.[0]?.toUpperCase() || '?'}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1.5">
+                        <p className="font-black text-slate-900 text-base">{lead.name}</p>
+                        <span className={`text-[9px] font-black px-2.5 py-1 rounded-full uppercase tracking-widest ${statusColors[lead.status] || 'bg-slate-100'}`}>
+                          {lead.status}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-4 flex-wrap">
+                        <p className="text-xs font-bold text-slate-400 flex items-center gap-1.5">
+                          <span>📱</span> {lead.number}
+                        </p>
+                        <p className="text-xs font-bold text-slate-400 flex items-center gap-1.5">
+                          <span>📧</span> {lead.email}
+                        </p>
+                        <p className="text-xs font-bold text-slate-400 flex items-center gap-1.5">
+                          <span>📍</span> {lead.city}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right shrink-0 hidden sm:block">
+                      <span className={`text-[9px] font-black px-2.5 py-1 rounded-full mb-2 inline-block ${mealTypeColors[lead.mealType] || 'bg-slate-100'}`}>
+                        {lead.mealType}
+                      </span>
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">
+                        {customerTypeEmoji[lead.customerType]} {lead.customerType}
+                      </p>
+                    </div>
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-all shrink-0 ${
+                      expandedRow === lead._id ? 'bg-slate-900 text-white' : 'bg-slate-50 text-slate-300 group-hover:bg-orange-50 group-hover:text-orange-500'
+                    }`}>
+                      {expandedRow === lead._id ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                    </div>
+                  </button>
+
+                  {expandedRow === lead._id && (
+                    <div className="px-8 pb-8 pt-2 bg-slate-50/50 animate-in slide-in-from-top-4 duration-300">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                        <div className="bg-white rounded-[1.5rem] p-5 border border-slate-100 shadow-sm">
+                          <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Meal Preference</p>
+                          <span className={`text-sm font-black px-3 py-1 rounded-full inline-block ${mealTypeColors[lead.mealType]}`}>
+                            {lead.mealType}
+                          </span>
+                        </div>
+                        <div className="bg-white rounded-[1.5rem] p-5 border border-slate-100 shadow-sm">
+                          <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Customer Type</p>
+                          <span className="text-sm font-black">
+                            {customerTypeEmoji[lead.customerType]} {lead.customerType}
+                          </span>
+                        </div>
+                        <div className="bg-white rounded-[1.5rem] p-5 border border-slate-100 shadow-sm">
+                          <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Lead Date</p>
+                          <p className="text-sm font-black text-slate-700">
+                            {new Date(lead.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                        <div className="bg-white rounded-[1.5rem] p-5 border border-slate-100 shadow-sm">
+                          <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-3">Full Details</p>
+                          <div className="space-y-3">
+                            <div className="flex items-center gap-3">
+                              <span className="text-base">📧</span>
+                              <div>
+                                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Email</p>
+                                <p className="text-xs font-bold text-slate-700">{lead.email}</p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-3">
+                              <span className="text-base">📱</span>
+                              <div>
+                                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Phone</p>
+                                <p className="text-xs font-bold text-slate-700">{lead.number}</p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-3">
+                              <span className="text-base">📍</span>
+                              <div>
+                                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Address</p>
+                                <p className="text-xs font-bold text-slate-700">{lead.address}</p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-3">
+                              <span className="text-base">🏙️</span>
+                              <div>
+                                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">City</p>
+                                <p className="text-xs font-bold text-slate-700">{lead.city}</p>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="bg-white rounded-[1.5rem] p-5 border border-slate-100 shadow-sm space-y-4">
+                          <div>
+                            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Update Status</p>
+                            <select 
+                              value={lead.status}
+                              onChange={async (e) => {
+                                const res = await fetch(`${API_URL}/leads/${lead._id}`, { 
+                                  method: 'PATCH', 
+                                  headers: { ...headers, 'Content-Type': 'application/json' }, 
+                                  body: JSON.stringify({ status: e.target.value }) 
+                                });
+                                if ((await res.json()).success) fetchAll();
+                              }}
+                              className="w-full bg-slate-50 border border-slate-100 rounded-lg px-3 py-2.5 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-orange-100"
+                            >
+                              <option value="new">New</option>
+                              <option value="contacted">Contacted</option>
+                              <option value="converted">Converted</option>
+                              <option value="not-interested">Not Interested</option>
+                            </select>
+                          </div>
+                          <div>
+                            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Internal Notes</p>
+                            <textarea 
+                              placeholder="Add notes..."
+                              defaultValue={lead.notes}
+                              onBlur={async (e) => {
+                                const res = await fetch(`${API_URL}/leads/${lead._id}`, { 
+                                  method: 'PATCH', 
+                                  headers: { ...headers, 'Content-Type': 'application/json' }, 
+                                  body: JSON.stringify({ notes: e.target.value }) 
+                                });
+                                if ((await res.json()).success) fetchAll();
+                              }}
+                              className="w-full bg-slate-50 border border-slate-100 rounded-lg px-3 py-2 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-orange-100 resize-none"
+                              rows={4}
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex gap-3">
+                        <button 
+                          onClick={async () => {
+                            window.location.href = `https://wa.me/${lead.number}?text=Hi ${lead.name}, we're interested in offering you our tiffin services!`;
+                          }}
+                          className="flex-1 py-3 bg-green-500 text-white rounded-lg font-bold text-[10px] uppercase tracking-widest hover:bg-green-600 transition shadow-lg shadow-green-100"
+                        >
+                          💬 Send WhatsApp
+                        </button>
+                        <button 
+                          onClick={async () => {
+                            if (!confirm('Delete this lead?')) return;
+                            const res = await fetch(`${API_URL}/leads/${lead._id}`, { 
+                              method: 'DELETE', 
+                              headers 
+                            });
+                            if ((await res.json()).success) fetchAll();
+                          }}
+                          className="px-6 py-3 bg-red-50 text-red-500 rounded-lg font-bold text-[10px] uppercase tracking-widest hover:bg-red-100 transition"
+                        >
+                          🗑️ Delete
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="px-8 py-6 border-t border-slate-50 flex items-center justify-between bg-slate-50/30">
+                <button 
+                  disabled={page === 1}
+                  onClick={() => setPage(p => Math.max(1, p - 1))}
+                  className="px-4 py-2 bg-slate-100 text-slate-600 rounded-lg text-sm font-bold hover:bg-slate-200 disabled:opacity-50 transition"
+                >
+                  ← Previous
+                </button>
+                <div className="flex gap-2">
+                  {Array.from({ length: totalPages }).map((_, i) => (
+                    <button 
+                      key={i + 1}
+                      onClick={() => setPage(i + 1)}
+                      className={`w-10 h-10 rounded-lg font-black text-sm transition ${
+                        page === i + 1 ? 'bg-orange-500 text-white' : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'
+                      }`}
+                    >
+                      {i + 1}
+                    </button>
+                  ))}
+                </div>
+                <button 
+                  disabled={page === totalPages}
+                  onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                  className="px-4 py-2 bg-slate-100 text-slate-600 rounded-lg text-sm font-bold hover:bg-slate-200 disabled:opacity-50 transition"
+                >
+                  Next →
+                </button>
+              </div>
+            )}
+          </>
+        )}
+      </div>
+    </div>
+  );
+}

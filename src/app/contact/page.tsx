@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { Mail, Phone, MapPin, Instagram, Twitter, Facebook, HelpCircle, MessageCircle } from 'lucide-react';
-import ContactForm from './ContactForm';
+import ContactLeadsForm from './ContactLeadsForm';
 import { buildPageMetadata } from '@/lib/seo';
 
 export const metadata: Metadata = buildPageMetadata({
@@ -13,7 +13,7 @@ export const metadata: Metadata = buildPageMetadata({
 
 export default function ContactPage() {
   return (
-    <div className="bg-white pt-20 sm:pt-32 pb-20">
+    <div className="bg-white pt-32 sm:pt-40 pb-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mb-16 sm:mb-24 text-center">
           <h1 className="text-5xl sm:text-6xl lg:text-mega uppercase tracking-tighter mb-4 sm:mb-6 italic">
@@ -24,9 +24,15 @@ export default function ContactPage() {
           </p>
         </div>
 
-        <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-start">
+        {/* Mobile: Leads Form on Top, Desktop: Grid Layout */}
+        <div className="flex flex-col lg:grid lg:grid-cols-2 gap-12 lg:gap-20 items-start">
+          {/* Leads Form - appears first on mobile, first on desktop too */}
+          <div className="lg:order-1 w-full">
+            <ContactLeadsForm />
+          </div>
+
           {/* Contact Info */}
-          <div className="space-y-12 sm:space-y-16">
+          <div className="lg:order-2 space-y-12 sm:space-y-16">
             <div>
               <h2 className="text-xs sm:text-sm font-black text-primary uppercase tracking-[0.3em] mb-8 sm:mb-12">Contact Information</h2>
               <div className="space-y-8 sm:space-y-10">
@@ -90,9 +96,6 @@ export default function ContactPage() {
               </div>
             </div>
           </div>
-
-          {/* Contact Form */}
-          <ContactForm />
         </div>
 
         {/* Local Impact Stats in Contact */}
