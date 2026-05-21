@@ -32,7 +32,6 @@ export default function AdminDashboard() {
   const [search, setSearch] = useState('');
   const [leadsSearch, setLeadsSearch] = useState('');
   const [leadsStatusFilter, setLeadsStatusFilter] = useState('');
-  const [search, setSearch] = useState('');
   const [expandedRow, setExpandedRow] = useState<string | null>(null);
   const [error, setError] = useState('');
   const [today, setToday] = useState<any>(null);
