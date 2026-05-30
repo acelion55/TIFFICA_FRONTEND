@@ -99,7 +99,7 @@ export default function ContactLeadsForm() {
             <form onSubmit={handleSubmit} className="space-y-5">
               {/* Row 1: Name & Number */}
               <div className="grid grid-cols-2 gap-4">
-                <div className="relative pt-6">
+                <div className="relative">
                   <input
                     type="text"
                     name="name"
@@ -108,19 +108,19 @@ export default function ContactLeadsForm() {
                     onFocus={() => setFocusedField('name')}
                     onBlur={() => setFocusedField(null)}
                     placeholder=" "
-                    className="w-full bg-white px-4 py-3 rounded-lg border-2 border-gray-300 outline-none focus:border-primary transition-colors duration-300 font-medium text-sm"
+                    className="w-full bg-white px-4 py-3 rounded-lg border-2 border-gray-300 outline-none focus:border-primary transition-colors duration-300 font-medium text-sm pt-6"
                   />
                   <label
-                    className={`absolute left-4 bg-white px-1 text-xs font-bold uppercase tracking-wider pointer-events-none transition-all duration-300 ease-out ${
+                    className={`absolute left-4 bg-white px-1 pointer-events-none transition-all duration-300 ease-out ${
                       focusedField === 'name' || formData.name.length > 0
-                        ? 'top-[2vh] text-primary text-[10px]'
-                        : 'top-10 text-gray-500 text-sm'
+                        ? 'top-0 text-primary text-[10px] font-bold uppercase tracking-wider'
+                        : 'top-1/2 -translate-y-1/2 text-gray-500 text-sm font-medium'
                     }`}
                   >
                     Name
                   </label>
                 </div>
-                <div className="relative pt-6">
+                <div className="relative">
                   <input
                     type="tel"
                     name="number"
@@ -129,13 +129,13 @@ export default function ContactLeadsForm() {
                     onFocus={() => setFocusedField('number')}
                     onBlur={() => setFocusedField(null)}
                     placeholder=" "
-                    className="w-full bg-white px-4 py-3 rounded-lg border-2 border-gray-300 outline-none focus:border-primary transition-colors duration-300 font-medium text-sm"
+                    className="w-full bg-white px-4 py-3 rounded-lg border-2 border-gray-300 outline-none focus:border-primary transition-colors duration-300 font-medium text-sm pt-6"
                   />
                   <label
-                    className={`absolute left-4 bg-white px-1 text-xs font-bold uppercase tracking-wider pointer-events-none transition-all duration-300 ease-out ${
+                    className={`absolute left-4 bg-white px-1 pointer-events-none transition-all duration-300 ease-out ${
                       focusedField === 'number' || formData.number.length > 0
-                        ? 'top-[2vh] text-primary text-[10px]'
-                        : 'top-10 text-gray-500 text-sm'
+                        ? 'top-0 text-primary text-[10px] font-bold uppercase tracking-wider'
+                        : 'top-1/2 -translate-y-1/2 text-gray-500 text-sm font-medium'
                     }`}
                   >
                     Number
@@ -145,7 +145,7 @@ export default function ContactLeadsForm() {
 
               {/* Row 2: Email & City */}
               <div className="grid grid-cols-2 gap-4">
-                <div className="relative pt-6">
+                <div className="relative">
                   <input
                     type="email"
                     name="email"
@@ -154,19 +154,19 @@ export default function ContactLeadsForm() {
                     onFocus={() => setFocusedField('email')}
                     onBlur={() => setFocusedField(null)}
                     placeholder=" "
-                    className="w-full bg-white px-4 py-3 rounded-lg border-2 border-gray-300 outline-none focus:border-primary transition-colors duration-300 font-medium text-sm"
+                    className="w-full bg-white px-4 py-3 rounded-lg border-2 border-gray-300 outline-none focus:border-primary transition-colors duration-300 font-medium text-sm pt-6"
                   />
                   <label
-                    className={`absolute left-4 bg-white px-1 text-xs font-bold uppercase tracking-wider pointer-events-none transition-all duration-300 ease-out ${
+                    className={`absolute left-4 bg-white px-1 pointer-events-none transition-all duration-300 ease-out ${
                       focusedField === 'email' || formData.email.length > 0
-                        ? 'top-[2vh] text-primary text-[10px]'
-                        : 'top-10 text-gray-500 text-sm'
+                        ? 'top-0 text-primary text-[10px] font-bold uppercase tracking-wider'
+                        : 'top-1/2 -translate-y-1/2 text-gray-500 text-sm font-medium'
                     }`}
                   >
                     Email
                   </label>
                 </div>
-                <div className="relative pt-6">
+                <div className="relative">
                   <input
                     type="text"
                     name="city"
@@ -175,13 +175,13 @@ export default function ContactLeadsForm() {
                     onFocus={() => setFocusedField('city')}
                     onBlur={() => setFocusedField(null)}
                     placeholder=" "
-                    className="w-full bg-white px-4 py-3 rounded-lg border-2 border-gray-300 outline-none focus:border-primary transition-colors duration-300 font-medium text-sm"
+                    className="w-full bg-white px-4 py-3 rounded-lg border-2 border-gray-300 outline-none focus:border-primary transition-colors duration-300 font-medium text-sm pt-6"
                   />
                   <label
-                    className={`absolute left-4 bg-white px-1 text-xs font-bold uppercase tracking-wider pointer-events-none transition-all duration-300 ease-out ${
+                    className={`absolute left-4 bg-white px-1 pointer-events-none transition-all duration-300 ease-out ${
                       focusedField === 'city' || formData.city.length > 0
-                        ? 'top-[2vh] text-primary text-[10px]'
-                        : 'top-10 text-gray-500 text-sm'
+                        ? 'top-0 text-primary text-[10px] font-bold uppercase tracking-wider'
+                        : 'top-1/2 -translate-y-1/2 text-gray-500 text-sm font-medium'
                     }`}
                   >
                     City
@@ -190,7 +190,7 @@ export default function ContactLeadsForm() {
               </div>
 
               {/* Row 3: Address (Full Width) */}
-              <div className="relative pt-6">
+              <div className="relative">
                 <input
                   type="text"
                   name="address"
@@ -199,13 +199,13 @@ export default function ContactLeadsForm() {
                   onFocus={() => setFocusedField('address')}
                   onBlur={() => setFocusedField(null)}
                   placeholder=" "
-                  className="w-full bg-white px-4 py-3 rounded-lg border-2 border-gray-300 outline-none focus:border-primary transition-colors duration-300 font-medium text-sm"
+                  className="w-full bg-white px-4 py-3 rounded-lg border-2 border-gray-300 outline-none focus:border-primary transition-colors duration-300 font-medium text-sm pt-6"
                 />
                 <label
-                  className={`absolute left-4 bg-white px-1 text-xs font-bold uppercase tracking-wider pointer-events-none transition-all duration-300 ease-out ${
+                  className={`absolute left-4 bg-white px-1 pointer-events-none transition-all duration-300 ease-out ${
                     focusedField === 'address' || formData.address.length > 0
-                      ? 'top-[2vh] text-primary text-[10px]'
-                      : 'top-10 text-gray-500 text-sm'
+                      ? 'top-0 text-primary text-[10px] font-bold uppercase tracking-wider'
+                      : 'top-1/2 -translate-y-1/2 text-gray-500 text-sm font-medium'
                   }`}
                 >
                   Address
@@ -236,14 +236,14 @@ export default function ContactLeadsForm() {
               </div>
 
               {/* Row 5: Customer Type Dropdown */}
-              <div className="relative pt-6">
+              <div className="relative">
                 <select
                   name="customerType"
                   value={formData.customerType}
                   onChange={handleChange}
                   onFocus={() => setFocusedField('customerType')}
                   onBlur={() => setFocusedField(null)}
-                  className="w-full bg-white px-4 py-3 rounded-lg border-2 border-gray-300 outline-none focus:border-primary transition-all font-medium text-sm appearance-none pr-10"
+                  className="w-full bg-white px-4 py-3 rounded-lg border-2 border-gray-300 outline-none focus:border-primary transition-all font-medium text-sm appearance-none pr-10 pt-6"
                 >
                   <option value="Student">Student</option>
                   <option value="Corporate">Corporate</option>
@@ -251,12 +251,14 @@ export default function ContactLeadsForm() {
                   <option value="Employee">Hostel</option>
                   <option value="Employee">Bachelor</option>
                 </select>
-                <div className="absolute right-3 top-9 pointer-events-none text-gray-500">
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-500">
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
                   </svg>
                 </div>
-                <label className="absolute left-4 top-0 bg-white px-1 text-xs font-bold uppercase tracking-wider text-primary">
+                <label className={`absolute left-4 bg-white px-1 pointer-events-none transition-all duration-300 ease-out ${
+                  focusedField === 'customerType' || formData.customerType ? 'top-0 text-primary text-[10px] font-bold uppercase tracking-wider' : 'top-1/2 -translate-y-1/2 text-gray-500 text-sm font-medium'
+                }`}>
                   Type
                 </label>
               </div>

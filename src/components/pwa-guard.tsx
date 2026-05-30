@@ -75,7 +75,7 @@ export default function PWAGuard({ children }: { children: React.ReactNode }) {
             </button>
             
             <button
-              onClick={() => router.push('/')}
+              onClick={() => window.location.href = 'https://tiffica.xyz'}
               className="w-full bg-gray-100 text-gray-700 px-6 py-4 rounded-2xl font-bold text-sm hover:bg-gray-200 transition-all uppercase"
             >
               ← Back to Web Pages

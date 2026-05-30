@@ -58,26 +58,63 @@ export default function AdminNotifications() {
   const setupWebSocket = () => {
     if (!token) return;
 
-    const wsUrl = API_URL.replace('http', 'ws').replace('/api', '');
-    wsRef.current = new WebSocket(`${wsUrl}/admin-notifications`);
+    try {
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const host = window.location.hostname;
+      const port = process.env.NEXT_PUBLIC_API_URL ? new URL(process.env.NEXT_PUBLIC_API_URL).port || (protocol === 'wss:' ? 443 : 80) : 5001;
+      
+      wsRef.current = new WebSocket(`${protocol}//${host}:${port}/admin-notifications`);
 
-    wsRef.current.onmessage = (event) => {
-      try {
-        const notification = JSON.parse(event.data);
-        handleNewNotification(notification);
-      } catch (error) {
-        console.error('WebSocket message error:', error);
-      }
-    };
+      wsRef.current.onopen = () => {
+        console.log('✅ WebSocket connected');
+        // Send authentication
+        wsRef.current?.send(JSON.stringify({
+          type: 'auth',
+          token: token
+        }));
+      };
 
-    wsRef.current.onerror = (error) => {
-      console.error('WebSocket error:', error);
-    };
+      wsRef.current.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          
+          // Handle auth responses
+          if (data.type === 'auth_success') {
+            console.log('✅ Admin authenticated on WebSocket');
+            setIsSubscribed(true);
+            return;
+          }
+          
+          if (data.type === 'auth_error') {
+            console.error('❌ WebSocket auth failed:', data.message);
+            return;
+          }
+          
+          // Handle notifications
+          if (data.type === 'notification') {
+            handleNewNotification(data);
+          }
+        } catch (error) {
+          console.error('WebSocket message error:', error);
+        }
+      };
 
-    wsRef.current.onclose = () => {
-      // Reconnect after 5 seconds
+      wsRef.current.onerror = (error) => {
+        console.warn('WebSocket connection error - notifications may be delayed', error);
+        setIsSubscribed(false);
+      };
+
+      wsRef.current.onclose = () => {
+        console.log('🔌 WebSocket disconnected');
+        setIsSubscribed(false);
+        // Reconnect after 5 seconds
+        setTimeout(setupWebSocket, 5000);
+      };
+    } catch (error) {
+      console.warn('Failed to setup WebSocket:', error);
+      // Fallback to polling
       setTimeout(setupWebSocket, 5000);
-    };
+    }
   };
 
   const subscribeToNotifications = async () => {
