@@ -1,10 +1,9 @@
-import { buildPageMetadata } from '@/lib/seo';
+import type { Metadata } from 'next';
 
-export const metadata = buildPageMetadata({
+export const metadata: Metadata = {
   title: 'Order Tiffin — Home | Tiffica Jaipur',
   description: 'Order daily veg tiffin in Jaipur — browse menu, add to cart, and get homemade food delivery in your area.',
-  path: '/home',
-});
+};
 
 export default function HomeAppLayout({ children }: { children: React.ReactNode }) {
   return children;

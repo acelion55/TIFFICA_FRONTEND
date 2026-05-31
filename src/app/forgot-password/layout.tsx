@@ -1,9 +1,8 @@
-import { buildPageMetadata } from '@/lib/seo';
+import type { Metadata } from 'next';
 
-export const metadata = buildPageMetadata({
+export const metadata: Metadata = {
   title: 'Reset Password — Tiffica Jaipur',
-  path: '/forgot-password',
-});
+};
 
 export default function ForgotPasswordLayout({ children }: { children: React.ReactNode }) {
   return children;

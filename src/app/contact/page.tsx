@@ -1,15 +1,12 @@
 import type { Metadata } from 'next';
 import { Mail, Phone, MapPin, Instagram, Twitter, Facebook, HelpCircle, MessageCircle } from 'lucide-react';
 import ContactLeadsForm from './ContactLeadsForm';
-import { buildPageMetadata } from '@/lib/seo';
 
-export const metadata: Metadata = buildPageMetadata({
+export const metadata: Metadata = {
   title: 'Contact Tiffica — Tiffin Service Jaipur | Support & Orders',
   description:
     'Contact Tiffica for tiffin service in Jaipur — Vaishali Nagar, Malviya Nagar, Jagatpura, Mahesh Nagar, Mansarovar. Subscriptions, corporate lunch, student plans & support.',
-  path: '/contact',
-  extraKeywords: 'contact tiffica jaipur, tiffin service number jaipur, order tiffin jaipur',
-});
+};
 
 export default function ContactPage() {
   return (

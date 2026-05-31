@@ -1,10 +1,9 @@
-import { buildPageMetadata } from '@/lib/seo';
+import type { Metadata } from 'next';
 
-export const metadata = buildPageMetadata({
+export const metadata: Metadata = {
   title: 'Sign Up — Tiffica Tiffin Service Jaipur',
   description: 'Create your Tiffica account — affordable veg tiffin, student meal plans & monthly tiffin service in Jaipur.',
-  path: '/signup',
-});
+};
 
 export default function SignupLayout({ children }: { children: React.ReactNode }) {
   return children;

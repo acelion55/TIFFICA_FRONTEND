@@ -13,6 +13,7 @@ import RoleRedirect from "@/components/role-redirect";
 import PWAUpdater from "@/components/pwa-updater";
 import PWAGuard from "@/components/pwa-guard";
 import PWAInstallBanner from "@/components/pwa-install-banner";
+import CapacitorInit from "@/components/capacitor-init";
 
 export const viewport: Viewport = {
   themeColor: '#f97316',
@@ -29,6 +30,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
        
       </head>
       <body className="font-sans">
+        <CapacitorInit />
         <ToastProvider>
           <AuthProvider>
             <DeliveryAuthProvider>

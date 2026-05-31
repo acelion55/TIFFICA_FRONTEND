@@ -1,11 +1,9 @@
-import { buildPageMetadata } from '@/lib/seo';
+import type { Metadata } from 'next';
 
-export const metadata = buildPageMetadata({
+export const metadata: Metadata = {
   title: 'Tiffin Subscriptions — Monthly Plans Jaipur | Tiffica',
   description: 'Subscribe to monthly tiffin service Jaipur — affordable veg plans for students, bachelors & families.',
-  path: '/subscriptions',
-  extraKeywords: 'monthly tiffin service Jaipur, monthly tiffin for students in Jaipur',
-});
+};
 
 export default function SubscriptionsLayout({ children }: { children: React.ReactNode }) {
   return children;

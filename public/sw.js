@@ -59,6 +59,9 @@ self.addEventListener('fetch', event => {
   // Skip non-GET requests
   if (request.method !== 'GET') return;
 
+  // Skip chrome-extension and other non-http(s) schemes
+  if (!url.protocol.startsWith('http')) return;
+
   // API calls - always fetch from network
   if (url.pathname.startsWith('/api/')) {
     event.respondWith(
@@ -71,23 +74,74 @@ self.addEventListener('fetch', event => {
     return;
   }
 
+  // Skip caching large files (APKs, etc)
+  if (url.pathname.endsWith('.apk') || url.pathname.endsWith('.ipa')) {
+    event.respondWith(fetch(request).catch(() => {
+      return new Response('Download failed', { status: 503 });
+    }));
+    return;
+  }
+
   // For other requests, try network first, then cache
   event.respondWith(
     fetch(request)
       .then(response => {
-        // Clone the response
-        const responseToCache = response.clone();
-        
-        // Cache the fetched response
-        caches.open(CACHE_NAME).then(cache => {
-          cache.put(request, responseToCache);
-        });
+        // Only cache successful responses
+        if (!response || response.status !== 200 || response.type === 'error') {
+          return response;
+        }
+
+        // Don't cache if request scheme is not http(s)
+        try {
+          // Clone the response
+          const responseToCache = response.clone();
+          
+          // Cache the fetched response
+          caches.open(CACHE_NAME).then(cache => {
+            try {
+              cache.put(request, responseToCache).catch(err => {
+                console.warn('[SW] Cache put failed:', err);
+              });
+            } catch (err) {
+              console.warn('[SW] Cache put error:', err);
+            }
+          });
+        } catch (err) {
+          console.warn('[SW] Response clone error:', err);
+        }
         
         return response;
       })
       .catch(() => {
         // If network fails, try cache
-        return caches.match(request);
+        return caches.match(request).then(cachedResponse => {
+          // Return cached response or offline page
+          if (cachedResponse) {
+            return cachedResponse;
+          }
+          
+          // Return offline response for navigation requests
+          if (request.mode === 'navigate') {
+            return caches.match('/home').then(response => {
+              return response || new Response('Offline - please check your connection', {
+                status: 503,
+                statusText: 'Service Unavailable',
+                headers: new Headers({
+                  'Content-Type': 'text/plain'
+                })
+              });
+            });
+          }
+          
+          // For other requests, return a generic error response
+          return new Response('Resource not available offline', {
+            status: 503,
+            statusText: 'Service Unavailable',
+            headers: new Headers({
+              'Content-Type': 'text/plain'
+            })
+          });
+        });
       })
   );
 });
