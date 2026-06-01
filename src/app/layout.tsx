@@ -12,7 +12,6 @@ import CouponPopup from "@/components/CouponPopup";
 import RoleRedirect from "@/components/role-redirect";
 import PWAUpdater from "@/components/pwa-updater";
 import PWAGuard from "@/components/pwa-guard";
-import PWAInstallBanner from "@/components/pwa-install-banner";
 import CapacitorInit from "@/components/capacitor-init";
 
 export const viewport: Viewport = {
@@ -41,7 +40,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                     <PWAGuard>
                       <AppShell>{children}</AppShell>
                     </PWAGuard>
-                    <PWAInstallBanner />
                     <LocationModal />
                     <CouponPopup />
                     <PWAUpdater />

@@ -32,15 +32,22 @@ export default function OnboardingPage() {
   const [current, setCurrent] = useState(0);
   const router = useRouter();
 
+  const completeOnboarding = () => {
+    // Mark onboarding as completed in localStorage
+    localStorage.setItem('onboarding_completed', 'true');
+    // Redirect to login
+    router.push('/login');
+  };
+
   const next = () => {
     if (current < slides.length - 1) {
       setCurrent(current + 1);
     } else {
-      router.push('/home');
+      completeOnboarding();
     }
   };
 
-  const skip = () => router.push('/home');
+  const skip = () => completeOnboarding();
 
   const slide = slides[current];
 

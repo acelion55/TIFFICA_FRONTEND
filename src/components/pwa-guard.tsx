@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { isPWA } from '@/lib/pwaDetect';
 import { useInstallApp } from '@/hooks/useInstallApp';
+import { Capacitor } from '@capacitor/core';
 
 const PWA_ONLY_ROUTES = [
   '/login',
@@ -28,31 +29,42 @@ const BROWSER_ALLOWED_ROUTES = [
   '/contact',
   '/blog',
   '/menu',
-  '/admin'
+  '/admin',
+  '/onboarding',
+  '/login',
+  '/signup'
 ];
 
 export default function PWAGuard({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const [isClient, setIsClient] = useState(false);
+  const [isNativeApp, setIsNativeApp] = useState(false);
   
   // IMPORTANT: Call hooks at the top level, before any conditional returns
   const { handleInstall, isInstalling } = useInstallApp();
 
   useEffect(() => {
     setIsClient(true);
+    
+    // Check if running as native Capacitor app
+    const isCapacitor = Capacitor.isNativePlatform();
+    setIsNativeApp(isCapacitor);
   }, []);
 
   if (!isClient) return <>{children}</>;
 
-  const isPWAMode = isPWA();
+  const isPWAMode = isPWA() || isNativeApp;
   
   // Check if current route is a protected/app-only route
   const isAppOnlyRoute = PWA_ONLY_ROUTES.some(route => pathname === route || pathname.startsWith(route + '/'));
+  
+  // Check if route is explicitly allowed for browser
+  const isBrowserAllowedRoute = BROWSER_ALLOWED_ROUTES.some(route => pathname === route || pathname.startsWith(route + '/'));
 
   // BLOCK app-only routes in browser (both mobile and desktop)
-  // ONLY allow app routes in PWA mode
-  if (isAppOnlyRoute && !isPWAMode) {
+  // ONLY allow app routes in PWA mode or native app
+  if (isAppOnlyRoute && !isPWAMode && !isBrowserAllowedRoute) {
     // Show install prompt for app-only routes accessed from browser
     return (
       <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-orange-50 to-amber-50">

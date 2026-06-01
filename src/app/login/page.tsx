@@ -8,7 +8,12 @@ import { usePWAInstall } from '@/hooks/usePWAInstall';
 import { Eye, EyeOff, Mail, Lock, ArrowRight, Download, Loader2, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005/api';
+const API_URL = 'https://tifficaapp-1.onrender.com/api';
+
+// Add debug logging
+console.log('🔧 LOGIN PAGE DEBUG');
+console.log('API_URL:', API_URL);
+console.log('Build:', 'BUILD_20260531_235959');
 
 type Mode = 'mobile-password' | 'email-otp';
 
@@ -197,12 +202,17 @@ export default function LoginPage() {
                       if (!/^\d{10}$/.test(mobile)) { setError('Invalid mobile number'); setLoading(false); return; }
                       if (mobilePass.length < 6) { setError('Password must be at least 6 characters'); setLoading(false); return; }
                       try {
+                        console.log('📱 Mobile Login Attempt:', { phone: mobile });
+                        console.log('API URL:', `${API_URL}/auth/login-mobile`);
                         const res = await fetch(`${API_URL}/auth/login-mobile`, {
                           method: 'POST', headers: { 'Content-Type': 'application/json' },
                           body: JSON.stringify({ phone: mobile, password: mobilePass }),
                         });
+                        console.log('Response Status:', res.status);
                         const data = await res.json();
-                        if (res.ok) { 
+                        console.log('Response Data:', data);
+                        if (res.ok) {
+                          console.log('✅ Login Success!');
                           await login(data.token);
                           // Role-based redirect
                           if (data.role === 'delivery') {
@@ -215,8 +225,14 @@ export default function LoginPage() {
                             router.push('/home');
                           }
                         }
-                        else setError(data.msg || 'Invalid credentials');
-                      } catch { setError('Cannot connect to server.'); }
+                        else {
+                          console.log('❌ Login Failed:', data);
+                          setError(data.msg || 'Invalid credentials');
+                        }
+                      } catch (err) {
+                        console.error('❌ Network Error:', err);
+                        setError('Cannot connect to server: ' + (err instanceof Error ? err.message : String(err)));
+                      }
                       finally { setLoading(false); }
                     }}
                     className="space-y-3"

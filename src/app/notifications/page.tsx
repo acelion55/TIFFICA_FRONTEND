@@ -6,7 +6,7 @@ import { ArrowLeft, Tag, Bell, Package, Info, AlertCircle, Gift } from 'lucide-r
 import { useAuth } from '@/context/AuthContext';
 import { useNotifications } from '@/context/NotificationContext';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005/api';
+const API_URL = 'https://tifficaapp-1.onrender.com/api';
 
 const TYPE_ICON: Record<string, any> = {
   offer: Tag,
@@ -180,3 +180,4 @@ export default function NotificationsPage() {
     </div>
   );
 }
+

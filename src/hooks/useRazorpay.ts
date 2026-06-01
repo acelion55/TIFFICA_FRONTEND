@@ -1,6 +1,6 @@
 'use client';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005/api';
+const API_URL = 'https://tifficaapp-1.onrender.com/api';
 const RZP_KEY = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || 'rzp_live_SOo4j7OHUYTDfq';
 
 interface PayOptions {

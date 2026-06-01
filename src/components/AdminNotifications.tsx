@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { Bell, X, Volume2, VolumeX } from 'lucide-react';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005/api';
+const API_URL = 'https://tifficaapp-1.onrender.com/api';
 
 interface AdminNotification {
   _id: string;
@@ -183,8 +183,8 @@ export default function AdminNotifications() {
       audioRef.current.play().catch(console.error);
     }
 
-    // Show browser notification
-    if ('Notification' in window && Notification.permission === 'granted') {
+    // Show browser notification (browser only)
+    if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
       new Notification(notification.title, {
         body: notification.message,
         icon: '/icon-192.svg',

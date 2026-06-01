@@ -8,7 +8,7 @@ import {
   Home, Briefcase, Hotel, MoreHorizontal, Loader2, Check
 } from 'lucide-react';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005/api';
+const API_URL = 'https://tifficaapp-1.onrender.com/api';
 
 const ADDRESS_TYPES = ['Home', 'Work', 'Hotel', 'Other'];
 
@@ -335,3 +335,4 @@ export default function AddressesPage() {
     </div>
   );
 }
+

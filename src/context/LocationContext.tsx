@@ -1,8 +1,7 @@
 'use client';
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from './AuthContext';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005/api';
+import { API_URL } from '@/lib/config';
 
 interface Location {
   latitude: number;

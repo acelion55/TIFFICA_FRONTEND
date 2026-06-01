@@ -4,10 +4,9 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
-import { usePWAInstall } from '@/hooks/usePWAInstall';
-import { Eye, EyeOff, Mail, Lock, User, Phone, ArrowRight, Download, Loader2, X } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, User, Phone, ArrowRight, Loader2, X } from 'lucide-react';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005/api';
+const API_URL = 'https://tifficaapp-1.onrender.com/api';
 
 export default function SignUpPage() {
   const [name, setName]         = useState('');
@@ -22,7 +21,6 @@ export default function SignUpPage() {
   const [legalContent, setLegalContent] = useState<{ terms: string; privacy: string }>({ terms: '', privacy: '' });
   const router = useRouter();
   const { login } = useAuth();
-  const { canInstall, install } = usePWAInstall();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,18 +47,6 @@ export default function SignUpPage() {
       />
       <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/20 to-black/85" />
 
-      {/* PWA install banner */}
-      {canInstall && (
-        <div className="relative z-10 mx-4 mt-12">
-          <button onClick={install}
-            className="w-full flex items-center gap-3 bg-white/15 backdrop-blur-md border border-white/20 text-white rounded-2xl px-4 py-3">
-            <Download className="w-4 h-4 flex-shrink-0" />
-            <span className="text-sm font-bold flex-1 text-left">Install Tiffica App</span>
-            <span className="text-xs bg-white/20 px-3 py-1 rounded-xl font-bold">Install</span>
-          </button>
-        </div>
-      )}
-
       <div className="relative z-10 flex-1 flex flex-col justify-center px-5 py-8">
 
         {/* Branding */}
@@ -69,7 +55,10 @@ export default function SignUpPage() {
             <div className="w-12 h-12 bg-orange-500 rounded-2xl flex items-center justify-center shadow-lg">
               <span className="text-2xl">🍱</span>
             </div>
-            <h1 className="text-4xl font-black text-white tracking-tight">Tiffica</h1>
+            <div>
+              <h1 className="text-4xl font-black text-white tracking-tight">Tiffica</h1>
+              <p className="text-xs text-orange-300 font-bold">BUILD_20260531_235959</p>
+            </div>
           </div>
           <p className="text-white/60 text-sm font-medium">Join thousands who love home-cooked meals</p>
         </div>

@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Send } from 'lucide-react';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005/api';
+const API_URL = 'https://tifficaapp-1.onrender.com/api';
 
 export default function ContactForm() {
   const [formData, setFormData] = useState({
@@ -136,3 +136,4 @@ export default function ContactForm() {
     </div>
   );
 }
+

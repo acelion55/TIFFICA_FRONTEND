@@ -12,7 +12,7 @@ import {
 import { CouponModal } from './CouponModal';
 import { notificationSound, showAdminNotification } from '@/lib/notificationSound';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005/api';
+const API_URL = 'https://tifficaapp-1.onrender.com/api';
 type Tab = 'stats' | 'users' | 'orders' | 'menu' | 'kitchens' | 'subscriptions' | 'schedules' | 'homestyles' | 'notifications' | 'legal' | 'coupons' | 'leads';
 interface Stats { users: number; orders: number; menuItems: number; subscriptions: number; totalWalletBalance?: number; }
 
@@ -209,8 +209,8 @@ export default function AdminDashboard() {
     if (user && (user.role === 'admin' || user.role === 'kitchen-owner')) {
       fetchAll();
       
-      // Request notification permission
-      if (Notification.permission === 'default') {
+      // Request notification permission (browser only)
+      if (typeof Notification !== 'undefined' && Notification.permission === 'default') {
         Notification.requestPermission();
       }
       
@@ -1072,3 +1072,4 @@ export default function AdminDashboard() {
     </div>
   );
 }
+

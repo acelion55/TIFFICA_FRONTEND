@@ -10,23 +10,31 @@ export default function PWAEntryPage() {
   const router = useRouter();
 
   useEffect(() => {
-    if (!loading) {
-      if (token) {
-        if (user?.role === 'admin' || user?.role === 'kitchen-owner') {
-          router.push('/admin');
+    // Wait for auth to load
+    const timer = setTimeout(() => {
+      if (!loading) {
+        // If user is logged in
+        if (token && user) {
+          if (user.role === 'admin' || user.role === 'kitchen-owner') {
+            router.push('/admin');
+          } else {
+            router.push('/home');
+          }
         } else {
-          router.push('/home');
-        }
-      } else {
-        // Check if onboarding is completed
-        const onboardingDone = localStorage.getItem('onboarding_completed');
-        if (onboardingDone) {
-          router.push('/login');
-        } else {
-          router.push('/onboarding');
+          // Not logged in - check if onboarding was completed
+          const onboardingDone = localStorage.getItem('onboarding_completed');
+          if (onboardingDone) {
+            // Go to login if onboarding is done
+            router.push('/login');
+          } else {
+            // Show onboarding if first time
+            router.push('/onboarding');
+          }
         }
       }
-    }
+    }, 500);
+
+    return () => clearTimeout(timer);
   }, [loading, token, user, router]);
 
   return (

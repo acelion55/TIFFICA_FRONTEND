@@ -8,7 +8,7 @@ import { gsap } from 'gsap';
 import { Wallet, Plus, CheckCircle, Zap, Shield, Loader2, TrendingUp } from 'lucide-react';
 import { openRazorpay } from '@/hooks/useRazorpay';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005/api';
+const API_URL = 'https://tifficaapp-1.onrender.com/api';
 
 const PLANS = [
   { amount: 199,  bonus: 0,   popular: false },

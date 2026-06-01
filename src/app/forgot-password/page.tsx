@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005/api';
+const API_URL = 'https://tifficaapp-1.onrender.com/api';
 
 type Step = 'email' | 'otp' | 'reset';
 
@@ -171,3 +171,4 @@ export default function ForgotPasswordPage() {
     </div>
   );
 }
+

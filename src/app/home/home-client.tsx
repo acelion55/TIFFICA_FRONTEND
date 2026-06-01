@@ -14,7 +14,7 @@ import { useCart } from '@/context/CartContext';
 import { useNotifications } from '@/context/NotificationContext';
 import { openRazorpay } from '@/hooks/useRazorpay';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api';
+const API_URL = 'https://tifficaapp-1.onrender.com/api';
 const FALLBACK_IMG = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&auto=format&fit=crop';
 const FALLBACK_VIDEO = 'https://assets.mixkit.co/videos/preview/mixkit-fresh-vegetables-being-prepared-for-a-salad-40432-large.mp4';
 const CATEGORIES = [
@@ -352,3 +352,4 @@ function EmptyState({ locationSet }: { locationSet: boolean }) {
     </div>
   );
 }
+

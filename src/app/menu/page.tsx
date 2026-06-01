@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { ArrowRight, ShoppingCart, Info, Star, Clock, Flame, ShieldCheck } from 'lucide-react';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api';
+const API_URL = 'https://tifficaapp-1.onrender.com/api';
 
 interface MenuItem {
   _id: string;
@@ -156,3 +156,4 @@ export default function PublicMenu() {
     </div>
   );
 }
+
