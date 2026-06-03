@@ -80,7 +80,7 @@ export default function PWAUpdater() {
     <div className="fixed bottom-4 left-4 right-4 bg-gradient-to-r from-orange-500 to-amber-500 text-white p-4 rounded-xl shadow-2xl z-[9999] animate-slide-up">
       <div className="flex items-center justify-between">
         <div className="flex-1">
-          <p className="font-bold text-lg mb-1">🎉 New Update Available!</p>
+          <p className="font-bold text-lg mb-1">New Update Available!</p>
           <p className="text-sm opacity-90">
             Auto-updating in {autoUpdateTimer} seconds...
           </p>

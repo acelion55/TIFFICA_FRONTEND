@@ -6,19 +6,12 @@ import { usePathname } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { useCart } from '@/context/CartContext';
 import { useState, useEffect } from 'react';
-import { isPWA } from '@/lib/pwaDetect';
 
 const userNavItems = [
   { href: '/home',          label: 'HOME',         icon: Home },
   { href: '/schedule',      label: 'SCHEDULE',     icon: Calendar },
   { href: '/subscriptions', label: 'SUBSCRIPTION', icon: CreditCard },
   { href: '/reorder',       label: 'REORDER',      icon: RotateCcw },
-];
-
-// Browser-only navigation for non-PWA users - only login/signup for now
-const browserNavItems = [
-  { href: '/login',         label: 'LOGIN',        icon: User },
-  { href: '/signup',        label: 'SIGNUP',       icon: User },
 ];
 
 const adminNavItems = [
@@ -71,53 +64,11 @@ export default function Navbar() {
 
   if (!isClient) return null;
 
-  // Hide bottom navbar on mobile browsers. Only show in PWA mode or if Desktop.
-  // This prevents double navigation (Top Header + Bottom Nav) on the public website.
-  const isPWAMode = isPWA();
-  const isMobile = typeof window !== 'undefined' && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-  
-  if (!token && isMobile && !isPWAMode) return null;
+  // Only show navbar for authenticated users (Capacitor app users)
+  if (!token) return null;
 
-  // Don't show navbar if no token and not PWA (browser users get different experience)
-  if (!token && !isPWAMode) return null;
-  
-  // Show browser navigation for non-authenticated users
-  if (!token) {
-    return (
-      <nav
-        style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
-        className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-100 shadow-[0_-4px_24px_rgba(0,0,0,0.07)]"
-      >
-        <div className="flex items-stretch justify-around h-16">
-          {browserNavItems.map(({ href, label, icon: Icon }) => {
-            const isActive = pathname === href;
-            return (
-              <Link
-                key={href}
-                href={href}
-                className="flex flex-col items-center justify-center flex-1 gap-1 relative"
-              >
-                {isActive && (
-                  <div className="absolute -top-0.5 left-1/2 transform -translate-x-1/2 w-8 h-1 bg-orange-500 rounded-full" />
-                )}
-                
-                <Icon
-                  size={22}
-                  className={isActive ? 'text-orange-500' : 'text-gray-400'}
-                  strokeWidth={isActive ? 2.5 : 1.8}
-                />
-                <span className={`text-[9px] font-bold tracking-wide leading-none ${
-                  isActive ? 'text-orange-500' : 'text-gray-400'
-                }`}>
-                  {label}
-                </span>
-              </Link>
-            );
-          })}
-        </div>
-      </nav>
-    );
-  }
+  // Admin dashboard has its own sidebar (desktop) and floating nav (mobile)
+  if (pathname?.startsWith('/admin')) return null;
 
   const toggleMore = () => {
     setShowMore(!showMore);

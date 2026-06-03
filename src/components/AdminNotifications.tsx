@@ -2,7 +2,8 @@
 
 import { useEffect, useState, useRef } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { Bell, X, Volume2, VolumeX } from 'lucide-react';
+import { Bell, X, Volume2, VolumeX, UtensilsCrossed, CreditCard, Calendar, Circle } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 
 const API_URL = 'https://tifficaapp-1.onrender.com/api';
 
@@ -118,40 +119,12 @@ export default function AdminNotifications() {
   };
 
   const subscribeToNotifications = async () => {
-    if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-      console.log('Push notifications not supported');
-      return;
-    }
-
     try {
-      const registration = await navigator.serviceWorker.ready;
-      
-      // Get VAPID public key
-      const vapidResponse = await fetch(`${API_URL}/notifications/vapid-public-key`);
-      const { publicKey } = await vapidResponse.json();
-
-      // Subscribe to push notifications
-      const subscription = await registration.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: publicKey
-      });
-
-      // Send subscription to server as admin subscription
-      const response = await fetch(`${API_URL}/notifications/admin/subscribe`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ subscription })
-      });
-
-      if (response.ok) {
-        setIsSubscribed(true);
-        console.log('✅ Admin subscribed to notifications');
-      }
+      // Service workers are not available in Capacitor apps
+      // Notifications will work through WebSocket polling instead
+      console.log('Using WebSocket for notifications (service workers not supported in Capacitor)');
     } catch (error) {
-      console.error('Failed to subscribe to notifications:', error);
+      console.error('Failed to setup notifications:', error);
     }
   };
 
@@ -230,12 +203,12 @@ export default function AdminNotifications() {
 
   if (!isAdmin) return null;
 
-  const getNotificationIcon = (type: string) => {
+  const getNotificationIcon = (type: string): LucideIcon => {
     switch (type) {
-      case 'order': return '🍱';
-      case 'subscription': return '💳';
-      case 'schedule': return '📅';
-      default: return '🔔';
+      case 'order': return UtensilsCrossed;
+      case 'subscription': return CreditCard;
+      case 'schedule': return Calendar;
+      default: return Bell;
     }
   };
 
@@ -306,7 +279,10 @@ export default function AdminNotifications() {
           <div className="p-3 border-b border-gray-100 bg-gray-50">
             <div className="flex items-center justify-between text-xs">
               <span className="text-gray-600">
-                {isSubscribed ? '🟢 Connected' : '🔴 Disconnected'}
+                <span className="flex items-center gap-1.5">
+                  <Circle className={`w-2.5 h-2.5 fill-current ${isSubscribed ? 'text-green-500' : 'text-red-500'}`} />
+                  {isSubscribed ? 'Connected' : 'Disconnected'}
+                </span>
               </span>
               <button
                 onClick={testNotification}
@@ -334,8 +310,11 @@ export default function AdminNotifications() {
                   onClick={() => markAsRead(notification._id)}
                 >
                   <div className="flex items-start gap-3">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center text-lg ${getNotificationColor(notification.type)}`}>
-                      {getNotificationIcon(notification.type)}
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${getNotificationColor(notification.type)}`}>
+                      {(() => {
+                        const Icon = getNotificationIcon(notification.type);
+                        return <Icon className="w-5 h-5 text-orange-600" />;
+                      })()}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between mb-1">

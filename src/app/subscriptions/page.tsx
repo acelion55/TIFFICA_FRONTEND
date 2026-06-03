@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { gsap } from 'gsap';
-import { Wallet, Plus, CheckCircle, Zap, Shield, Loader2, TrendingUp } from 'lucide-react';
+import { Wallet, Plus, CheckCircle, Zap, Shield, Loader2, TrendingUp, UtensilsCrossed, Lock, RotateCcw, CreditCard } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import { openRazorpay } from '@/hooks/useRazorpay';
 
 const API_URL = 'https://tifficaapp-1.onrender.com/api';
@@ -57,31 +58,43 @@ export default function SubscriptionsPage() {
     }
   }, []);
 
-  const handleRecharge = async (amount: number) => {
+  /** payAmount = Razorpay charge; walletCredit = total added to wallet (pay + bonus) */
+  const handleRecharge = async (payAmount: number, walletCredit?: number) => {
     if (!token || recharging !== null) return;
-    setRecharging(amount);
+    const credit = walletCredit ?? payAmount;
+    const bonus = credit - payAmount;
+    setRecharging(payAmount);
     setError('');
+
+    const description =
+      bonus > 0
+        ? `Tiffica Wallet ₹${payAmount} (+₹${bonus} bonus → ₹${credit} in wallet)`
+        : `Tiffica Wallet Recharge ₹${payAmount}`;
 
     try {
       await openRazorpay({
-        amount,
-        description: `Tiffica Wallet Recharge ₹${amount}`,
+        amount: payAmount,
+        description,
         token,
         userName:  user?.name,
         userEmail: user?.email,
         userPhone: user?.phone,
-        onSuccess: async (paymentId, amt) => {
-          // Credit wallet on backend
+        onSuccess: async (paymentId) => {
           const res = await fetch(`${API_URL}/payments/wallet-credit`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-            body: JSON.stringify({ amount: amt, paymentId }),
+            body: JSON.stringify({
+              amount: credit,
+              payAmount,
+              bonus: bonus > 0 ? bonus : 0,
+              paymentId,
+            }),
           });
           if (res.ok) {
             const d = await res.json();
             setBalance(d.walletBalance);
             updateUser(d.user);
-            setSuccess(amt);
+            setSuccess(credit);
             setTimeout(() => setSuccess(null), 4000);
           }
           setRecharging(null);
@@ -124,7 +137,7 @@ export default function SubscriptionsPage() {
               >
                 <CheckCircle className="w-6 h-6 text-green-500 flex-shrink-0" />
               </motion.div>
-              <p className="text-green-700 font-bold text-sm">₹{success} added to your wallet!</p>
+              <p className="text-green-700 font-bold text-sm">₹{success} credited to your wallet!</p>
             </motion.div>
           )}
         </AnimatePresence>
@@ -212,8 +225,8 @@ export default function SubscriptionsPage() {
           </motion.h3>
           <div ref={plansRef} className="space-y-4">
             {PLANS.map((plan, index) => {
-              const total = plan.amount + plan.bonus;
-              const isLoading = recharging === total;
+              const walletTotal = plan.amount + plan.bonus;
+              const isLoading = recharging === plan.amount;
               return (
                 <motion.div 
                   key={plan.amount}
@@ -249,13 +262,15 @@ export default function SubscriptionsPage() {
                         )}
                       </div>
                       <p className="text-xs text-gray-500 font-medium">
-                        {plan.bonus > 0 ? `Get ₹${total} total in wallet` : 'Added directly to wallet'}
+                        {plan.bonus > 0
+                          ? `Pay ₹${plan.amount} · get ₹${walletTotal} in wallet`
+                          : 'Added directly to wallet'}
                       </p>
                     </div>
                     <motion.button 
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
-                      onClick={() => handleRecharge(total)}
+                      onClick={() => handleRecharge(plan.amount, walletTotal)}
                       disabled={recharging !== null}
                       className={`px-6 py-3.5 rounded-2xl font-extrabold text-sm transition disabled:opacity-50 flex items-center gap-2 shadow-md ${
                         plan.popular 
@@ -281,12 +296,12 @@ export default function SubscriptionsPage() {
         >
           <h3 className="font-extrabold text-gray-900 text-lg mb-5">How it works</h3>
           <div className="space-y-4">
-            {[
-              { icon: '💳', text: 'Recharge your wallet with any amount' },
-              { icon: '🍱', text: 'Use wallet balance to schedule & lock meals' },
-              { icon: '🔒', text: 'Locked meals are deducted from wallet instantly' },
-              { icon: '↩️', text: 'Cancelled meals are refunded to wallet' },
-            ].map(({ icon, text }, i) => (
+            {([
+              { Icon: CreditCard, text: 'Recharge your wallet with any amount' },
+              { Icon: UtensilsCrossed, text: 'Use wallet balance to schedule & lock meals' },
+              { Icon: Lock, text: 'Locked meals are deducted from wallet instantly' },
+              { Icon: RotateCcw, text: 'Cancelled meals are refunded to wallet' },
+            ] as { Icon: LucideIcon; text: string }[]).map(({ Icon, text }, i) => (
               <motion.div 
                 key={text}
                 initial={{ opacity: 0, x: -20 }}
@@ -295,7 +310,9 @@ export default function SubscriptionsPage() {
                 whileHover={{ x: 4 }}
                 className="flex items-center gap-3 p-3 rounded-2xl hover:bg-white/50 transition-colors"
               >
-                <span className="text-2xl w-10 text-center">{icon}</span>
+                <div className="w-10 flex items-center justify-center text-orange-500">
+                  <Icon className="w-5 h-5" strokeWidth={2} />
+                </div>
                 <p className="text-sm text-gray-700 font-semibold">{text}</p>
               </motion.div>
             ))}

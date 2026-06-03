@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { useLocation } from '@/context/LocationContext';
 import { useNotifications } from '@/context/NotificationContext';
-import { ArrowLeft, Search, X, Star, Clock, Leaf, SlidersHorizontal, Loader2, Bell } from 'lucide-react';
+import { ArrowLeft, Search, X, Star, Clock, SlidersHorizontal, Loader2, Bell, MapPin } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const API_URL = 'https://tifficaapp-1.onrender.com/api';
@@ -108,7 +108,7 @@ export default function SearchPage() {
     <div className="min-h-screen bg-[#F8F9FB] pb-24">
 
       {/* ── Search Header ── */}
-      <div className="bg-white px-4 pt-14 pb-3 sticky top-0 z-30 shadow-sm">
+      <div className="bg-white px-4 pt-20 pb-3 sticky top-0 z-30 shadow-sm">
         <div className="flex items-center gap-3">
           <button onClick={() => router.back()}
             className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0 active:scale-95">
@@ -250,7 +250,7 @@ export default function SearchPage() {
         {/* ── No results ── */}
         {query && !loading && searched && filtered.length === 0 && (
           <div className="text-center py-16">
-            <p className="text-5xl mb-4">🔍</p>
+            <Search className="w-12 h-12 text-gray-300 mx-auto mb-4" />
             <h3 className="text-lg font-black text-gray-800 mb-2">No results found</h3>
             <p className="text-sm text-gray-400">Try a different keyword or remove filters</p>
             {activeFilterCount > 0 && (
@@ -293,7 +293,10 @@ function MenuCard({ item }: { item: MenuItem }) {
         </div>
         <h3 className="text-sm font-black text-gray-900 line-clamp-1 mb-2">{item.name}</h3>
         {item.cloudKitchen?.name && (
-          <p className="text-[10px] text-orange-400 font-semibold truncate mb-2">🏠 {item.cloudKitchen.name}</p>
+          <p className="text-[10px] text-orange-400 font-semibold truncate mb-2 flex items-center gap-1">
+            <MapPin size={10} className="shrink-0" />
+            {item.cloudKitchen.name}
+          </p>
         )}
         <div className="flex items-center justify-between">
           <span className="text-base font-black text-gray-900">₹{item.price}</span>

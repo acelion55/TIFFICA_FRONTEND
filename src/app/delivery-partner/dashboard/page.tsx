@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useDeliveryAuth } from '@/context/DeliveryAuthContext';
 import { 
   Power, MapPin, Wallet, Star, Package, TrendingUp, 
-  Navigation, Phone, Clock, CheckCircle, Loader2, Menu, X
+  Navigation, Phone, Clock, CheckCircle, Loader2, Menu, X, User, LogOut, History
 } from 'lucide-react';
 
 const API_URL = 'https://tifficaapp-1.onrender.com/api';
@@ -508,17 +508,17 @@ export default function DeliveryDashboard() {
             </div>
 
             <div className="space-y-3">
-              <button onClick={() => alert('Earnings page coming soon')} className="w-full py-3 bg-gray-100 rounded-xl font-bold text-left px-4">
-                💰 Earnings
+              <button onClick={() => alert('Earnings page coming soon')} className="w-full py-3 bg-gray-100 rounded-xl font-bold text-left px-4 flex items-center gap-2">
+                <Wallet className="w-5 h-5" /> Earnings
               </button>
-              <button onClick={() => alert('History page coming soon')} className="w-full py-3 bg-gray-100 rounded-xl font-bold text-left px-4">
-                📦 History
+              <button onClick={() => alert('History page coming soon')} className="w-full py-3 bg-gray-100 rounded-xl font-bold text-left px-4 flex items-center gap-2">
+                <History className="w-5 h-5" /> History
               </button>
-              <button onClick={() => alert('Profile page coming soon')} className="w-full py-3 bg-gray-100 rounded-xl font-bold text-left px-4">
-                👤 Profile
+              <button onClick={() => alert('Profile page coming soon')} className="w-full py-3 bg-gray-100 rounded-xl font-bold text-left px-4 flex items-center gap-2">
+                <User className="w-5 h-5" /> Profile
               </button>
-              <button onClick={logout} className="w-full py-3 bg-red-100 text-red-600 rounded-xl font-bold text-left px-4">
-                🚪 Logout
+              <button onClick={logout} className="w-full py-3 bg-red-100 text-red-600 rounded-xl font-bold text-left px-4 flex items-center gap-2">
+                <LogOut className="w-5 h-5" /> Logout
               </button>
             </div>
           </div>

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { User, Mail, Phone, MapPin, Edit, Loader2, LogOut, ChevronRight, Home, Briefcase, Hotel, MoreHorizontal, Plus, Bell } from 'lucide-react';
+import { User, Mail, Phone, MapPin, Edit, Loader2, LogOut, ChevronRight, Home, Briefcase, Hotel, MoreHorizontal, Plus, Bell, Wallet } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { useNotifications } from '@/context/NotificationContext';
@@ -73,7 +73,10 @@ export default function ProfileClient() {
           <p className="font-extrabold text-gray-900 truncate">{u.name}</p>
           <p className="text-sm text-gray-500 truncate">{u.email}</p>
           {u.walletBalance !== undefined && (
-            <p className="text-xs font-bold text-green-600 mt-0.5">💰 ₹{u.walletBalance?.toFixed(0)} wallet</p>
+            <p className="text-xs font-bold text-green-600 mt-0.5 flex items-center gap-1">
+              <Wallet className="w-3.5 h-3.5" />
+              ₹{u.walletBalance?.toFixed(0)} wallet
+            </p>
           )}
         </div>
         <div className="flex gap-2 flex-shrink-0">

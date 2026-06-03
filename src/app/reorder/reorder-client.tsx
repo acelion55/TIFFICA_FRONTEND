@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
-import { RefreshCw, ShoppingBag, Clock, Truck, CheckCircle, Package } from 'lucide-react';
+import { RefreshCw, ShoppingBag, Clock, Truck, CheckCircle, Package, Calendar, ChefHat } from 'lucide-react';
 
 const API_URL = 'https://tifficaapp-1.onrender.com/api';
 const FALLBACK = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=200&h=200&fit=crop';
@@ -90,7 +90,7 @@ export default function ReorderClient() {
 
   return (
     <div className="min-h-screen bg-[#F8F9FB] pb-24">
-      <div className="bg-white px-5 pt-14 pb-5 border-b border-gray-100">
+      <div className="bg-white px-5 pt-20 pb-5 border-b border-gray-100">
         <h1 className="text-2xl font-extrabold text-gray-900">Reorder</h1>
         <p className="text-sm text-gray-400 mt-1">Quickly reorder from past deliveries</p>
       </div>
@@ -135,8 +135,9 @@ export default function ReorderClient() {
                   <p className="text-sm font-bold text-gray-900">
                     {schedule.meals?.length} meal(s) scheduled
                   </p>
-                  <p className="text-xs text-gray-400">
-                    📅 {fmt(schedule.date)}
+                  <p className="text-xs text-gray-400 flex items-center gap-1">
+                    <Calendar className="w-3.5 h-3.5" />
+                    {fmt(schedule.date)}
                   </p>
                 </div>
                 <div className="text-right flex-shrink-0">
@@ -228,16 +229,19 @@ export default function ReorderClient() {
                   <p className="text-xs text-gray-400">
                     {fmt(order.createdAt)}
                   </p>
-                  <span className={`text-xs px-2 py-0.5 rounded-full font-bold inline-block mt-1 ${
+                  <span className={`text-xs px-2 py-0.5 rounded-full font-bold inline-flex items-center gap-1 mt-1 ${
                     order.status === 'delivered' ? 'bg-green-100 text-green-700' :
                     order.status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
                     order.status === 'preparing' ? 'bg-blue-100 text-blue-700' :
                     'bg-gray-100 text-gray-700'
                   }`}>
-                    {order.status === 'delivered' ? '✅ Delivered' :
-                     order.status === 'pending' ? '🕒 Pending' :
-                     order.status === 'preparing' ? '🍳 Preparing' :
-                     order.status}
+                    {order.status === 'delivered' ? (
+                      <><CheckCircle className="w-3 h-3" /> Delivered</>
+                    ) : order.status === 'pending' ? (
+                      <><Clock className="w-3 h-3" /> Pending</>
+                    ) : order.status === 'preparing' ? (
+                      <><ChefHat className="w-3 h-3" /> Preparing</>
+                    ) : order.status}
                   </span>
                 </div>
                 <div className="text-right flex-shrink-0">

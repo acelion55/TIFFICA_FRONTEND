@@ -107,7 +107,7 @@ export default function NotificationPanel({ isOpen, onClose }: { isOpen: boolean
                             <Tag className="w-5 h-5 text-white" />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="text-xs text-purple-600 font-bold mb-1">🎉 New Coupon</p>
+                            <p className="text-xs text-purple-600 font-bold mb-1">New Coupon</p>
                             <p className="text-sm font-black text-gray-900 mb-1">
                               {c.discountType === 'percentage' ? `${c.discountValue}% OFF` : `₹${c.discountValue} OFF`}
                             </p>

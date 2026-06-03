@@ -32,7 +32,7 @@ export default function WalletBar() {
   // Close profile on route change
   useEffect(() => { setProfileOpen(false); }, [pathname]);
 
-  if (!user) return null;
+  if (!user || pathname?.startsWith('/admin')) return null;
 
   const showBg = !isHeroPage || scrolled;
   const initials = user.name

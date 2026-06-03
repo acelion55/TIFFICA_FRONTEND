@@ -48,27 +48,27 @@ export class NotificationSound {
 // Notification types and messages
 export const NOTIFICATION_TYPES = {
   NEW_ORDER: {
-    title: '🍽️ New Order Received!',
+    title: 'New Order Received!',
     sound: true,
     priority: 'high'
   },
   NEW_SCHEDULE: {
-    title: '📅 New Schedule Order!',
+    title: 'New Schedule Order!',
     sound: true,
     priority: 'high'
   },
   NEW_SUBSCRIPTION: {
-    title: '💳 New Subscription Purchase!',
+    title: 'New Subscription Purchase!',
     sound: true,
     priority: 'medium'
   },
   NEW_USER: {
-    title: '👤 New User Registered!',
+    title: 'New User Registered!',
     sound: true,
     priority: 'low'
   },
   USER_SIGNUP: {
-    title: '✨ New User Signup!',
+    title: 'New User Signup!',
     sound: true,
     priority: 'low'
   }

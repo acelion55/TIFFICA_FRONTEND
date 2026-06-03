@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { MapPin, Navigation, Loader2, X, Search, Home, Briefcase, Hotel, MoreHorizontal, ChevronRight, Plus } from 'lucide-react';
+import { MapPin, Navigation, Loader2, X, Search, Home, Briefcase, Hotel, MoreHorizontal, ChevronRight, Plus, Check } from 'lucide-react';
 import { useLocation } from '@/context/LocationContext';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
@@ -117,17 +117,18 @@ export default function LocationModal() {
         {/* Header */}
         <div className="flex items-center justify-between px-5 pt-4 pb-3 flex-shrink-0">
           <div>
-            <h2 className="text-lg font-extrabold text-gray-900">📍 Delivery Location</h2>
+            <h2 className="text-lg font-extrabold text-gray-900 flex items-center gap-2">
+              <MapPin className="w-5 h-5 text-orange-500" />
+              Delivery Location
+            </h2>
             <p className="text-xs text-gray-400 mt-0.5">
               {previousLocation ? 'Confirm or change your delivery location' : 'Choose where to deliver'}
             </p>
           </div>
-          {locationSet && (
-            <button onClick={() => setShowModal(false)}
-              className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
-              <X className="w-4 h-4 text-gray-500" />
-            </button>
-          )}
+          <button onClick={() => setShowModal(false)}
+            className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition active:scale-90 flex-shrink-0">
+            <X className="w-4 h-4 text-gray-500" />
+          </button>
         </div>
 
         {/* Previous location quick-confirm */}
@@ -145,7 +146,9 @@ export default function LocationModal() {
                 <p className="text-sm font-extrabold text-gray-900 truncate">{previousLocation.locationName.split(',')[0]}</p>
                 <p className="text-xs text-gray-500 truncate">{previousLocation.locationName.split(',').slice(1, 3).join(',')}</p>
               </div>
-              <span className="text-xs font-black text-orange-500 flex-shrink-0">USE ✓</span>
+              <span className="text-xs font-black text-orange-500 flex-shrink-0 inline-flex items-center gap-1">
+                USE <Check className="w-3.5 h-3.5" />
+              </span>
             </button>
           </div>
         )}

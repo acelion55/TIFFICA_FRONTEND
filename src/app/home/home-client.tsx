@@ -6,8 +6,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Search, Flame,
   SlidersHorizontal, Plus, Star, Clock,
-  Sunrise, Sun, Sunset, Moon, MapPin, Bell
+  Sunrise, Sun, Sunset, Moon, MapPin, Bell,
+  UtensilsCrossed, IndianRupee, Tag, Coffee, Sandwich, LayoutGrid
 } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useLocation } from '@/context/LocationContext';
 import { useCart } from '@/context/CartContext';
@@ -17,14 +19,14 @@ import { openRazorpay } from '@/hooks/useRazorpay';
 const API_URL = 'https://tifficaapp-1.onrender.com/api';
 const FALLBACK_IMG = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&auto=format&fit=crop';
 const FALLBACK_VIDEO = 'https://assets.mixkit.co/videos/preview/mixkit-fresh-vegetables-being-prepared-for-a-salad-40432-large.mp4';
-const CATEGORIES = [
-  { id: 'All',       label: 'All',        emoji: '🍽️' },
-  { id: 'Under79',   label: 'Under ₹79',  emoji: '💸' },
-  { id: 'Under99',   label: 'Under ₹99',  emoji: '🏷️' },
-  { id: 'Breakfast', label: 'Breakfast',  emoji: '☕' },
-  { id: 'Lunch',     label: 'Lunch',      emoji: '🍛' },
-  { id: 'Dinner',    label: 'Dinner',     emoji: '🌙' },
-  { id: 'Snack',     label: 'Snack',      emoji: '🥪' },
+const CATEGORIES: { id: string; label: string; Icon: LucideIcon }[] = [
+  { id: 'All',       label: 'All',        Icon: LayoutGrid },
+  { id: 'Under79',   label: 'Under ₹79',  Icon: IndianRupee },
+  { id: 'Under99',   label: 'Under ₹99',  Icon: Tag },
+  { id: 'Breakfast', label: 'Breakfast',  Icon: Coffee },
+  { id: 'Lunch',     label: 'Lunch',      Icon: UtensilsCrossed },
+  { id: 'Dinner',    label: 'Dinner',     Icon: Moon },
+  { id: 'Snack',     label: 'Snack',      Icon: Sandwich },
 ];
 
 interface MenuItem {
@@ -194,7 +196,7 @@ export default function HomeClient() {
                   : 'bg-gray-100 text-gray-500'
               }`}
             >
-              <span>{c.emoji}</span>
+              <c.Icon size={16} strokeWidth={2} />
               <span>{c.label}</span>
             </button>
           ))}
@@ -288,7 +290,6 @@ function MenuCard({ item, token, user }: { item: MenuItem; token: string | null;
   const { addToCart } = useCart();
 
   const handleAdd = () => {
-    if (!token) return;
     addToCart({ _id: item._id, name: item.name, price: item.price, image: item.image });
   };
 
@@ -336,7 +337,7 @@ function EmptyState({ locationSet }: { locationSet: boolean }) {
   const { setShowModal } = useLocation();
   return (
     <div className="text-center py-16 bg-white rounded-3xl border border-dashed border-gray-200">
-      <div className="text-5xl mb-4 opacity-40">🍱</div>
+      <UtensilsCrossed className="w-12 h-12 text-gray-300 mx-auto mb-4" strokeWidth={1.5} />
       <h3 className="text-lg font-black text-gray-800 mb-2">
         {locationSet ? 'Nothing on the stove yet' : 'Where should we deliver?'}
       </h3>

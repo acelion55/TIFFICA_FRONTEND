@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Camera, Check } from 'lucide-react';
 
 const AVAILABLE_AREAS = [
   'Malviya Nagar',
@@ -96,7 +97,11 @@ export function CouponModal({ couponModal, setCouponModal, userPerformance, fetc
                 />
               )}
               <label className="cursor-pointer flex-1 py-3 border-2 border-dashed border-purple-300 rounded-xl text-center text-xs font-bold text-purple-500 hover:bg-purple-50 transition">
-                {imgUploading ? 'Uploading...' : formData.couponImage ? '📷 Change Image' : '📷 Upload Coupon Image'}
+                <span className="inline-flex items-center justify-center gap-2">
+                  {imgUploading ? 'Uploading...' : (
+                    <><Camera className="w-4 h-4" />{formData.couponImage ? 'Change Image' : 'Upload Coupon Image'}</>
+                  )}
+                </span>
                 <input 
                   type="file" 
                   accept="image/*" 
@@ -230,7 +235,7 @@ export function CouponModal({ couponModal, setCouponModal, userPerformance, fetc
                       onClick={() => setFormData({ ...formData, availableForAreas: [] })}
                       className="w-full text-left px-3 py-2 text-sm hover:bg-purple-50 rounded-lg text-purple-600 font-semibold"
                     >
-                      ✓ All Areas (Clear Selection)
+                      <span className="inline-flex items-center gap-1"><Check className="w-3.5 h-3.5" /> All Areas (Clear Selection)</span>
                     </button>
                   </div>
                   <div className="border-t border-gray-100 p-2 space-y-1">
@@ -245,7 +250,7 @@ export function CouponModal({ couponModal, setCouponModal, userPerformance, fetc
                             : 'hover:bg-gray-50 text-gray-700'
                         }`}
                       >
-                        {formData.availableForAreas.includes(area) && '✓ '}{area}
+                        {formData.availableForAreas.includes(area) && <Check className="w-3.5 h-3.5 inline mr-1" />}{area}
                       </button>
                     ))}
                   </div>

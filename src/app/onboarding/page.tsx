@@ -2,25 +2,26 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ChevronRight } from 'lucide-react';
+import { ChevronRight, UtensilsCrossed, MapPin, Rocket, PartyPopper } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 
-const slides = [
+const slides: { Icon: LucideIcon; image: string; title: string; desc: string; bg: string }[] = [
   {
-    emoji: '🍱',
+    Icon: UtensilsCrossed,
     image: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&h=400&fit=crop',
     title: 'Fresh Home-Cooked Meals',
     desc: 'Enjoy authentic tiffin meals made fresh daily by local cloud kitchens near you.',
     bg: 'from-orange-400 to-amber-400',
   },
   {
-    emoji: '📍',
+    Icon: MapPin,
     image: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&h=400&fit=crop',
     title: 'Kitchens Near You',
     desc: 'We find the best cloud kitchens within 5km of your location and show their menus.',
     bg: 'from-amber-400 to-yellow-400',
   },
   {
-    emoji: '🚀',
+    Icon: Rocket,
     image: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=600&h=400&fit=crop',
     title: 'Order & Subscribe',
     desc: 'Order single meals or subscribe for weekly tiffin plans. Healthy eating made easy!',
@@ -33,9 +34,7 @@ export default function OnboardingPage() {
   const router = useRouter();
 
   const completeOnboarding = () => {
-    // Mark onboarding as completed in localStorage
     localStorage.setItem('onboarding_completed', 'true');
-    // Redirect to login
     router.push('/login');
   };
 
@@ -50,10 +49,10 @@ export default function OnboardingPage() {
   const skip = () => completeOnboarding();
 
   const slide = slides[current];
+  const SlideIcon = slide.Icon;
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
-      {/* Image area */}
       <div className={`relative bg-gradient-to-br ${slide.bg} flex-shrink-0`} style={{ height: '55vh' }}>
         <img
           src={slide.image}
@@ -61,10 +60,11 @@ export default function OnboardingPage() {
           className="w-full h-full object-cover mix-blend-overlay opacity-60"
         />
         <div className="absolute inset-0 flex items-center justify-center">
-          <span className="text-8xl drop-shadow-lg">{slide.emoji}</span>
+          <div className="w-24 h-24 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center">
+            <SlideIcon className="w-12 h-12 text-white drop-shadow-lg" strokeWidth={1.5} />
+          </div>
         </div>
 
-        {/* Skip button */}
         {current < slides.length - 1 && (
           <button
             onClick={skip}
@@ -75,9 +75,7 @@ export default function OnboardingPage() {
         )}
       </div>
 
-      {/* Content area */}
       <div className="flex-1 flex flex-col items-center justify-between px-8 py-10">
-        {/* Dots */}
         <div className="flex gap-2 mb-6">
           {slides.map((_, i) => (
             <div
@@ -89,13 +87,11 @@ export default function OnboardingPage() {
           ))}
         </div>
 
-        {/* Text */}
         <div className="text-center flex-1 flex flex-col justify-center">
           <h2 className="text-2xl font-extrabold text-gray-900 mb-3">{slide.title}</h2>
           <p className="text-gray-500 text-base leading-relaxed">{slide.desc}</p>
         </div>
 
-        {/* Button */}
         <button
           onClick={next}
           className={`w-full py-4 bg-gradient-to-r ${slide.bg} text-white font-bold rounded-2xl shadow-lg flex items-center justify-center gap-2 text-base mt-6`}
@@ -103,7 +99,9 @@ export default function OnboardingPage() {
           {current < slides.length - 1 ? (
             <>Next <ChevronRight className="w-5 h-5" /></>
           ) : (
-            "Let's Get Started 🎉"
+            <>
+              Let&apos;s Get Started <PartyPopper className="w-5 h-5" />
+            </>
           )}
         </button>
       </div>

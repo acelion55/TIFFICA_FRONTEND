@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { Check, UtensilsCrossed } from 'lucide-react';
 
 const API_URL = 'https://tifficaapp-1.onrender.com/api';
 
@@ -85,7 +86,7 @@ export default function ForgotPasswordPage() {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-orange-500 to-amber-500 rounded-2xl shadow-lg mb-4">
-            <span className="text-3xl">🍱</span>
+            <UtensilsCrossed className="w-8 h-8 text-white" strokeWidth={2} />
           </div>
           <h1 className="text-3xl font-extrabold text-gray-900">Tiffica</h1>
           <p className="text-gray-500 mt-1 text-sm">Reset your password</p>
@@ -97,7 +98,7 @@ export default function ForgotPasswordPage() {
             {steps.map((s, i) => (
               <div key={s} className="flex items-center gap-2">
                 <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all ${i <= stepIndex ? 'bg-orange-500 text-white' : 'bg-gray-100 text-gray-400'}`}>
-                  {i < stepIndex ? '✓' : i + 1}
+                  {i < stepIndex ? <Check className="w-4 h-4" /> : i + 1}
                 </div>
                 {i < steps.length - 1 && <div className={`w-8 h-0.5 ${i < stepIndex ? 'bg-orange-400' : 'bg-gray-200'}`} />}
               </div>

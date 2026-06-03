@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Tag, Copy, Check } from 'lucide-react';
+import { X, Tag, Copy, Check, Gift } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useLocation } from '@/context/LocationContext';
 
@@ -131,8 +131,9 @@ export default function CouponPopup() {
                   transition={{ delay: 0.1 }}
                 >
                   <div className="flex items-center gap-2 mb-3">
-                    <span className="bg-purple-100 text-purple-600 text-xs font-bold px-3 py-1 rounded-full">
-                      🎉 Special Offer
+                    <span className="bg-purple-100 text-purple-600 text-xs font-bold px-3 py-1 rounded-full inline-flex items-center gap-1">
+                      <Gift className="w-3.5 h-3.5" />
+                      Special Offer
                     </span>
                   </div>
 

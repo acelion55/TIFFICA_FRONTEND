@@ -72,7 +72,7 @@ export default function NotificationsPage() {
 
   return (
     <div className="min-h-screen bg-[#FAF7F5] pb-24">
-      <div className="bg-white px-4 pt-14 pb-4 sticky top-0 z-30 shadow-sm">
+      <div className="bg-white px-4 pt-20 pb-4 sticky top-0 z-30 shadow-sm">
         <div className="flex items-center gap-3">
           <button
             onClick={() => router.back()}

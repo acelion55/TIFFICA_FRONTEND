@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Trash2, Plus, Minus, MapPin, ChevronDown, CheckCircle2, Home, Briefcase, Hotel, MoreHorizontal } from 'lucide-react';
+import { ArrowLeft, Trash2, Plus, Minus, MapPin, ChevronDown, CheckCircle2, Home, Briefcase, Hotel, MoreHorizontal, Loader2, Lock } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/context/ToastContext';
@@ -25,6 +25,7 @@ export default function CheckoutPage() {
   const [addresses, setAddresses] = useState<any[]>([]);
   const [selectedAddress, setSelectedAddress] = useState<any>(null);
   const [showAddressModal, setShowAddressModal] = useState(false);
+  const [specialInstructions, setSpecialInstructions] = useState('');
 
   useEffect(() => {
     if (cart.length === 0) {
@@ -64,7 +65,7 @@ export default function CheckoutPage() {
         userEmail: user.email,
         userPhone: user.phone,
         onSuccess: async (paymentId) => {
-          addToast('✅ Payment successful! Processing order...', 'success');
+          addToast('Payment successful! Processing order...', 'success');
           
           // Send order to backend
           try {
@@ -79,6 +80,7 @@ export default function CheckoutPage() {
               discount: 0,
               paymentMethod: 'razorpay',
               paymentId: paymentId,
+              specialInstructions: specialInstructions.trim(),
             };
 
             console.log('📋 Order data:', JSON.stringify(orderData, null, 2));
@@ -102,32 +104,32 @@ export default function CheckoutPage() {
             
             if (!response.ok) {
               console.error('❌ Order creation failed:', result);
-              addToast(`⚠️ Payment successful but order save failed: ${result.error || 'Unknown error'}`, 'error');
+              addToast(`Payment successful but order save failed: ${result.error || 'Unknown error'}`, 'error');
             } else {
               console.log('✅ Order saved successfully:', result.order?._id);
-              addToast('✅ Order placed and saved successfully!', 'success');
+              addToast('Order placed and saved successfully!', 'success');
             }
           } catch (e) {
             console.error('❌ Order save failed:', e);
             const msg = e instanceof Error ? e.message : 'Unknown error';
-            addToast(`⚠️ Payment successful but order save failed: ${msg}`, 'error');
+            addToast(`Payment successful but order save failed: ${msg}`, 'error');
           }
 
           clearCart();
           setTimeout(() => router.push('/orders'), 1500);
         },
         onFailure: () => {
-          addToast('❌ Payment failed. Please try again.', 'error');
+          addToast('Payment failed. Please try again.', 'error');
           setPaying(false);
         },
         onError: (error) => {
           console.error('🚫 Payment error:', error);
-          addToast(`❌ Payment error: ${error.message || 'Unknown error'}`, 'error');
+          addToast(`Payment error: ${error.message || 'Unknown error'}`, 'error');
           setPaying(false);
         },
       });
     } catch (e) {
-      addToast('❌ Error processing payment', 'error');
+      addToast('Error processing payment', 'error');
       setPaying(false);
     }
   };
@@ -190,7 +192,10 @@ export default function CheckoutPage() {
                 <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
                   <h3 className="font-extrabold text-lg mb-1">{item.name}</h3>
                   {item.cloudKitchen && (
-                    <p className="text-xs text-orange-300 mb-2">🏠 {item.cloudKitchen.name}</p>
+                    <p className="text-xs text-orange-300 mb-2 flex items-center gap-1">
+                      <Home className="w-3.5 h-3.5 shrink-0" />
+                      {item.cloudKitchen.name}
+                    </p>
                   )}
                   <div className="flex items-center justify-between">
                     <p className="text-xl font-black">
@@ -271,6 +276,20 @@ export default function CheckoutPage() {
           )}
         </div>
 
+        {/* Special Instructions (Optional Note) */}
+        <div className="bg-white rounded-3xl shadow-sm p-5 space-y-3">
+          <h2 className="text-sm font-extrabold text-gray-900 flex items-center gap-2">
+            <MoreHorizontal className="w-4 h-4 text-orange-500" />
+            Add a Note
+          </h2>
+          <textarea
+            value={specialInstructions}
+            onChange={(e) => setSpecialInstructions(e.target.value)}
+            placeholder="Any special instructions for the kitchen or delivery partner?"
+            className="w-full bg-gray-50 border-none rounded-xl p-3 text-sm text-gray-800 placeholder-gray-400 focus:ring-2 focus:ring-orange-500 transition-all resize-none h-20"
+          />
+        </div>
+
         {/* Bill Summary */}
         <div className="bg-white rounded-3xl shadow-sm p-5 space-y-3">
           <h2 className="text-sm font-extrabold text-gray-900 mb-3">Bill Summary</h2>
@@ -302,10 +321,15 @@ export default function CheckoutPage() {
               : 'bg-linear-to-r from-orange-500 to-amber-500 active:scale-95 shadow-lg shadow-orange-200'
           }`}
         >
-          {paying ? '⏳ Processing...' : `Pay ₹${total.toFixed(0)}`}
+          {paying ? (
+            <><Loader2 className="w-5 h-5 animate-spin" /> Processing...</>
+          ) : (
+            `Pay ₹${total.toFixed(0)}`
+          )}
         </button>
-        <p className="text-center text-[10px] text-gray-400 mt-2">
-          🔒 Secure payment powered by Razorpay
+        <p className="text-center text-[10px] text-gray-400 mt-2 flex items-center justify-center gap-1">
+          <Lock className="w-3 h-3" />
+          Secure payment powered by Razorpay
         </p>
       </div>
 

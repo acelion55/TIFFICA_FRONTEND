@@ -7,12 +7,11 @@ import { ToastProvider } from "@/context/ToastContext";
 import { NotificationProvider } from "@/context/NotificationContext";
 import { DeliveryAuthProvider } from "@/context/DeliveryAuthContext";
 import LocationModal from "@/components/location-modal";
-import AppShell from "@/components/app-shell";
 import CouponPopup from "@/components/CouponPopup";
 import RoleRedirect from "@/components/role-redirect";
-import PWAUpdater from "@/components/pwa-updater";
-import PWAGuard from "@/components/pwa-guard";
 import CapacitorInit from "@/components/capacitor-init";
+import Navbar from "@/components/navbar";
+import WalletBar from "@/components/wallet-bar";
 
 export const viewport: Viewport = {
   themeColor: '#f97316',
@@ -37,12 +36,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <CartProvider>
                   <LocationProvider>
                     <RoleRedirect />
-                    <PWAGuard>
-                      <AppShell>{children}</AppShell>
-                    </PWAGuard>
+                    <WalletBar />
+                    {children}
+                    <Navbar />
                     <LocationModal />
                     <CouponPopup />
-                    <PWAUpdater />
                   </LocationProvider>
                 </CartProvider>
               </NotificationProvider>

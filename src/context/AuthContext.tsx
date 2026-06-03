@@ -32,9 +32,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (t: string) => {
     localStorage.setItem('token', t);
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+      
       const res = await fetch(`${API_URL}/auth/profile`, {
         headers: { 'Authorization': `Bearer ${t}` },
+        signal: controller.signal,
       });
+      
+      clearTimeout(timeoutId);
+      
       if (res.ok) {
         const data = await res.json();
         setToken(t);
@@ -49,10 +56,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     } catch (e) {
       console.error('Failed to fetch profile', e);
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      setToken(null);
-      setUser(null);
+      // If backend is down, still set the token locally for offline mode
+      if (e instanceof Error && (e.name === 'AbortError' || !navigator.onLine)) {
+        // Keep token, allow offline mode
+        setToken(t);
+        setLoading(false);
+      } else {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        setToken(null);
+        setUser(null);
+      }
     } finally {
       setLoading(false);
     }
@@ -70,10 +84,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setLoading(false);
         startPing(stored);
         
-        // Verify token in background
+        // Verify token in background with timeout
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 3000); // 3 second timeout
+        
         fetch(`${API_URL}/auth/profile`, {
           headers: { 'Authorization': `Bearer ${stored}` },
+          signal: controller.signal,
         }).then(res => {
+          clearTimeout(timeoutId);
           if (!res.ok) {
             // Token invalid, logout
             localStorage.removeItem('token');
@@ -82,7 +101,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setUser(null);
             stopPing();
           }
-        }).catch(() => {});
+        }).catch((err) => {
+          clearTimeout(timeoutId);
+          // Network error or timeout - keep local state
+          console.log('Profile verification failed:', err);
+        });
       } catch {
         login(stored);
       }
