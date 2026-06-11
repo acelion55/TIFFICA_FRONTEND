@@ -8,15 +8,15 @@ import { usePWAInstall } from '@/hooks/usePWAInstall';
 import { Eye, EyeOff, Mail, Lock, ArrowRight, Download, Loader2, X, Phone } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const API_URL = 'https://tifficaapp-1.onrender.com/api';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://tifficaapp-1.onrender.com/api';
 
 type Mode = 'mobile-password' | 'email-otp';
 
 export default function LoginPage() {
   const [mode, setMode] = useState<Mode>('mobile-password');
-  const [mobile, setMobile] = useState('');
-  const [mobilePass, setMobilePass] = useState('');
-  const [showMobilePass, setShowMobilePass] = useState(false);
+  const [loginId, setLoginId] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPass, setShowPass] = useState(false);
   const [otpEmail, setOtpEmail] = useState('');
   const [otp, setOtp] = useState('');
   const [otpSent, setOtpSent] = useState(false);
@@ -84,16 +84,14 @@ export default function LoginPage() {
     finally { setLoading(false); }
   };
 
-  const handleMobileLogin = async (e: React.FormEvent) => {
+  const handlePasswordLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(''); setLoading(true);
-    if (!mobile || !mobilePass) { setError('Mobile and password required'); setLoading(false); return; }
-    if (!/^\d{10}$/.test(mobile)) { setError('Invalid mobile number'); setLoading(false); return; }
-    if (mobilePass.length < 6) { setError('Password must be at least 6 characters'); setLoading(false); return; }
+    if (!loginId || !password) { setError('ID and password required'); setLoading(false); return; }
     try {
-      const res = await fetch(`${API_URL}/auth/login-mobile`, {
+      const res = await fetch(`${API_URL}/auth/login`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone: mobile, password: mobilePass }),
+        body: JSON.stringify({ identifier: loginId, password }),
       });
       const data = await res.json();
       if (res.ok) {
@@ -230,14 +228,14 @@ export default function LoginPage() {
               transition={{ duration: 0.3, ease: 'easeOut' }}
             >
               {mode === 'mobile-password' ? (
-                <form onSubmit={handleMobileLogin} className="space-y-4">
+                <form onSubmit={handlePasswordLogin} className="space-y-4">
                   <div className="space-y-4">
                     <div className="relative group">
                       <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                         <Phone className="w-5 h-5 text-gray-500 group-focus-within:text-orange-400 transition-colors" />
                       </div>
-                      <input type="tel" value={mobile} onChange={e => setMobile(e.target.value.replace(/\D/g, '').slice(0, 10))}
-                        placeholder="Mobile Number" required
+                      <input type="text" value={loginId} onChange={e => setLoginId(e.target.value)}
+                        placeholder="Phone, Email or Name" required
                         className="w-full bg-black/40 border border-white/10 rounded-2xl pl-12 pr-4 py-4 text-white placeholder:text-gray-500 focus:outline-none focus:border-orange-500/50 focus:ring-1 focus:ring-orange-500/50 transition-all" />
                     </div>
                     
@@ -245,11 +243,11 @@ export default function LoginPage() {
                       <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                         <Lock className="w-5 h-5 text-gray-500 group-focus-within:text-orange-400 transition-colors" />
                       </div>
-                      <input type={showMobilePass ? 'text' : 'password'} value={mobilePass} onChange={e => setMobilePass(e.target.value)}
+                      <input type={showPass ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)}
                         placeholder="Password" required
                         className="w-full bg-black/40 border border-white/10 rounded-2xl pl-12 pr-12 py-4 text-white placeholder:text-gray-500 focus:outline-none focus:border-orange-500/50 focus:ring-1 focus:ring-orange-500/50 transition-all" />
-                      <button type="button" onClick={() => setShowMobilePass(v => !v)} className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-500 hover:text-white transition-colors">
-                        {showMobilePass ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                      <button type="button" onClick={() => setShowPass(v => !v)} className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-500 hover:text-white transition-colors">
+                        {showPass ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                       </button>
                     </div>
                   </div>
@@ -264,7 +262,7 @@ export default function LoginPage() {
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     type="submit"
-                    disabled={loading || mobile.length !== 10 || mobilePass.length < 6}
+                    disabled={loading || !loginId || password.length < 6}
                     className="w-full py-4 bg-gradient-to-r from-orange-500 to-rose-500 hover:from-orange-400 hover:to-rose-400 text-white font-bold rounded-2xl shadow-[0_0_40px_-10px_rgba(249,115,22,0.4)] flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <>Login to Account <ArrowRight className="w-4 h-4 ml-1" /></>}

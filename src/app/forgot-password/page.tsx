@@ -5,13 +5,14 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Check, UtensilsCrossed } from 'lucide-react';
 
-const API_URL = 'https://tifficaapp-1.onrender.com/api';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://tifficaapp-1.onrender.com/api';
 
 type Step = 'email' | 'otp' | 'reset';
 
 export default function ForgotPasswordPage() {
   const [step, setStep] = useState<Step>('email');
-  const [email, setEmail] = useState('');
+  const [method, setMethod] = useState<'email' | 'phone'>('email');
+  const [identifier, setIdentifier] = useState('');
   const [otp, setOtp] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -22,16 +23,29 @@ export default function ForgotPasswordPage() {
   const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(''); setLoading(true);
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      setError('Invalid email format');
-      setLoading(false);
-      return;
+    
+    const body: any = {};
+    if (method === 'email') {
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(identifier)) {
+        setError('Invalid email format');
+        setLoading(false);
+        return;
+      }
+      body.email = identifier;
+    } else {
+      if (!/^\d{10}$/.test(identifier)) {
+        setError('Invalid phone number (10 digits)');
+        setLoading(false);
+        return;
+      }
+      body.phone = identifier;
     }
+
     try {
       const res = await fetch(`${API_URL}/auth/forgot-password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify(body),
       });
       const data = await res.json();
       if (res.ok) setStep('otp');
@@ -48,11 +62,16 @@ export default function ForgotPasswordPage() {
       setLoading(false);
       return;
     }
+
+    const body: any = { otp };
+    if (method === 'email') body.email = identifier;
+    else body.phone = identifier;
+
     try {
       const res = await fetch(`${API_URL}/auth/verify-reset-otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, otp }),
+        body: JSON.stringify(body),
       });
       const data = await res.json();
       if (res.ok) setStep('reset');
@@ -65,11 +84,16 @@ export default function ForgotPasswordPage() {
     e.preventDefault();
     if (password !== confirmPassword) { setError('Passwords do not match'); return; }
     setError(''); setLoading(true);
+
+    const body: any = { otp, password };
+    if (method === 'email') body.email = identifier;
+    else body.phone = identifier;
+
     try {
       const res = await fetch(`${API_URL}/auth/reset-password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, otp, password }),
+        body: JSON.stringify(body),
       });
       const data = await res.json();
       if (res.ok) router.push('/login');
@@ -113,11 +137,35 @@ export default function ForgotPasswordPage() {
 
           {step === 'email' && (
             <form onSubmit={handleSendOtp} className="space-y-4">
-              <h2 className="text-lg font-bold text-gray-800 mb-2">Enter your email</h2>
-              <p className="text-sm text-gray-500 mb-4">We'll send you a 6-digit code to reset your password.</p>
+              <div className="flex bg-gray-100 p-1 rounded-xl mb-4">
+                <button
+                  type="button"
+                  onClick={() => setMethod('email')}
+                  className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${method === 'email' ? 'bg-white text-orange-600 shadow-sm' : 'text-gray-500'}`}
+                >
+                  Email
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setMethod('phone')}
+                  className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${method === 'phone' ? 'bg-white text-orange-600 shadow-sm' : 'text-gray-500'}`}
+                >
+                  Phone
+                </button>
+              </div>
+
+              <h2 className="text-lg font-bold text-gray-800 mb-2">
+                Enter your {method === 'email' ? 'email' : 'phone number'}
+              </h2>
+              <p className="text-sm text-gray-500 mb-4">
+                We'll send you a 6-digit code to reset your password.
+              </p>
               <input
-                type="email" value={email} onChange={e => setEmail(e.target.value)}
-                placeholder="you@example.com" required
+                type={method === 'email' ? 'email' : 'tel'}
+                value={identifier}
+                onChange={e => setIdentifier(e.target.value)}
+                placeholder={method === 'email' ? 'you@example.com' : '10-digit mobile number'}
+                required
                 className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 bg-gray-50"
               />
               <button type="submit" disabled={loading}
@@ -130,7 +178,7 @@ export default function ForgotPasswordPage() {
           {step === 'otp' && (
             <form onSubmit={handleVerifyOtp} className="space-y-4">
               <h2 className="text-lg font-bold text-gray-800 mb-2">Enter OTP</h2>
-              <p className="text-sm text-gray-500 mb-4">Enter the 6-digit code sent to <strong>{email}</strong></p>
+              <p className="text-sm text-gray-500 mb-4">Enter the 6-digit code sent to <strong>{identifier}</strong></p>
               <input
                 type="text" value={otp} onChange={e => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
                 placeholder="6-digit OTP" required maxLength={6}
@@ -140,7 +188,7 @@ export default function ForgotPasswordPage() {
                 className="w-full py-3 bg-gradient-to-r from-orange-500 to-amber-500 text-white font-bold rounded-xl shadow-md hover:shadow-xl transition-all disabled:opacity-60">
                 {loading ? 'Verifying…' : 'Verify OTP'}
               </button>
-              <button type="button" onClick={() => setStep('email')} className="w-full text-sm text-gray-400 hover:text-orange-500 py-1">← Change email</button>
+              <button type="button" onClick={() => setStep('email')} className="w-full text-sm text-gray-400 hover:text-orange-500 py-1">← Change {method}</button>
             </form>
           )}
 

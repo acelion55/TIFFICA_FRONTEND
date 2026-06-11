@@ -7,7 +7,7 @@ import { useAuth } from '@/context/AuthContext';
 import { Eye, EyeOff, Mail, Lock, User, Phone, ArrowRight, Loader2, X, UtensilsCrossed } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const API_URL = 'https://tifficaapp-1.onrender.com/api';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://tifficaapp-1.onrender.com/api';
 
 export default function SignUpPage() {
   const [name, setName]         = useState('');

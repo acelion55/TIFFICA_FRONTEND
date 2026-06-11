@@ -1,0 +1,13 @@
+{
+  "version": "1.0.4",
+  "message": "Bug fixes and improved performance!",
+  "releaseDate": "2026-06-04",
+  "changelog": [
+    "Fixed admin panel navbar spacing",
+    "Improved app update detection (now checks every 2 minutes)",
+    "Removed swipe page navigation in admin panel",
+    "Fixed menu addition on home page",
+    "Better offline support"
+  ],
+  "critical": false
+}

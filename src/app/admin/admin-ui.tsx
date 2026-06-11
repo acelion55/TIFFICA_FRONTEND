@@ -14,7 +14,7 @@ export const ERP = {
   panelHead: 'px-4 py-3 border-b border-slate-200 bg-slate-50 flex items-center justify-between',
   input: 'w-full px-3 py-2 bg-white border border-slate-200 rounded-md text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-200 focus:border-slate-400',
   select: 'w-full px-3 py-2 bg-white border border-slate-200 rounded-md text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-200',
-  btn: 'inline-flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-md border transition-colors',
+  btn: 'inline-flex  items-center justify-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-md border transition-colors',
   btnPrimary: 'bg-slate-800 text-white border-slate-800 hover:bg-slate-900',
   btnSecondary: 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50',
   btnDanger: 'bg-white text-red-700 border-red-200 hover:bg-red-50',
@@ -374,6 +374,7 @@ export function AdminDataTable<T extends { _id?: string }>({
   exportFilename,
   exportHeaders,
   exportRows,
+  showSearch = true, // Added this prop
 }: {
   columns: AdminTableColumn<T>[];
   rows: T[];
@@ -387,6 +388,7 @@ export function AdminDataTable<T extends { _id?: string }>({
   exportFilename?: string;
   exportHeaders?: string[];
   exportRows?: (string | number)[][];
+  showSearch?: boolean; // Added this prop
 }) {
   const [page, setPage] = React.useState(1);
   const [sortKey, setSortKey] = React.useState<string | null>(null);
@@ -422,24 +424,28 @@ export function AdminDataTable<T extends { _id?: string }>({
 
   return (
     <div className={ERP.panel}>
-      <div className="px-3 py-2 border-b border-slate-200 flex flex-wrap items-center gap-2 bg-slate-50">
-        <div className="flex-1 min-w-[160px] flex items-center gap-2 border border-slate-200 rounded-md px-2 py-1.5 bg-white">
-          <Search className="w-3.5 h-3.5 text-slate-400" />
-          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Table search…" className="flex-1 text-xs focus:outline-none" />
-        </div>
-        {exportFilename && exportHeaders && exportRows && (
-          <button
-            type="button"
-            onClick={() => exportToCsv(exportFilename, exportHeaders, exportRows)}
-            className={`${ERP.btn} ${ERP.btnSecondary}`}
-          >
-            <Download className="w-3.5 h-3.5" /> CSV
+      {(showSearch || (exportFilename && exportHeaders && exportRows)) && (
+        <div className="px-3 py-2 border-b border-slate-200 flex flex-wrap items-center gap-2 bg-slate-50">
+          {showSearch && (
+            <div className="flex-1 min-w-[160px] flex items-center gap-2 border border-slate-200 rounded-md px-2 py-1.5 bg-white">
+              <Search className="w-3.5 h-3.5 text-slate-400" />
+              <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Table search…" className="flex-1 text-xs focus:outline-none" />
+            </div>
+          )}
+          {exportFilename && exportHeaders && exportRows && (
+            <button
+              type="button"
+              onClick={() => exportToCsv(exportFilename, exportHeaders, exportRows)}
+              className={`${ERP.btn} ${ERP.btnSecondary}`}
+            >
+              <Download className="w-3.5 h-3.5" /> CSV
+            </button>
+          )}
+          <button type="button" className={`${ERP.btn} ${ERP.btnSecondary} opacity-60 cursor-not-allowed`} title="PDF export — configure in report builder">
+            <FileSpreadsheet className="w-3.5 h-3.5" /> Excel
           </button>
-        )}
-        <button type="button" className={`${ERP.btn} ${ERP.btnSecondary} opacity-60 cursor-not-allowed`} title="PDF export — configure in report builder">
-          <FileSpreadsheet className="w-3.5 h-3.5" /> Excel
-        </button>
-      </div>
+        </div>
+      )}
       <div className="overflow-x-auto max-h-[min(70vh,600px)]">
         <table className="w-full text-sm border-collapse">
           <thead className={`${ERP.tableHead} sticky top-0 z-10`}>

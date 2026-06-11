@@ -1,6 +1,6 @@
 'use client';
 import React from 'react';
-import { ChevronDown, ChevronUp, Search, Trash2, Plus, Activity, Tag, TrendingUp, Award, Users, User, ShoppingBag, UtensilsCrossed, CreditCard, ChevronRight, Calendar, ArrowUpDown, Mail, Phone, MapPin, Truck, Copy, Zap, CheckCircle, Hourglass, Home, Wallet, Gem, CalendarDays, Rocket, Flag, Megaphone, Info, Gift, Package, AlertTriangle, Bell, Send, Save, Smartphone, GraduationCap, Building2, Shirt, Lock, FileText, Film, Video, Sparkles, X, RefreshCw, Download, ChevronLeft, Printer, Eye, MoreHorizontal, ArrowUp, ArrowDown } from 'lucide-react';
+import { ChevronDown, ChevronUp, Search, Trash2, Plus, Activity, Tag, TrendingUp, Award, Users, User, ShoppingBag, UtensilsCrossed, CreditCard, ChevronRight, Calendar, ArrowUpDown, Mail, Phone, MapPin, Truck, Copy, Zap, CheckCircle, Hourglass, Home, Wallet, Gem, CalendarDays, Rocket, Flag, Megaphone, Info, Gift, Package, AlertTriangle, Bell, Send, Save, Smartphone, GraduationCap, Building2, Shirt, Lock, FileText, Film, Video, Sparkles, X, RefreshCw, Download, ChevronLeft, Printer, Eye, MoreHorizontal, ArrowUp, ArrowDown, Edit, Loader2, BarChart2, Store } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import AdminNotifications from '@/components/AdminNotifications';
 import { ERP, AdminPageHeader, AdminToolbar, AdminPanel, AdminDataTable, AdminKpiGrid, AdminStatusBadge, MiniBarChart } from './admin-ui';
@@ -22,33 +22,103 @@ const SC: Record<string, string> = {
 const fmt = (d: string) => new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
 const fmtTime = (d: string) => new Date(d).toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
 
-export function UsersTab({ users, search, setSearch, setUserModal, openEditUserModal }: any) {
-  const filtered = users.filter((u: any) =>
-    !search ||
-    u.name?.toLowerCase().includes(search.toLowerCase()) ||
-    u.email?.toLowerCase().includes(search.toLowerCase()) ||
-    u.phone?.includes(search)
-  );
+export function UsersTab({ users, search, setSearch, setUserModal, openEditUserModal, deleteUser, fetchAll, headers, API_URL }: any) {
+  const [selectedIds, setSelectedIds] = React.useState<Set<string>>(new Set());
+
+  const filtered = users.filter((u: any) => {
+    return !search ||
+      u.name?.toLowerCase().includes(search.toLowerCase()) ||
+      u.email?.toLowerCase().includes(search.toLowerCase()) ||
+      u.phone?.includes(search);
+  });
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === filtered.length && filtered.length > 0) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(filtered.map((u: any) => u._id)));
+    }
+  };
+
+  const handleBulkRoleChange = async (role: string) => {
+    if (selectedIds.size === 0) return;
+    if (!confirm(`Are you sure you want to change the role to "${role}" for ${selectedIds.size} selected users?`)) return;
+
+    try {
+      const res = await fetch(`${API_URL}/admin/users/bulk-role`, {
+        method: 'POST',
+        headers: { ...headers, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userIds: Array.from(selectedIds), role })
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert(data.message);
+        setSelectedIds(new Set());
+        fetchAll?.();
+      } else {
+        alert(data.error || 'Bulk update failed');
+      }
+    } catch (err) {
+      alert('Error connecting to server');
+    }
+  };
 
   return (
     <div className={ERP.page}>
       <AdminPageHeader
-        title="User Management"
-        subtitle={`${filtered.length} accounts in registry`}
+        title=""
+        subtitle={""}
         actions={
-          <button type="button" onClick={() => setUserModal({ open: true, data: null })} className={`${ERP.btn} ${ERP.btnPrimary}`}>
-            <Plus className="w-4 h-4" /> Add user
-          </button>
+          <div className="flex items-center gap-2">
+            {selectedIds.size > 0 && (
+              <div className="flex items-center gap-2 px-3 py-1 bg-orange-50 border border-orange-100 rounded-lg animate-in fade-in slide-in-from-right-4">
+                <span className="text-[10px] font-bold text-orange-600 uppercase tracking-wider">{selectedIds.size} Selected</span>
+                <div className="h-4 w-[1px] bg-orange-200 mx-1" />
+                <select
+                  onChange={(e) => {
+                    if (e.target.value) {
+                      handleBulkRoleChange(e.target.value);
+                      e.target.value = "";
+                    }
+                  }}
+                  className="text-[10px] font-bold text-slate-600 bg-transparent py-1 pr-6 focus:outline-none cursor-pointer"
+                >
+                  <option value="">Bulk Role Change</option>
+                  <option value="user">Set as User</option>
+                  <option value="admin">Set as Admin</option>
+                  <option value="delivery">Set as Delivery</option>
+                  <option value="kitchen-owner">Set as Kitchen Owner</option>
+                </select>
+              </div>
+            )}
+            <button type="button" onClick={() => setUserModal({ open: true, data: null })} className={`${ERP.btn} ${ERP.btnPrimary}`}>
+              <Plus className="w-4 h-4" /> Add user
+            </button>
+          </div>
         }
       />
       <AdminKpiGrid items={[
-        { label: 'Total users', value: users.length },
+        { label: 'Total users', value: filtered.length },
         { label: 'Customers', value: users.filter((u: any) => u.role === 'user' || !u.role).length },
         { label: 'Kitchen owners', value: users.filter((u: any) => u.role === 'kitchen-owner').length },
         { label: 'Premium', value: users.filter((u: any) => u.isPremium).length },
       ]} />
       <AdminToolbar search={search} setSearch={setSearch} searchPlaceholder="Search name, email, phone…" />
       <AdminDataTable
+        showSearch={false}
+        selectable={true}
+        selectedIds={selectedIds}
+        onToggleSelect={toggleSelect}
+        onToggleSelectAll={toggleSelectAll}
         columns={[
           { key: 'name', header: 'Name', sortable: true },
           { key: 'phone', header: 'Phone' },
@@ -56,9 +126,16 @@ export function UsersTab({ users, search, setSearch, setUserModal, openEditUserM
           { key: 'role', header: 'Role', sortable: true, render: (u: any) => <AdminStatusBadge status={u.role || 'user'} /> },
           { key: 'walletBalance', header: 'Wallet', render: (u: any) => `₹${(u.walletBalance || 0).toLocaleString('en-IN')}` },
           { key: 'createdAt', header: 'Joined', sortable: true, render: (u: any) => fmt(u.createdAt) },
-          { key: 'actions', header: '', render: (u: any) => (
-            <button type="button" onClick={() => openEditUserModal ? openEditUserModal(u) : setUserModal({ open: true, data: u })} className={`${ERP.btn} ${ERP.btnSecondary} py-1`}>Edit</button>
-          ) },
+          {
+            key: 'actions', header: '', render: (u: any) => (
+              <div className="flex items-center gap-2">
+                <button type="button" onClick={() => openEditUserModal ? openEditUserModal(u) : setUserModal({ open: true, data: u })} className={`${ERP.btn} ${ERP.btnSecondary} py-1`}>Edit</button>
+                {deleteUser && (
+                  <button type="button" onClick={() => deleteUser(u._id)} className={`${ERP.btn} ${ERP.btnDanger} py-1`}><Trash2 className="w-4 h-4" /></button>
+                )}
+              </div>
+            )
+          },
         ]}
         rows={filtered}
         emptyMessage="No users match search"
@@ -539,7 +616,7 @@ export function OrdersTab({ orders, fetchAll, headers, API_URL, search, setSearc
 }
 
 
-export function MenuTab({ menuItems, search, setSearch, expandedRow, setExpandedRow, setMenuModal, setImgPreview, kitchens, fetchAll, headers, API_URL, isDraftTab, user }: any) {
+export function MenuTab({ menuItems, search, setSearch, setMenuModal, setImgPreview, kitchens, fetchAll, headers, API_URL, isDraftTab, user }: any) {
   const [kitchenFilter, setKitchenFilter] = React.useState('');
   const [nameFilter, setNameFilter] = React.useState('');
   const [showFilters, setShowFilters] = React.useState(false);
@@ -558,171 +635,183 @@ export function MenuTab({ menuItems, search, setSearch, expandedRow, setExpanded
     }
 
     const matchesSearch = !search || m.name?.toLowerCase().includes(search.toLowerCase());
-    const matchesKitchen = !kitchenFilter ||
-      (kitchenFilter === 'no-kitchen' ? !m.cloudKitchen :
-        (typeof m.cloudKitchen === 'object' ? m.cloudKitchen?._id === kitchenFilter : m.cloudKitchen === kitchenFilter)
-      );
-    const matchesName = !nameFilter || m.name?.toLowerCase().includes(nameFilter.toLowerCase());
-    return matchesSearch && matchesKitchen && matchesName;
+
+    // Only apply kitchen and name filters if user is admin
+    if (user?.role === 'admin') {
+      const matchesKitchen = !kitchenFilter ||
+        (kitchenFilter === 'no-kitchen' ? !m.cloudKitchen :
+          (typeof m.cloudKitchen === 'object' ? m.cloudKitchen?._id === kitchenFilter : m.cloudKitchen === kitchenFilter)
+        );
+      const matchesName = !nameFilter || m.name?.toLowerCase().includes(nameFilter.toLowerCase());
+      return matchesSearch && matchesKitchen && matchesName;
+    }
+
+    return matchesSearch;
   });
 
   return (
     <div className={ERP.page}>
-      <AdminPageHeader
-        title={isDraftTab ? 'Draft menu items' : 'Menu catalog'}
-        subtitle={`${filteredItems.length} items · ${kitchens.length} kitchens`}
-        actions={
-          <button type="button" onClick={() => setMenuModal({ open: true, data: null })} className={`${ERP.btn} ${ERP.btnPrimary}`}>
-            <Plus className="w-4 h-4" /> Add item
-          </button>
-        }
-      />
-      {!isDraftTab && (
-        <div className="flex border border-slate-200 rounded-md w-fit overflow-hidden bg-white">
-          <button
-            type="button"
-            onClick={() => setView('live')}
-            className={`px-4 py-2 text-xs font-semibold ${view === 'live' ? 'bg-slate-800 text-white' : 'text-slate-600 hover:bg-slate-50'}`}
-          >
-            Live ({menuItems.filter((m: any) => !(m.isDraft === true || String(m.isDraft) === 'true')).length})
-          </button>
-          <button
-            type="button"
-            onClick={() => setView('draft')}
-            className={`px-4 py-2 text-xs font-semibold border-l border-slate-200 ${view === 'draft' ? 'bg-slate-800 text-white' : 'text-slate-600 hover:bg-slate-50'}`}
-          >
-            Drafts ({menuItems.filter((m: any) => m.isDraft === true || String(m.isDraft) === 'true').length})
-          </button>
-        </div>
-      )}
+      <span className='flex justify-between -mt-3'>
 
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-        <div className="flex-1 flex items-center gap-3 bg-white rounded-md border border-slate-200 px-3 py-2">
+        <button type="button" onClick={() => setMenuModal({ open: true, data: null })} className={`${ERP.btn} ${ERP.btnPrimary}`}>
+          <Plus className="w-4 h-4" /> Add item
+        </button>
+
+        {!isDraftTab && (
+          <div className="flex border border-slate-200 rounded-md w-fit overflow-hidden bg-white">
+            <button
+              type="button"
+              onClick={() => setView('live')}
+              className={`px-4 py-2 text-xs font-semibold ${view === 'live' ? 'bg-slate-800 text-white' : 'text-slate-600 hover:bg-slate-50'}`}
+            >
+              Live ({menuItems.filter((m: any) => !(m.isDraft === true || String(m.isDraft) === 'true')).length})
+            </button>
+            <button
+              type="button"
+              onClick={() => setView('draft')}
+              className={`px-4 py-2 text-xs font-semibold border-l border-slate-200 ${view === 'draft' ? 'bg-slate-800 text-white' : 'text-slate-600 hover:bg-slate-50'}`}
+            >
+              Drafts ({menuItems.filter((m: any) => m.isDraft === true || String(m.isDraft) === 'true').length})
+            </button>
+          </div>
+        )}
+      </span>
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center">
+        <div className="flex-1 flex items-center  bg-white rounded-md border border-slate-200 px-3 py-2">
           <Search className="w-4 h-4 text-slate-400 shrink-0" />
           <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search menu items…" className="flex-1 text-sm focus:outline-none placeholder:text-slate-400" />
         </div>
-        <div className="relative">
-          <button
-            onClick={() => setShowFilters(!showFilters)}
-            className={`flex items-center gap-2 px-5 py-3 rounded-full text-sm font-bold transition-all ${showFilters ? 'bg-slate-900 text-white' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
-              }`}
-          >
-            <span className="inline-flex items-center gap-1.5"><Search className="w-4 h-4" /> Filters</span>
-            {(nameFilter || kitchenFilter) && (
-              <span className="w-2 h-2 rounded-full bg-orange-500 animate-pulse"></span>
-            )}
-            <ChevronDown className={`w-4 h-4 transition-transform ${showFilters ? 'rotate-180' : ''}`} />
-          </button>
-          {showFilters && (
-            <div className="absolute right-0 top-full mt-3 bg-white rounded-[2rem] shadow-2xl border border-slate-100 p-6 z-50 min-w-[300px] animate-in fade-in slide-in-from-top-2">
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-[10px] font-black text-slate-400 mb-2 uppercase tracking-widest">Filter by Name</label>
-                  <select
-                    value={nameFilter}
-                    onChange={e => setNameFilter(e.target.value)}
-                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-100"
+        {user?.role === 'admin' && (
+          <div className="relative">
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className={`flex items-center gap-2 px-5 py-3 rounded-full text-sm font-bold transition-all ${showFilters ? 'bg-slate-900 text-white' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
+                }`}
+            >
+              <span className="inline-flex items-center gap-1.5"><Search className="w-4 h-4" /> Filters</span>
+              {user?.role === 'admin' && (
+
+                <span className="w-2 h-2 rounded-full bg-orange-500 animate-pulse"></span>
+              )}
+              <ChevronDown className={`w-4 h-4 transition-transform ${showFilters ? 'rotate-180' : ''}`} />
+            </button>
+            {showFilters && (
+              <div className="absolute right-0 top-full mt-3 bg-white rounded-[2rem] shadow-2xl border border-slate-100 p-6 z-50 min-w-[300px] animate-in fade-in slide-in-from-top-2">
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-[10px] font-black text-slate-400 mb-2 uppercase tracking-widest">Filter by Name</label>
+                    <select
+                      value={nameFilter}
+                      onChange={e => setNameFilter(e.target.value)}
+                      className="w-full px-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-100"
+                    >
+                      <option value="">All Items</option>
+                      <option value="dal">Dal Items</option>
+                      <option value="sabji">Sabji Items</option>
+                      <option value="roti">Roti Items</option>
+                      <option value="raita">Raita Items</option>
+                      <option value="rice">Rice Items</option>
+                      <option value="paneer">Paneer Items</option>
+                      <option value="chicken">Chicken Items</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-black text-slate-400 mb-2 uppercase tracking-widest">Kitchen</label>
+                    <select
+                      value={kitchenFilter}
+                      onChange={e => setKitchenFilter(e.target.value)}
+                      className="w-full px-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-100"
+                    >
+                      <option value="">All Kitchens</option>
+                      {kitchens?.map((k: any) => (
+                        <option key={k._id} value={k._id}>{k.name}</option>
+                      ))}
+                      <option value="no-kitchen">No Kitchen</option>
+                    </select>
+                  </div>
+                  <button
+                    onClick={() => { setNameFilter(''); setKitchenFilter(''); setShowFilters(false); }}
+                    className="w-full py-3 bg-slate-900 text-white rounded-full text-xs font-black uppercase tracking-widest hover:bg-slate-800 transition shadow-lg shadow-slate-200"
                   >
-                    <option value="">All Items</option>
-                    <option value="dal">Dal Items</option>
-                    <option value="sabji">Sabji Items</option>
-                    <option value="roti">Roti Items</option>
-                    <option value="raita">Raita Items</option>
-                    <option value="rice">Rice Items</option>
-                    <option value="paneer">Paneer Items</option>
-                    <option value="chicken">Chicken Items</option>
-                  </select>
+                    Clear All Filters
+                  </button>
                 </div>
-                <div>
-                  <label className="block text-[10px] font-black text-slate-400 mb-2 uppercase tracking-widest">Kitchen</label>
-                  <select
-                    value={kitchenFilter}
-                    onChange={e => setKitchenFilter(e.target.value)}
-                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-100"
-                  >
-                    <option value="">All Kitchens</option>
-                    {kitchens?.map((k: any) => (
-                      <option key={k._id} value={k._id}>{k.name}</option>
-                    ))}
-                    <option value="no-kitchen">No Kitchen</option>
-                  </select>
-                </div>
-                <button
-                  onClick={() => { setNameFilter(''); setKitchenFilter(''); setShowFilters(false); }}
-                  className="w-full py-3 bg-slate-900 text-white rounded-full text-xs font-black uppercase tracking-widest hover:bg-slate-800 transition shadow-lg shadow-slate-200"
-                >
-                  Clear All Filters
-                </button>
               </div>
-            </div>
-          )}
-        </div>
-        <button onClick={() => { setMenuModal({ open: true, data: null }); setImgPreview(''); }} className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white rounded-full text-sm font-black shadow-lg shadow-orange-200 transition shrink-0 active:scale-95">
-          <Plus className="w-5 h-5" /> Add New Item
-        </button>
+            )}
+          </div>
+        )}
       </div>
 
-      <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden">
-        <div className="px-7 py-4 border-b border-slate-50 flex items-center justify-between bg-slate-50/30">
-          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Inventory List</p>
-          <span className="text-[10px] font-bold text-orange-500 bg-orange-50 px-3 py-1 rounded-full">{filteredItems.length} items matched</span>
-        </div>
-        <div className="divide-y divide-slate-50">
+      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredItems.length === 0 ? (
-            <div className="text-center py-12 text-slate-400">
+            <div className="col-span-full text-center py-12 text-slate-400">
               <UtensilsCrossed className="w-12 h-12 text-slate-300 mx-auto mb-2" />
               <p className="font-semibold">No menu items found</p>
               <p className="text-xs mt-1">Try adjusting your filters</p>
             </div>
           ) : (
             filteredItems.map((m: any) => (
-              <div key={m._id}>
-                <div className="flex items-center gap-4 px-5 py-3 hover:bg-slate-50 transition cursor-pointer" onClick={() => setExpandedRow(expandedRow === m._id ? null : m._id)}>
+              <div key={m._id} className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden hover:shadow-md transition-all duration-300">
+                {/* Image with overlay */}
+                <div className="relative h-48 bg-gradient-to-br from-orange-100 to-amber-100">
                   <img
-                    src={m.image?.startsWith('http') ? m.image : 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=80&h=80&fit=crop'}
+                    src={m.image?.startsWith('http') ? m.image : ''}
                     alt={m.name}
-                    className="w-16 h-16 rounded-xl object-cover shrink-0 shadow-sm"
-                    onError={e => { (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=80&h=80&fit=crop'; }}
+                    className="w-full h-full object-cover"
+                    onError={e => { (e.target as HTMLImageElement).src = ''; }}
                   />
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <p className="font-black text-slate-900 leading-tight uppercase tracking-tight text-sm">{m.name}</p>
-                      {m.isDraft && (
-                        <span className="bg-orange-50 text-orange-500 text-[8px] font-black px-2 py-0.5 rounded-md uppercase tracking-tighter border border-orange-100">In-Process</span>
-                      )}
-                      {m.isTodaySpecial && <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">⭐ Today's Special</span>}
-                      {m.isSpecial && !m.isTodaySpecial && <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-100 text-purple-700 inline-flex items-center gap-1"><Sparkles className="w-3 h-3" /> Special</span>}
-                    </div>
-                    <p className="text-xs text-slate-400">{m.cloudKitchen?.name || 'No Kitchen'}</p>
-                    {m.cloudKitchen?.location?.coordinates && (
-                      <p className="text-[10px] text-slate-400 mt-0.5">
-                        <span className="inline-flex items-center gap-1"><MapPin className="w-3.5 h-3.5 shrink-0" />{m.cloudKitchen.location.coordinates[1].toFixed(4)}°N, {m.cloudKitchen.location.coordinates[0].toFixed(4)}°E</span>
-                      </p>
-                    )}
-                  </div>
-                  <div className="text-right shrink-0">
-                    <div className="space-y-0.5">
-                      {m.originalPrice && user?.role === 'admin' && (
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-tighter">Cost: ₹{m.originalPrice}</p>
-                      )}
-                      {m.discount > 0 ? (
-                        <div>
-                          <p className="text-xs text-slate-400 line-through">₹{m.price}</p>
-                          <p className="font-black text-orange-600 text-lg">₹{m.price - m.discount}</p>
-                          <p className="text-[10px] text-green-600 font-bold">₹{m.discount} OFF</p>
+                  {/* Overlay with name and category */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent flex flex-col justify-end p-4">
+                    <div className="flex items-end justify-between">
+                      <div>
+                        <h3 className="font-black text-white text-lg leading-tight mb-1">{m.name}</h3>
+                        <div className="flex items-center gap-2">
+                          <span className={`text-[10px] font-bold px-2 py-1 rounded-full ${m.category === 'gold' ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700'
+                            }`}>
+                            {m.category === 'gold' ? 'Gold' : 'Regular'}
+                          </span>
+                          {m.isDraft && (
+                            <span className="bg-orange-100 text-orange-600 text-[8px] font-black px-2 py-1 rounded-full uppercase tracking-tighter border border-orange-200">Draft</span>
+                          )}
                         </div>
-                      ) : (
-                        <p className="font-black text-orange-600 text-lg">₹{m.price}</p>
+                      </div>
+                      {user?.role === 'admin' && (
+                        <div className="text-right">
+                          <p className="font-black text-white text-xl leading-none">₹{m.price}</p>
+                        </div>
                       )}
                     </div>
                   </div>
-                  <div className="flex gap-2 shrink-0">
-                    <button onClick={(e) => { e.stopPropagation(); setImgPreview(''); setMenuModal({ open: true, data: m }); }} className="px-3 py-1.5 text-xs font-bold bg-orange-50 text-orange-600 rounded-lg hover:bg-orange-100 transition">
+                </div>
+
+                {/* Details section */}
+                <div className="p-4 space-y-3">
+                  <div className="flex items-center justify-between text-xs text-slate-500">
+                    <span className="flex items-center gap-1">
+                      <Home className="w-3 h-3" />
+                      {m.cloudKitchen?.name || 'No Kitchen'}
+                    </span>
+                    <span className="px-2 py-1 bg-slate-50 rounded-full text-[10px] font-medium">
+                      {m.isDraft ? 'Draft' : 'Live'}
+                    </span>
+                  </div>
+
+                  {m.description && (
+                    <p className="text-xs text-slate-600 line-clamp-2">{m.description}</p>
+                  )}
+
+                  {/* Action buttons */}
+                  <div className="flex gap-2 pt-2">
+                    <button
+                      onClick={() => { setImgPreview(''); setMenuModal({ open: true, data: m }); }}
+                      className="flex-1 px-3 py-2 text-xs font-bold bg-orange-50 text-orange-600 rounded-lg hover:bg-orange-100 transition"
+                    >
                       Edit
                     </button>
                     <button
-                      onClick={async (e) => {
-                        e.stopPropagation();
+                      onClick={async () => {
                         if (!confirm(`Delete "${m.name}"?\n\nThis will permanently remove this menu item.`)) return;
                         try {
                           const res = await fetch(`${API_URL}/admin/menu/${m._id}`, {
@@ -732,7 +821,7 @@ export function MenuTab({ menuItems, search, setSearch, expandedRow, setExpanded
                           const data = await res.json();
                           if (data.success) {
                             alert('✅ ' + data.message);
-                            fetchAll(); // Refresh data
+                            fetchAll();
                           } else {
                             alert('❌ ' + (data.error || 'Failed to delete'));
                           }
@@ -741,92 +830,13 @@ export function MenuTab({ menuItems, search, setSearch, expandedRow, setExpanded
                           alert('❌ Failed to delete menu item');
                         }
                       }}
-                      className="p-1.5 bg-red-50 text-red-500 rounded-lg hover:bg-red-100 hover:text-red-600 transition"
+                      className="p-2 bg-red-50 text-red-500 rounded-lg hover:bg-red-100 hover:text-red-600 transition"
                       title="Delete menu item"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
                   </div>
                 </div>
-                {expandedRow === m._id && (
-                  <div className="px-5 pb-4 pt-2 bg-slate-50 border-t border-slate-100">
-                    <div className="grid grid-cols-2 gap-2 mb-3">
-                      <div className="bg-white rounded-lg p-2.5">
-                        <p className="text-slate-400 text-[10px] uppercase">Category</p>
-                        <p className="font-semibold text-slate-800 mt-0.5 text-xs">{m.category}</p>
-                      </div>
-                      <div className="bg-white rounded-lg p-2.5">
-                        <p className="text-slate-400 text-[10px] uppercase">Meal Type</p>
-                        <p className="font-semibold text-slate-800 mt-0.5 text-xs truncate" title={m.mealTypes?.join(', ') || m.mealType}>
-                          {m.mealTypes?.length > 0 ? m.mealTypes.join(', ') : m.mealType || 'None'}
-                        </p>
-                      </div>
-                      <div className="bg-white rounded-lg p-2.5">
-                        <p className="text-slate-400 text-[10px] uppercase">Discount Price</p>
-                        <p className="font-semibold text-green-600 mt-0.5 text-xs">₹{m.discount || 0}</p>
-                      </div>
-                      <div className="bg-white rounded-lg p-2.5">
-                        <p className="text-slate-400 text-[10px] uppercase">Final Price</p>
-                        <p className="font-semibold text-orange-600 mt-0.5 text-xs">₹{m.price - (m.discount || 0)}</p>
-                      </div>
-                      <div className="bg-white rounded-lg p-2.5">
-                        <p className="text-slate-400 text-[10px] uppercase">Rating</p>
-                        <p className="font-semibold text-slate-800 mt-0.5 text-xs">⭐ {m.rating || 0}/5</p>
-                      </div>
-                      <div className="bg-white rounded-lg p-2.5">
-                        <p className="text-slate-400 text-[10px] uppercase">Kitchen</p>
-                        <p className="font-semibold text-slate-800 mt-0.5 text-xs truncate">{m.cloudKitchen?.name || 'No Kitchen'}</p>
-                        {m.cloudKitchen?.location?.coordinates && (
-                          <p className="text-[10px] text-slate-400 mt-0.5">
-                            <span className="inline-flex items-center gap-1"><MapPin className="w-3.5 h-3.5 shrink-0" />{m.cloudKitchen.location.coordinates[1].toFixed(4)}°N, {m.cloudKitchen.location.coordinates[0].toFixed(4)}°E</span>
-                          </p>
-                        )}
-                      </div>
-                      <div className="bg-white rounded-lg p-2.5">
-                        <p className="text-slate-400 text-[10px] uppercase">Available Quantity</p>
-                        <p className="font-semibold text-slate-800 mt-0.5 text-xs">{m.availableQuantity || 'N/A'}</p>
-                      </div>
-                      <div className="bg-white rounded-lg p-2.5">
-                        <p className="text-slate-400 text-[10px] uppercase">Available Until</p>
-                        <p className="font-semibold text-slate-800 mt-0.5 text-xs">
-                          {m.availableUntil ? new Date(m.availableUntil).toLocaleString('en-IN', {
-                            day: '2-digit',
-                            month: 'short',
-                            year: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit',
-                            hour12: true
-                          }) : 'N/A'}
-                        </p>
-                      </div>
-                      <div className="bg-white rounded-lg p-2.5 col-span-2">
-                        <p className="text-slate-400 text-[10px] uppercase">Special Tags</p>
-                        <div className="flex gap-1.5 mt-1 flex-wrap">
-                          {m.isTodaySpecial && <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">⭐ Today's Special</span>}
-                          {m.isSpecial && <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-100 text-purple-700 inline-flex items-center gap-1"><Sparkles className="w-3 h-3" /> Special Item</span>}
-                          {!m.isTodaySpecial && !m.isSpecial && <span className="text-xs text-slate-400">No special tags</span>}
-                        </div>
-                      </div>
-                    </div>
-                    {m.description && (
-                      <div className="bg-white rounded-lg p-2.5 mb-2">
-                        <p className="text-slate-400 text-[10px] uppercase mb-1">Description</p>
-                        <p className="text-xs text-slate-600">{m.description}</p>
-                      </div>
-                    )}
-                    {m.ingredients && m.ingredients.length > 0 && (
-                      <div className="bg-white rounded-lg p-2.5">
-                        <p className="text-slate-400 text-[10px] uppercase mb-1">Ingredients</p>
-                        <div className="flex flex-wrap gap-1">
-                          {m.ingredients.map((ing: string, i: number) => (
-                            <span key={i} className="text-[10px] bg-green-50 text-green-700 px-2 py-0.5 rounded-full">{ing}</span>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                    <p className="text-slate-400 font-mono text-[10px] px-1 mt-2">ID: {m._id}</p>
-                  </div>
-                )}
               </div>
             ))
           )}
@@ -836,7 +846,7 @@ export function MenuTab({ menuItems, search, setSearch, expandedRow, setExpanded
   );
 }
 
-export function KitchensTab({ kitchens, menuItems, setKitchenModal, fetchAll, headers, API_URL, users = [] }: any) {
+export function KitchensTab({ kitchens, menuItems, setKitchenModal, fetchAll, headers, API_URL, users = [], kitchenOwners = [] }: any) {
   const [search, setSearch] = React.useState('');
   const [view, setView] = React.useState<'table' | 'grid'>('table');
 
@@ -846,8 +856,26 @@ export function KitchensTab({ kitchens, menuItems, setKitchenModal, fetchAll, he
   const ownerName = (k: any) => {
     const ownerId = k.owner?._id || k.owner;
     if (k.owner?.name) return k.owner.name;
-    if (ownerId) return users.find((u: any) => u._id === ownerId)?.name || '—';
-    return k.ownerEmail || '—';
+    if (ownerId && users && users.length > 0) {
+      const user = users.find((u: any) => u._id === ownerId);
+      if (user?.name) return user.name;
+    }
+    return k.ownerName || k.ownerEmail || '—';
+  };
+
+  const getOwnerDetails = (k: any) => {
+    const ownerId = k.owner?._id || k.owner;
+    if (k.owner?.name) return { name: k.owner.name, email: k.owner.email, phone: k.owner.phone, id: k.owner._id };
+    if (ownerId && users && users.length > 0) {
+      const user = users.find((u: any) => u._id === ownerId);
+      if (user) return { name: user.name, email: user.email, phone: user.phone, id: user._id };
+    }
+    return {
+      name: k.ownerName || k.ownerEmail || '—',
+      email: k.ownerEmail || '—',
+      phone: k.ownerPhone || '—',
+      id: null
+    };
   };
 
   const enriched = kitchens.map((k: any) => ({
@@ -866,27 +894,67 @@ export function KitchensTab({ kitchens, menuItems, setKitchenModal, fetchAll, he
     k._id?.toLowerCase().includes(search.toLowerCase())
   );
 
+  const unassignedOwners = (kitchenOwners || []).filter((o: any) => !o.kitchenId);
+
+  const unassignedKitchenRows = unassignedOwners.map((owner: any) => ({
+    _id: `unassigned-${owner._id}`,
+    name: null,
+    owner: owner,
+    ownerName: owner.name,
+    ownerPhone: owner.phone,
+    ownerEmail: owner.email,
+    menuCount: 0,
+    createdAt: owner.createdAt,
+    location: null,
+    isUnassigned: true
+  }));
+
+  const tableRows = [...filtered, ...unassignedKitchenRows];
+
   const deleteKitchen = async (id: string) => {
-    if (!confirm('Delete this cloud kitchen permanently?')) return;
-    const res = await fetch(`${API_URL}/admin/cloudkitchens/${id}`, { method: 'DELETE', headers });
-    if ((await res.json()).success) fetchAll();
+    if (!confirm('🚨 CRITICAL ACTION: Delete this cloud kitchen and all associated data permanently?\n\nThis cannot be undone.')) return;
+    try {
+      const res = await fetch(`${API_URL}/admin/cloudkitchens/${id}`, { method: 'DELETE', headers });
+      const result = await res.json();
+      if (result.success) {
+        alert('✅ Kitchen deleted successfully');
+        fetchAll();
+      } else {
+        alert('❌ Failed to delete: ' + (result.error || 'Unknown error'));
+      }
+    } catch (err) {
+      console.error('Delete kitchen error:', err);
+      alert('❌ Error connecting to server');
+    }
+  };
+
+  const toggleKitchenStatus = async (id: string, current: boolean) => {
+    try {
+      const res = await fetch(`${API_URL}/admin/cloudkitchens/${id}/status`, {
+        method: 'PATCH',
+        headers: { ...headers, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isActive: !current })
+      });
+      const result = await res.json();
+      if (result.success) {
+        fetchAll();
+      } else {
+        alert('❌ Failed: ' + (result.error || 'Unknown error'));
+      }
+    } catch (err) {
+      alert('❌ Error connecting to server');
+    }
   };
 
   return (
     <div className={ERP.page}>
       <AdminPageHeader
         title="Cloud Kitchens"
-        subtitle={`${filtered.length} of ${kitchens.length} hubs · Excel reporting view`}
+        subtitle={`${filtered.length} of ${kitchens.length} hubs · Admin Control`}
         actions={
-          <>
-            <div className="flex border border-slate-200 rounded-md overflow-hidden bg-white">
-              <button type="button" onClick={() => setView('table')} className={`px-3 py-1.5 text-xs font-semibold ${view === 'table' ? 'bg-slate-800 text-white' : 'text-slate-600 hover:bg-slate-50'}`}>Table</button>
-              <button type="button" onClick={() => setView('grid')} className={`px-3 py-1.5 text-xs font-semibold border-l border-slate-200 ${view === 'grid' ? 'bg-slate-800 text-white' : 'text-slate-600 hover:bg-slate-50'}`}>Grid</button>
-            </div>
-            <button type="button" onClick={() => setKitchenModal({ open: true, data: null })} className={`${ERP.btn} ${ERP.btnPrimary}`}>
-              <Plus className="w-4 h-4" /> Add kitchen
-            </button>
-          </>
+          <button type="button" onClick={() => setKitchenModal({ open: true, data: null })} className={`${ERP.btn} ${ERP.btnPrimary}`}>
+            <Plus className="w-4 h-4" /> Add kitchen
+          </button>
         }
       />
 
@@ -901,19 +969,34 @@ export function KitchensTab({ kitchens, menuItems, setKitchenModal, fetchAll, he
 
       {view === 'table' ? (
         <AdminDataTable
+          showSearch={false}
           columns={[
             { key: '_id', header: 'Kitchen ID', sortable: true, render: (k: any) => <span className="font-mono text-xs">{k._id?.slice(-8).toUpperCase()}</span> },
             { key: 'name', header: 'Kitchen name', sortable: true },
-            { key: 'ownerLabel', header: 'Owner', sortable: true },
-            { key: 'ownerEmail', header: 'Owner email', render: (k: any) => k.ownerEmail || '—' },
+            {
+              key: 'isActive',
+              header: 'Status',
+              render: (k: any) => (
+                <button
+                  onClick={(e) => { e.stopPropagation(); toggleKitchenStatus(k._id, k.isActive); }}
+                  className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border shadow-sm transition-all ${k.isActive
+                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
+                    : 'bg-red-50 text-red-700 border-red-200 hover:bg-red-100'
+                    }`}
+                >
+                  {k.isActive ? 'Active' : 'Inactive'}
+                </button>
+              )
+            },
+            { key: 'ownerName', header: 'Owner Name', sortable: true, render: (k: any) => getOwnerDetails(k).name },
+            { key: 'ownerPhone', header: 'Phone', render: (k: any) => getOwnerDetails(k).phone },
+            { key: 'ownerEmail', header: 'Email', render: (k: any) => getOwnerDetails(k).email },
             { key: 'menuCount', header: 'Menu items', sortable: true },
-            { key: 'lat', header: 'Latitude', sortable: true },
-            { key: 'lng', header: 'Longitude', sortable: true },
             { key: 'createdAt', header: 'Created', sortable: true, render: (k: any) => k.createdAt ? fmt(k.createdAt) : '—' },
             {
               key: 'actions', header: 'Actions', render: (k: any) => (
                 <div className="flex items-center gap-1" onClick={e => e.stopPropagation()}>
-                  <button type="button" onClick={() => setKitchenModal({ open: true, data: k })} className={`${ERP.btn} ${ERP.btnSecondary} py-1 px-2`}>Edit</button>
+                  <button type="button" onClick={() => { console.log('🔧 Edit kitchen clicked (table):', { kitchenId: k._id, name: k.name, owner: k.owner, ownerLabel: k.ownerLabel, fullData: k }); setKitchenModal({ open: true, data: k }); }} className={`${ERP.btn} ${ERP.btnSecondary} py-1 px-2`}>Edit</button>
                   {k.location?.coordinates && (
                     <button
                       type="button"
@@ -931,86 +1014,107 @@ export function KitchensTab({ kitchens, menuItems, setKitchenModal, fetchAll, he
               ),
             },
           ]}
-          rows={filtered}
+          rows={tableRows}
           emptyMessage="No kitchens match search"
           onRowClick={(k: any) => setKitchenModal({ open: true, data: k })}
           exportFilename={`cloud-kitchens-${new Date().toISOString().split('T')[0]}.csv`}
-          exportHeaders={['Kitchen ID', 'Name', 'Owner', 'Owner Email', 'Menu Items', 'Latitude', 'Longitude', 'Created']}
-          exportRows={filtered.map((k: any) => [k._id, k.name, k.ownerLabel, k.ownerEmail || '', k.menuCount, k.lat, k.lng, k.createdAt ? fmt(k.createdAt) : ''])}
+          exportHeaders={['Kitchen ID', 'Name', 'Owner Name', 'Phone', 'Email', 'Menu Items', 'Created']}
+          exportRows={filtered.map((k: any) => [k._id, k.name, k.ownerName || '', k.ownerPhone || '', k.ownerEmail || '', k.menuCount, k.createdAt ? fmt(k.createdAt) : ''])}
         />
       ) : (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-        {filtered.map((k: any) => (
-          <div key={k._id} className={`${ERP.panel} hover:border-slate-300 transition-colors overflow-hidden group`}>
-            <div className="p-7">
-              <div className="flex items-start justify-between mb-6">
-                <div className="w-12 h-12 rounded-md bg-slate-100 border border-slate-200 flex items-center justify-center">
-                  <Home className="w-6 h-6 text-slate-600" />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+          {filtered.map((k: any) => (
+            <div key={k._id} className={`${ERP.panel} hover:border-slate-300 transition-colors overflow-hidden group`}>
+              <div className="p-7">
+                <div className="flex items-start justify-between mb-6">
+                  <div className="w-12 h-12 rounded-md bg-slate-100 border border-slate-200 flex items-center justify-center">
+                    <Home className="w-6 h-6 text-slate-600" />
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <button onClick={() => { console.log('🔧 Plus icon edit clicked (grid card):', { kitchenId: k._id, name: k.name, owner: k.owner, ownerLabel: k.ownerLabel, fullData: k }); setKitchenModal({ open: true, data: k }); }} className="w-10 h-10 flex items-center justify-center bg-slate-50 text-slate-400 rounded-full hover:bg-orange-500 hover:text-white transition-all shadow-sm">
+                      <Plus className="w-4 h-4 rotate-45" />
+                    </button>
+                  </div>
                 </div>
-                <div className="flex flex-col gap-2">
-                  <button onClick={() => setKitchenModal({ open: true, data: k })} className="w-10 h-10 flex items-center justify-center bg-slate-50 text-slate-400 rounded-full hover:bg-orange-500 hover:text-white transition-all shadow-sm">
-                    <Plus className="w-4 h-4 rotate-45" />
-                  </button>
+
+                <div className="space-y-4">
+                  <div>
+                    <h3 className="font-black text-slate-900 text-lg leading-tight">{k.name}</h3>
+                    <div className="flex items-center gap-2 mt-1 cursor-pointer" onClick={(e) => { e.stopPropagation(); toggleKitchenStatus(k._id, k.isActive); }}>
+                      <span className={`w-2 h-2 rounded-full ${k.isActive ? 'bg-emerald-500 animate-pulse' : 'bg-red-500'}`} />
+                      <p className={`text-[10px] font-black uppercase tracking-widest ${k.isActive ? 'text-emerald-600' : 'text-red-600'}`}>{k.isActive ? 'Active Hub' : 'Inactive'}</p>
+                    </div>
+                    {k.owner?._id || k.owner ? (
+                      <div className="mt-3 p-2 bg-blue-50 border border-blue-100 rounded-lg">
+                        <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest">Owner Assigned</p>
+                        <p className="text-xs font-bold text-slate-900 mt-1">{getOwnerDetails(k).name}</p>
+                        {getOwnerDetails(k).email && getOwnerDetails(k).email !== '—' && (
+                          <p className="text-[9px] text-slate-500 mt-0.5">{getOwnerDetails(k).email}</p>
+                        )}
+                        {getOwnerDetails(k).phone && getOwnerDetails(k).phone !== '—' && (
+                          <p className="text-[9px] text-slate-500">{getOwnerDetails(k).phone}</p>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="mt-3 p-2 bg-amber-50 border border-amber-100 rounded-lg">
+                        <p className="text-[10px] font-black text-amber-600 uppercase tracking-widest">No Owner Assigned</p>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="p-3 rounded-2xl bg-slate-50 border border-slate-100">
+                      <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Menu Size</p>
+                      <p className="text-sm font-black text-slate-700">{k.menuCount} Items</p>
+                    </div>
+                    <div className="p-3 rounded-2xl bg-slate-50 border border-slate-100 text-center">
+                      <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Status</p>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); toggleKitchenStatus(k._id, k.isActive); }}
+                        className={`text-[10px] font-bold rounded-full px-2 py-0.5 inline-block shadow-sm ${k.isActive ? 'text-emerald-600 bg-emerald-50 border border-emerald-100' : 'text-red-600 bg-red-50 border border-red-100'}`}
+                      >
+                        {k.isActive ? 'Online' : 'Offline'}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="pt-2">
+                    <p className="text-[10px] font-bold text-slate-400 flex items-center gap-2">
+                      <MapPin className="w-4 h-4 text-slate-300 shrink-0" />
+                      <span className="truncate">{k.location?.coordinates ? `${k.location.coordinates[1].toFixed(4)}°N, ${k.location.coordinates[0].toFixed(4)}°E` : 'GPS Coordinates Pending'}</span>
+                    </p>
+                  </div>
                 </div>
               </div>
 
-              <div className="space-y-4">
-                <div>
-                  <h3 className="font-black text-slate-900 text-lg leading-tight">{k.name}</h3>
-                  <div className="flex items-center gap-2 mt-1">
-                    <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Active Hub</p>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="p-3 rounded-2xl bg-slate-50 border border-slate-100">
-                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Menu Size</p>
-                    <p className="text-sm font-black text-slate-700">{k.menuCount} Items</p>
-                  </div>
-                  <div className="p-3 rounded-2xl bg-slate-50 border border-slate-100 text-center">
-                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Status</p>
-                    <p className="text-[10px] font-bold text-emerald-600 bg-emerald-50 rounded-full px-2 py-0.5 inline-block">Online</p>
-                  </div>
-                </div>
-
-                <div className="pt-2">
-                  <p className="text-[10px] font-bold text-slate-400 flex items-center gap-2">
-                    <MapPin className="w-4 h-4 text-slate-300 shrink-0" />
-                    <span className="truncate">{k.location?.coordinates ? `${k.location.coordinates[1].toFixed(4)}°N, ${k.location.coordinates[0].toFixed(4)}°E` : 'GPS Coordinates Pending'}</span>
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="px-7 py-5 bg-slate-50/50 border-t border-slate-50 flex items-center gap-3">
-              <button
-                onClick={() => setKitchenModal({ open: true, data: k })}
-                className="flex-1 py-3 bg-white border border-slate-200 rounded-full text-[10px] font-black uppercase tracking-widest text-slate-600 hover:bg-orange-500 hover:text-white hover:border-orange-500 transition-all shadow-sm"
-              >
-                Config Hub
-              </button>
-              {k.location?.coordinates && (
+              <div className="px-7 py-5 bg-slate-50/50 border-t border-slate-50 flex items-center gap-3">
                 <button
-                  onClick={() => {
-                    const [lng, lat] = k.location.coordinates;
-                    window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`, '_blank');
-                  }}
-                  className="w-12 h-12 flex items-center justify-center bg-white border border-slate-200 rounded-full text-slate-400 hover:text-orange-500 hover:border-orange-100 transition shadow-sm"
+                  onClick={() => { console.log('🔧 Config Hub clicked (grid):', { kitchenId: k._id, name: k.name, owner: k.owner, ownerLabel: k.ownerLabel, fullData: k }); setKitchenModal({ open: true, data: k }); }}
+                  className="flex-1 py-3 bg-white border border-slate-200 rounded-full text-[10px] font-black uppercase tracking-widest text-slate-600 hover:bg-orange-500 hover:text-white hover:border-orange-500 transition-all shadow-sm"
                 >
-                  🧭
+                  Config Hub
                 </button>
-              )}
-              <button
-                onClick={async () => deleteKitchen(k._id)}
-                className="w-12 h-12 flex items-center justify-center bg-red-50 text-red-400 rounded-full hover:bg-red-500 hover:text-white transition shadow-sm"
-              >
-                <Trash2 className="w-4 h-4" />
-              </button>
+                {k.location?.coordinates && (
+                  <button
+                    onClick={() => {
+                      const [lng, lat] = k.location.coordinates;
+                      window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`, '_blank');
+                    }}
+                    className="w-12 h-12 flex items-center justify-center bg-white border border-slate-200 rounded-full text-slate-400 hover:text-orange-500 hover:border-orange-100 transition shadow-sm"
+                  >
+                    🧭
+                  </button>
+                )}
+                <button
+                  onClick={async () => deleteKitchen(k._id)}
+                  className="w-12 h-12 flex items-center justify-center bg-red-50 text-red-400 rounded-full hover:bg-red-500 hover:text-white transition shadow-sm"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
       )}
     </div>
   );
@@ -1874,9 +1978,9 @@ export function LeadsTab({ leads, expandedRow, setExpandedRow, search, setSearch
                           <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Customer Type</p>
                           <span className="text-sm font-black">
                             {(() => {
-                          const TypeIcon = customerTypeIcon[lead.customerType];
-                          return TypeIcon ? <><TypeIcon className="w-3.5 h-3.5 inline mr-1" />{lead.customerType}</> : lead.customerType;
-                        })()}
+                              const TypeIcon = customerTypeIcon[lead.customerType];
+                              return TypeIcon ? <><TypeIcon className="w-3.5 h-3.5 inline mr-1" />{lead.customerType}</> : lead.customerType;
+                            })()}
                           </span>
                         </div>
                         <div className="bg-white rounded-[1.5rem] p-5 border border-slate-100 shadow-sm">
@@ -2030,6 +2134,7 @@ export function LeadsTab({ leads, expandedRow, setExpandedRow, search, setSearch
   );
 }
 
+
 export function EarningsTab({ orders }: any) {
   const amt = (o: any) => Number(o.totalAmount || o.totalPrice || o.price || 0);
   const deliveredOrders = orders.filter((o: any) => o.status === 'delivered');
@@ -2050,15 +2155,21 @@ export function EarningsTab({ orders }: any) {
     <div className={ERP.page}>
       <AdminPageHeader title="Earnings & Payouts" subtitle="Financial summary from completed orders" />
       <AdminKpiGrid items={[
-        { label: 'Total earnings', value: `₹${totalEarnings.toLocaleString('en-IN')}` },
+        { label: 'Total earnings', value: totalEarnings },
         { label: 'Delivered orders', value: deliveredOrders.length },
-        { label: 'Pending payout', value: `₹${pendingEarnings.toLocaleString('en-IN')}` },
-        { label: 'Avg per order', value: `₹${deliveredOrders.length ? Math.round(totalEarnings / deliveredOrders.length) : 0}` },
-      ]} />
+        { label: 'Pending payout', value: pendingEarnings },
+        { label: 'Avg per order', value: deliveredOrders.length ? Math.round(totalEarnings / deliveredOrders.length) : 0 },
+      ].map(item => ({
+        ...item,
+        value: typeof item.value === 'number' ? (
+          item.label.includes('order') ? item.value : `₹${item.value.toLocaleString('en-IN')}`
+        ) : item.value
+      }))} />
       <AdminPanel title="Monthly revenue">
         <MiniBarChart data={monthlyData.slice(-6)} />
       </AdminPanel>
       <AdminDataTable
+        showSearch={false}
         columns={[
           { key: '_id', header: 'Order', render: (o: any) => `ORD-${o._id?.slice(-6).toUpperCase()}` },
           { key: 'createdAt', header: 'Date', sortable: true, render: (o: any) => fmt(o.createdAt) },

@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v1.0.2'; // Increment this version when you deploy updates
+const CACHE_VERSION = 'v1.0.4'; // Increment this version when you deploy updates
 const CACHE_NAME = `tiffica-cache-${CACHE_VERSION}`;
 
 // Assets to cache - only existing files
@@ -184,4 +184,11 @@ self.addEventListener('notificationclick', event => {
 
 self.addEventListener('message', event => {
   if (event.data?.type === 'SKIP_WAITING') self.skipWaiting();
+  
+  // Handle cache version updates
+  if (event.data?.type === 'UPDATE_CACHE_VERSION') {
+    const newVersion = event.data.version;
+    console.log('[SW] Updating cache version to:', newVersion);
+    // Cache will be invalidated on next page load/activation
+  }
 });
