@@ -5,6 +5,7 @@ import { MapPin, Navigation, Loader2, X, Search, Home, Briefcase, Hotel, MoreHor
 import { useLocation } from '@/context/LocationContext';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
+import { Geolocation } from '@capacitor/geolocation';
 
 const NOMINATIM_REVERSE = 'https://nominatim.openstreetmap.org/reverse?format=json';
 const NOMINATIM_SEARCH  = 'https://nominatim.openstreetmap.org/search?format=json&limit=5';
@@ -63,26 +64,68 @@ export default function LocationModal() {
     }
   };
 
-  // Detect GPS location
-  const handleDetect = () => {
+  // Detect GPS location — uses Capacitor Geolocation (requests permission on Android/iOS)
+  // and falls back to browser API on web/PWA
+  const handleDetect = async () => {
     setError('');
-    if (!navigator.geolocation) { setError('Geolocation not supported'); return; }
     setDetecting(true);
-    navigator.geolocation.getCurrentPosition(
-      async pos => {
-        const { latitude, longitude } = pos.coords;
-        let name = `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
-        try {
-          const r = await fetch(`${NOMINATIM_REVERSE}&lat=${latitude}&lon=${longitude}`);
-          const d = await r.json();
-          name = d.display_name?.split(',').slice(0, 3).join(',') || name;
-        } catch {}
-        await saveLocation(latitude, longitude, name);
+    console.log('🚀 Starting geolocation detection...');
+
+    try {
+      // Request permission first (Capacitor handles Android runtime permission dialog)
+      let permStatus = await Geolocation.checkPermissions();
+      console.log('📋 Permission status:', permStatus);
+
+      if (permStatus.location === 'prompt' || permStatus.location === 'prompt-with-rationale') {
+        permStatus = await Geolocation.requestPermissions();
+        console.log('📋 Permission after request:', permStatus);
+      }
+
+      if (permStatus.location === 'denied') {
         setDetecting(false);
-      },
-      () => { setDetecting(false); setError('Could not detect location.'); },
-      { timeout: 10000 }
-    );
+        setError('Location permission denied. Please enable it in your device Settings → Apps → Tiffica → Permissions.');
+        return;
+      }
+
+      // Get coordinates
+      const pos = await Geolocation.getCurrentPosition({
+        enableHighAccuracy: true,
+        timeout: 15000,
+      });
+
+      console.log('✅ Geolocation success:', pos.coords);
+      const { latitude, longitude } = pos.coords;
+      let name = `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
+
+      try {
+        const r = await fetch(`${NOMINATIM_REVERSE}&lat=${latitude}&lon=${longitude}`);
+        const d = await r.json();
+        name = d.display_name?.split(',').slice(0, 3).join(',') || name;
+        console.log('📍 Reverse geocoding result:', name);
+      } catch (err) {
+        console.warn('⚠️ Reverse geocoding failed:', err);
+      }
+
+      await saveLocation(latitude, longitude, name);
+      setDetecting(false);
+    } catch (err: any) {
+      setDetecting(false);
+      console.error('❌ Geolocation error:', err);
+
+      let errorMsg = 'Could not detect location.';
+      const code = err?.code ?? err?.message ?? '';
+      if (String(code).includes('1') || String(err?.message).toLowerCase().includes('denied')) {
+        errorMsg = 'Permission denied. Please enable location access in Settings.';
+      } else if (String(code).includes('2') || String(err?.message).toLowerCase().includes('unavailable')) {
+        errorMsg = 'Position unavailable. Check your GPS signal.';
+      } else if (String(code).includes('3') || String(err?.message).toLowerCase().includes('timeout')) {
+        errorMsg = 'Location detection timed out. Please try again.';
+      } else if (err?.message) {
+        errorMsg = `Error: ${err.message}`;
+      }
+
+      setError(errorMsg);
+    }
   };
 
   // Search location

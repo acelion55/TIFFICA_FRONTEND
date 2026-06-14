@@ -9,33 +9,26 @@ export async function initializeCapacitor() {
   }
 
   try {
-    // Hide splash screen after 3 seconds
     await SplashScreen.hide();
-  } catch (error) {
-    console.log('Error hiding splash screen:', error);
+  } catch (e) {
+    console.log('SplashScreen error:', e);
   }
 
   try {
-    // Set status bar style and color
     await StatusBar.setStyle({ style: Style.Light });
     await StatusBar.setBackgroundColor({ color: '#f97316' });
-  } catch (error) {
-    console.log('Error setting status bar:', error);
+  } catch (e) {
+    console.log('StatusBar error:', e);
   }
 
-  // Handle app pause/resume
-  App.addListener('pause', () => {
-    console.log('App paused');
-  });
-
-  App.addListener('resume', () => {
-    console.log('App resumed');
-  });
-
-  // Handle back button
-  App.addListener('backButton', () => {
-    console.log('Back button pressed');
-  });
+  // Handle app lifecycle events
+  try {
+    App.addListener('pause', () => console.log('App paused'));
+    App.addListener('resume', () => console.log('App resumed'));
+    App.addListener('backButton', () => console.log('Back button pressed'));
+  } catch (e) {
+    console.log('App listener error:', e);
+  }
 }
 
 export function isNative() {

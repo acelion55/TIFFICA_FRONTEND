@@ -64,6 +64,10 @@ export default function Navbar() {
 
   if (!isClient) return null;
 
+  // Hide navbar on auth-related pages to avoid flashing UI while auth state resolves
+  const hideOn = ['/login', '/signup', '/forgot-password', '/onboarding', '/checkout'];
+  if (hideOn.includes(pathname || '')) return null;
+
   // Only show navbar for authenticated users (Capacitor app users)
   if (!token) return null;
 

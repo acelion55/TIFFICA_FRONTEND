@@ -229,24 +229,24 @@ export default function AdminNotifications() {
       </audio>
 
       {/* Notification Bell */}
-      <div className="fixed top-4 right-4 z-50">
+      <div className="relative">
         <button
           onClick={() => setShowPanel(!showPanel)}
-          className="relative w-12 h-12 bg-white rounded-full shadow-lg border-2 border-orange-200 flex items-center justify-center hover:bg-orange-50 transition-all"
+          title="Notifications"
+          className="relative w-9 h-9 flex items-center justify-center rounded-md border border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
         >
-          <Bell className="w-6 h-6 text-orange-600" />
+          <Bell className="w-4 h-4" />
           {unreadCount > 0 && (
-            <span className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center animate-pulse">
-              {unreadCount > 99 ? '99+' : unreadCount}
+            <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-600 text-[10px] text-white font-bold rounded-full flex items-center justify-center">
+              {unreadCount > 9 ? '9+' : unreadCount}
             </span>
           )}
         </button>
-      </div>
 
-      {/* Notification Panel */}
-      {showPanel && (
-        <div className="fixed top-20 right-4 w-96 max-h-[80vh] bg-white rounded-2xl shadow-2xl border border-gray-200 z-50 overflow-hidden">
-          {/* Header */}
+        {/* Notification Panel */}
+        {showPanel && (
+          <div className="absolute top-full right-0 mt-2 w-96 max-h-[80vh] bg-white rounded-2xl shadow-xl border border-slate-200 z-50 overflow-hidden">
+            {/* Header */}
           <div className="p-4 border-b border-gray-100 bg-gradient-to-r from-orange-500 to-amber-500">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -351,6 +351,7 @@ export default function AdminNotifications() {
           </div>
         </div>
       )}
+      </div>
     </>
   );
 }

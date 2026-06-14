@@ -3,6 +3,20 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { API_URL } from '@/lib/config';
 
+// Compute effective API URL at runtime. When running on localhost,
+// prefer a local backend fallback so dev works without requiring .env files.
+const getEffectiveApiUrl = () => {
+  if (typeof window !== 'undefined') {
+    const host = window.location.hostname;
+    const isLocalhost = host === 'localhost' || host === '127.0.0.1' || host === '::1';
+    if (isLocalhost) {
+      return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api';
+    }
+  }
+  return process.env.NEXT_PUBLIC_API_URL || API_URL;
+};
+const EFFECTIVE_API_URL = getEffectiveApiUrl();
+
 interface User {
   _id: string;
   name: string;
@@ -34,8 +48,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
-      
-      const res = await fetch(`${API_URL}/auth/profile`, {
+
+      const res = await fetch(`${EFFECTIVE_API_URL}/auth/profile`, {
         headers: { 'Authorization': `Bearer ${t}` },
         signal: controller.signal,
       });
@@ -87,19 +101,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Verify token in background with timeout
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 3000); // 3 second timeout
-        
-        fetch(`${API_URL}/auth/profile`, {
+
+        fetch(`${EFFECTIVE_API_URL}/auth/profile`, {
           headers: { 'Authorization': `Bearer ${stored}` },
           signal: controller.signal,
-        }).then(res => {
+        }).then(async res => {
           clearTimeout(timeoutId);
-          if (!res.ok) {
-            // Token invalid, logout
+          // Only treat 401/403 as definitive invalid token — other errors may be transient
+          if (res.status === 401 || res.status === 403) {
             localStorage.removeItem('token');
             localStorage.removeItem('user');
             setToken(null);
             setUser(null);
             stopPing();
+          } else if (res.ok) {
+            try {
+              const fresh = await res.json();
+              // update stored user with fresh profile
+              setUser(fresh);
+              localStorage.setItem('user', JSON.stringify(fresh));
+            } catch (e) {
+              console.warn('Failed to parse profile response', e);
+            }
+          } else {
+            // Server error or other non-auth response — keep local state
+            console.warn('Profile verification returned non-auth status', res.status);
           }
         }).catch((err) => {
           clearTimeout(timeoutId);
@@ -130,9 +156,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const startPing = (t: string) => {
     stopPing();
-    fetch(`${API_URL}/admin/ping`, { method: 'POST', headers: { Authorization: `Bearer ${t}` } }).catch(() => {});
+    fetch(`${EFFECTIVE_API_URL}/admin/ping`, { method: 'POST', headers: { Authorization: `Bearer ${t}` } }).catch(() => {});
     pingInterval = setInterval(() => {
-      fetch(`${API_URL}/admin/ping`, { method: 'POST', headers: { Authorization: `Bearer ${t}` } }).catch(() => {});
+      fetch(`${EFFECTIVE_API_URL}/admin/ping`, { method: 'POST', headers: { Authorization: `Bearer ${t}` } }).catch(() => {});
     }, 60000);
   };
 

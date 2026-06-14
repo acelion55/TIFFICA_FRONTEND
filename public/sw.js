@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v1.0.4'; // Increment this version when you deploy updates
+const CACHE_VERSION = 'v1.0.5'; // Increment this version when you deploy updates
 const CACHE_NAME = `tiffica-cache-${CACHE_VERSION}`;
 
 // Assets to cache - only existing files

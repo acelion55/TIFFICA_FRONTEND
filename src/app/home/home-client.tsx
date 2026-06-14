@@ -14,9 +14,10 @@ import { useAuth } from '@/context/AuthContext';
 import { useLocation } from '@/context/LocationContext';
 import { useCart } from '@/context/CartContext';
 import { useNotifications } from '@/context/NotificationContext';
+import { useToast } from '@/context/ToastContext';
 import { openRazorpay } from '@/hooks/useRazorpay';
+import { API_URL } from '@/config/api';
 
-const API_URL = 'https://tifficaapp-1.onrender.com/api';
 const FALLBACK_IMG = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&auto=format&fit=crop';
 const FALLBACK_VIDEO = 'https://assets.mixkit.co/videos/preview/mixkit-fresh-vegetables-being-prepared-for-a-salad-40432-large.mp4';
 const CATEGORIES: { id: string; label: string; Icon: LucideIcon }[] = [
@@ -93,15 +94,41 @@ export default function HomeClient() {
     setLoading(true);
     const headers = { Authorization: `Bearer ${token}` };
     try {
+      // Always use location-based endpoints if location is set
       const menuUrl    = locationSet ? `${API_URL}/menu/by-location` : `${API_URL}/menu`;
       const specialUrl  = locationSet ? `${API_URL}/menu/today-special/by-location` : `${API_URL}/menu/today-special`;
+      
+      console.log('📍 Fetching menus...');
+      console.log('Location set:', locationSet);
+      console.log('Menu URL:', menuUrl);
+      
       const [menuRes, specialRes] = await Promise.all([
         fetch(menuUrl,   { headers }),
         fetch(specialUrl, { headers }),
       ]);
-      if (menuRes.ok)    { const d = await menuRes.json();    setItems(d.items || d.menuItems || []); }
-      if (specialRes.ok) { const d = await specialRes.json(); setTodaySpecial(d.items || []); }
-    } catch {}
+      
+      if (menuRes.ok) { 
+        const d = await menuRes.json();
+        console.log('📦 Menu response:', d);
+        const menuItems = d.items || d.menuItems || [];
+        console.log('📦 Menu items loaded:', menuItems.length);
+        setItems(menuItems);
+      } else {
+        console.error('❌ Menu fetch failed:', menuRes.status, menuRes.statusText);
+      }
+      
+      if (specialRes.ok) { 
+        const d = await specialRes.json();
+        console.log('🔥 Special response:', d);
+        const specialItems = d.items || [];
+        console.log('🔥 Today\'s special items loaded:', specialItems.length);
+        setTodaySpecial(specialItems);
+      } else {
+        console.error('❌ Special fetch failed:', specialRes.status, specialRes.statusText);
+      }
+    } catch (err) {
+      console.error('❌ Error fetching menus:', err);
+    }
     finally { setLoading(false); }
   }, [token, locationSet]);
 
@@ -288,10 +315,23 @@ function SpecialCard({ item }: { item: MenuItem }) {
 
 function MenuCard({ item, token, user }: { item: MenuItem; token: string | null; user: any }) {
   const { addToCart } = useCart();
+  const { addToast } = useToast() || { addToast: (msg: string) => console.log(msg) };
 
   const handleAdd = () => {
-    addToCart({ _id: item._id, name: item.name, price: item.price, image: item.image });
+    console.log('🛒 Adding to cart:', item.name);
+    try {
+      addToCart({ _id: item._id, name: item.name, price: item.price, image: item.image });
+      console.log('✅ Added successfully');
+      if (addToast) addToast(`Added ${item.name}`, 'success');
+    } catch (err) {
+      console.error('❌ Error adding to cart:', err);
+      if (addToast) addToast(`Failed to add ${item.name}`, 'error');
+    }
   };
+
+  // Check if item has Instant flag
+  const isInstant = (item as any)?.isInstant || (item.mealTypes && item.mealTypes.includes('Instant'));
+  const isTodaySpecial = (item as any)?.isTodaySpecial || (item as any)?.isSpecial;
 
   return (
     <motion.div
@@ -303,6 +343,18 @@ function MenuCard({ item, token, user }: { item: MenuItem; token: string | null;
     >
       <div className="relative h-40 rounded-2xl overflow-hidden mb-3">
         <img src={item.image || FALLBACK_IMG} className="w-full h-full object-cover" alt={item.name} />
+        {/* Instant badge */}
+        {isInstant && (
+          <div className="absolute top-2 left-2 bg-blue-500 text-white px-2.5 py-1 rounded-full text-[10px] font-black">
+            ⚡ Instant
+          </div>
+        )}
+        {/* Today's Special badge */}
+        {isTodaySpecial && (
+          <div className="absolute top-2 right-2 bg-red-500 text-white px-2.5 py-1 rounded-full text-[10px] font-black flex items-center gap-1">
+            <Flame size={10} /> Special
+          </div>
+        )}
       </div>
       <div className="px-1">
         <div className="flex items-center justify-between mb-1">

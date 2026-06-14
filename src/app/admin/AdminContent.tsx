@@ -1,6 +1,6 @@
 'use client';
 import React from 'react';
-import { ChevronDown, ChevronUp, Search, Trash2, Plus, Activity, Tag, TrendingUp, Award, Users, User, ShoppingBag, UtensilsCrossed, CreditCard, ChevronRight, Calendar, ArrowUpDown, Mail, Phone, MapPin, Truck, Copy, Zap, CheckCircle, Hourglass, Home, Wallet, Gem, CalendarDays, Rocket, Flag, Megaphone, Info, Gift, Package, AlertTriangle, Bell, Send, Save, Smartphone, GraduationCap, Building2, Shirt, Lock, FileText, Film, Video, Sparkles, X, RefreshCw, Download, ChevronLeft, Printer, Eye, MoreHorizontal, ArrowUp, ArrowDown, Edit, Loader2, BarChart2, Store } from 'lucide-react';
+import { ChevronDown, ChevronUp, Search, Trash2, Plus, Activity, Tag, TrendingUp, Award, Users, User, ShoppingBag, UtensilsCrossed, CreditCard, ChevronRight, Calendar, ArrowUpDown, Mail, Phone, MapPin, Truck, Copy, Zap, CheckCircle, Hourglass, Home, Wallet, Gem, CalendarDays, Rocket, Flag, Megaphone, Info, Gift, Package, AlertTriangle, Bell, Send, Save, Smartphone, GraduationCap, Building2, Shirt, Lock, FileText, Film, Video, Sparkles, X, RefreshCw, Download, ChevronLeft, Printer, Eye, MoreHorizontal, ArrowUp, ArrowDown, Edit, Loader2, BarChart2, Store, Camera, Layout } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import AdminNotifications from '@/components/AdminNotifications';
 import { ERP, AdminPageHeader, AdminToolbar, AdminPanel, AdminDataTable, AdminKpiGrid, AdminStatusBadge, MiniBarChart } from './admin-ui';
@@ -616,27 +616,28 @@ export function OrdersTab({ orders, fetchAll, headers, API_URL, search, setSearc
 }
 
 
-export function MenuTab({ menuItems, search, setSearch, setMenuModal, setImgPreview, kitchens, fetchAll, headers, API_URL, isDraftTab, user }: any) {
+export function MenuTab({ menuItems, search, setSearch, setMenuModal, setImgPreview, kitchens, fetchAll, headers, API_URL, isDraftTab, user, setSelectedCategory, categories }: any) {
   const [kitchenFilter, setKitchenFilter] = React.useState('');
   const [nameFilter, setNameFilter] = React.useState('');
   const [showFilters, setShowFilters] = React.useState(false);
-  const [view, setView] = React.useState<'live' | 'draft'>('live');
 
   const filteredItems = menuItems.filter((m: any) => {
     const isActuallyDraft = m.isDraft === true || String(m.isDraft) === 'true';
-
-    // If we're in the dedicated "In-Process" tab, only show drafts
-    if (isDraftTab) {
-      if (!isActuallyDraft) return false;
-    } else {
-      // If we're in the regular "Menu" tab, respect the toggle
-      if (view === 'live' && isActuallyDraft) return false;
-      if (view === 'draft' && !isActuallyDraft) return false;
-    }
+    // Exclude draft items from the listing
+    if (isActuallyDraft) return false;
 
     const matchesSearch = !search || m.name?.toLowerCase().includes(search.toLowerCase());
 
-    // Only apply kitchen and name filters if user is admin
+    // Kitchen-owner only sees their own menu items
+    if (user?.role === 'kitchen-owner') {
+      const kitchenId = (user as any).kitchenId || (user as any).assignedKitchen;
+      const isOwnMenu = typeof m.cloudKitchen === 'object' 
+        ? m.cloudKitchen?._id === kitchenId 
+        : m.cloudKitchen === kitchenId;
+      return matchesSearch && isOwnMenu;
+    }
+
+    // Admin can filter by kitchen and name
     if (user?.role === 'admin') {
       const matchesKitchen = !kitchenFilter ||
         (kitchenFilter === 'no-kitchen' ? !m.cloudKitchen :
@@ -653,28 +654,11 @@ export function MenuTab({ menuItems, search, setSearch, setMenuModal, setImgPrev
     <div className={ERP.page}>
       <span className='flex justify-between -mt-3'>
 
-        <button type="button" onClick={() => setMenuModal({ open: true, data: null })} className={`${ERP.btn} ${ERP.btnPrimary}`}>
+        <button type="button" onClick={() => { setSelectedCategory('regular'); setMenuModal({ open: true, data: null }); }} className={`${ERP.btn} ${ERP.btnPrimary}`}>
           <Plus className="w-4 h-4" /> Add item
         </button>
 
-        {!isDraftTab && (
-          <div className="flex border border-slate-200 rounded-md w-fit overflow-hidden bg-white">
-            <button
-              type="button"
-              onClick={() => setView('live')}
-              className={`px-4 py-2 text-xs font-semibold ${view === 'live' ? 'bg-slate-800 text-white' : 'text-slate-600 hover:bg-slate-50'}`}
-            >
-              Live ({menuItems.filter((m: any) => !(m.isDraft === true || String(m.isDraft) === 'true')).length})
-            </button>
-            <button
-              type="button"
-              onClick={() => setView('draft')}
-              className={`px-4 py-2 text-xs font-semibold border-l border-slate-200 ${view === 'draft' ? 'bg-slate-800 text-white' : 'text-slate-600 hover:bg-slate-50'}`}
-            >
-              Drafts ({menuItems.filter((m: any) => m.isDraft === true || String(m.isDraft) === 'true').length})
-            </button>
-          </div>
-        )}
+        {/* Drafts removed: only show live items */}
       </span>
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center">
         <div className="flex-1 flex items-center  bg-white rounded-md border border-slate-200 px-3 py-2">
@@ -770,11 +754,9 @@ export function MenuTab({ menuItems, search, setSearch, setMenuModal, setImgPrev
                         <div className="flex items-center gap-2">
                           <span className={`text-[10px] font-bold px-2 py-1 rounded-full ${m.category === 'gold' ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700'
                             }`}>
-                            {m.category === 'gold' ? 'Gold' : 'Regular'}
+                            {m.category || 'Regular'}
                           </span>
-                          {m.isDraft && (
-                            <span className="bg-orange-100 text-orange-600 text-[8px] font-black px-2 py-1 rounded-full uppercase tracking-tighter border border-orange-200">Draft</span>
-                          )}
+                          {/* Draft badge removed */}
                         </div>
                       </div>
                       {user?.role === 'admin' && (
@@ -793,9 +775,7 @@ export function MenuTab({ menuItems, search, setSearch, setMenuModal, setImgPrev
                       <Home className="w-3 h-3" />
                       {m.cloudKitchen?.name || 'No Kitchen'}
                     </span>
-                    <span className="px-2 py-1 bg-slate-50 rounded-full text-[10px] font-medium">
-                      {m.isDraft ? 'Draft' : 'Live'}
-                    </span>
+                    <span className="px-2 py-1 bg-slate-50 rounded-full text-[10px] font-medium">Live</span>
                   </div>
 
                   {m.description && (
@@ -805,7 +785,11 @@ export function MenuTab({ menuItems, search, setSearch, setMenuModal, setImgPrev
                   {/* Action buttons */}
                   <div className="flex gap-2 pt-2">
                     <button
-                      onClick={() => { setImgPreview(''); setMenuModal({ open: true, data: m }); }}
+                      onClick={() => { 
+                        setImgPreview(''); 
+                        setSelectedCategory(m?.category || 'regular');
+                        setMenuModal({ open: true, data: m }); 
+                      }}
                       className="flex-1 px-3 py-2 text-xs font-bold bg-orange-50 text-orange-600 rounded-lg hover:bg-orange-100 transition"
                     >
                       Edit
@@ -1120,6 +1104,372 @@ export function KitchensTab({ kitchens, menuItems, setKitchenModal, fetchAll, he
   );
 }
 
+export function SettingsTab({ categories = [], fetchAll, headers, API_URL, user }: any) {
+  const [catModal, setCatModal] = React.useState<{ open: boolean; data: any }>({ open: false, data: null });
+  const [locationModal, setLocationModal] = React.useState(false);
+  const [saving, setSaving] = React.useState(false);
+  const [locationSaving, setLocationSaving] = React.useState(false);
+  const [locating, setLocating] = React.useState(false);
+  
+  const [form, setForm] = React.useState({ 
+    name: '', 
+    purchasePrice: '', 
+    sellPrice: ''
+  });
+  
+  const [locationForm, setLocationForm] = React.useState({
+    latitude: '',
+    longitude: '',
+    geoLimit: '5000'
+  });
+
+  React.useEffect(() => {
+    if (catModal.open && catModal.data) {
+      setForm({ 
+        name: catModal.data.name || '', 
+        purchasePrice: String(catModal.data.purchasePrice || ''), 
+        sellPrice: String(catModal.data.sellPrice || '')
+      });
+    } else if (!catModal.open) {
+      setForm({ name: '', purchasePrice: '', sellPrice: '' });
+    }
+  }, [catModal]);
+
+  const openNew = () => setCatModal({ open: true, data: null });
+  const openEdit = (c: any) => setCatModal({ open: true, data: c });
+
+  const handleCaptureLocation = async () => {
+    if (!navigator.geolocation) {
+      alert('Geolocation not supported');
+      return;
+    }
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setLocationForm(f => ({ 
+          ...f, 
+          latitude: String(pos.coords.latitude.toFixed(6)), 
+          longitude: String(pos.coords.longitude.toFixed(6)) 
+        }));
+        console.log('✅ Location captured:', pos.coords.latitude, pos.coords.longitude);
+        setLocating(false);
+      },
+      (err) => {
+        console.error('❌ Location error:', err);
+        alert('Failed to get location: ' + err.message);
+        setLocating(false);
+      },
+      { timeout: 10000, enableHighAccuracy: true }
+    );
+  };
+
+  const save = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!form.name || String(form.name).trim() === '') return alert('Name required');
+    setSaving(true);
+    try {
+      const payload = { 
+        name: form.name.trim(), 
+        purchasePrice: Number(form.purchasePrice || 0), 
+        sellPrice: Number(form.sellPrice || 0)
+      };
+      let res;
+      if (catModal.data && catModal.data._id) {
+        res = await fetch(`${API_URL}/admin/categories/${catModal.data._id}`, { 
+          method: 'PUT', 
+          headers: { ...headers, 'Content-Type': 'application/json' }, 
+          body: JSON.stringify(payload) 
+        });
+      } else {
+        res = await fetch(`${API_URL}/admin/categories`, { 
+          method: 'POST', 
+          headers: { ...headers, 'Content-Type': 'application/json' }, 
+          body: JSON.stringify(payload) 
+        });
+      }
+      const data = await res.json();
+      if (data.success) {
+        setCatModal({ open: false, data: null });
+        fetchAll();
+      } else alert(data.error || 'Failed');
+    } catch (err) {
+      console.error('Save category error', err);
+      alert('Failed to save');
+    }
+    setSaving(false);
+  };
+
+  const saveLocationToAllCategories = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!locationForm.latitude || !locationForm.longitude) {
+      return alert('Please set latitude and longitude');
+    }
+    
+    if (categories.length === 0) {
+      return alert('No categories to update');
+    }
+
+    setLocationSaving(true);
+    try {
+      const payload = {
+        latitude: Number(locationForm.latitude),
+        longitude: Number(locationForm.longitude),
+        geoLimit: Number(locationForm.geoLimit || 5000)
+      };
+
+      let successCount = 0;
+      for (const category of categories) {
+        const res = await fetch(`${API_URL}/admin/categories/${category._id}`, {
+          method: 'PUT',
+          headers: { ...headers, 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (data.success) successCount++;
+      }
+
+      alert(`✅ Location updated for ${successCount}/${categories.length} categories`);
+      setLocationModal(false);
+      setLocationForm({ latitude: '', longitude: '', geoLimit: '5000' });
+      fetchAll();
+    } catch (err) {
+      console.error('Save location error', err);
+      alert('Failed to save location');
+    }
+    setLocationSaving(false);
+  };
+
+  const remove = async (id: string) => {
+    if (!confirm('Delete this category?')) return;
+    try {
+      const res = await fetch(`${API_URL}/admin/categories/${id}`, { 
+        method: 'DELETE', 
+        headers 
+      });
+      const data = await res.json();
+      if (data.success) fetchAll(); 
+      else alert(data.error || 'Failed');
+    } catch (err) { 
+      alert('Failed to delete'); 
+    }
+  };
+
+  return (
+    <div className={ERP.page}>
+      <AdminPageHeader 
+        title="Settings & Categories" 
+        subtitle={`${categories.length} categories`} 
+        actions={
+          <div className="flex gap-2">
+            <button 
+              onClick={() => setLocationModal(true)} 
+              className={`${ERP.btn} ${ERP.btnPrimary}`}
+            >
+              <MapPin className="w-4 h-4" /> Set Location
+            </button>
+            <button 
+              onClick={openNew} 
+              className={`${ERP.btn} ${ERP.btnPrimary}`}
+            >
+              <Plus className="w-4 h-4" /> Add category
+            </button>
+          </div>
+        } 
+      />
+
+      <div className={ERP.panel}>
+        <AdminDataTable
+          showSearch={false}
+          columns={[
+            { key: 'name', header: 'Name' },
+            { key: 'purchasePrice', header: 'Purchase Price', render: (c: any) => `₹${(c.purchasePrice || 0).toLocaleString('en-IN')}` },
+            { key: 'sellPrice', header: 'Selling Price', render: (c: any) => `₹${(c.sellPrice || 0).toLocaleString('en-IN')}` },
+            { key: 'location', header: 'Location', render: (c: any) => c.latitude && c.longitude ? `📍 ${c.latitude.toFixed(4)}, ${c.longitude.toFixed(4)}` : '—' },
+            { key: 'geoLimit', header: 'Geo Limit', render: (c: any) => c.geoLimit ? `${(c.geoLimit / 1000).toFixed(1)}km` : '—' },
+            { key: 'actions', header: '', render: (c: any) => (
+              <div className="flex items-center gap-2">
+                <button 
+                  onClick={() => openEdit(c)} 
+                  className={`${ERP.btn} ${ERP.btnSecondary} py-1 px-2`}
+                >
+                  Edit
+                </button>
+                <button 
+                  onClick={() => remove(c._id)} 
+                  className={`${ERP.btn} ${ERP.btnDanger} py-1 px-2`}
+                >
+                  Delete
+                </button>
+              </div>
+            ) }
+          ]}
+          rows={categories}
+          emptyMessage="No categories"
+        />
+      </div>
+
+      {catModal.open && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 overflow-y-auto">
+          <form onSubmit={save} className="w-full max-w-md bg-white rounded-2xl p-6 shadow-lg my-8">
+            <h3 className="font-black text-lg mb-4">{catModal.data ? 'Edit Category' : 'Add Category'}</h3>
+            <div className="space-y-3 max-h-[60vh] overflow-y-auto">
+              <div>
+                <label className="block text-xs font-bold mb-1 text-slate-700">Category Name</label>
+                <input 
+                  value={form.name} 
+                  onChange={e => setForm(f => ({ ...f, name: e.target.value }))} 
+                  placeholder="e.g., Lunch Tiffin"
+                  className="w-full px-3 py-2 border-2 border-slate-200 rounded-lg text-sm" 
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block text-xs font-bold mb-1 text-slate-700">Purchase Price (₹)</label>
+                  <input 
+                    type="number" 
+                    value={form.purchasePrice} 
+                    onChange={e => setForm(f => ({ ...f, purchasePrice: e.target.value }))} 
+                    placeholder="Kitchen earning"
+                    className="w-full px-3 py-2 border-2 border-slate-200 rounded-lg text-sm" 
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold mb-1 text-slate-700">Selling Price (₹)</label>
+                  <input 
+                    type="number" 
+                    value={form.sellPrice} 
+                    onChange={e => setForm(f => ({ ...f, sellPrice: e.target.value }))} 
+                    placeholder="Customer price"
+                    className="w-full px-3 py-2 border-2 border-slate-200 rounded-lg text-sm" 
+                  />
+                </div>
+              </div>
+
+              <p className="text-xs text-slate-500 italic">💡 Set location using "Set Location" button at top</p>
+            </div>
+
+            <div className="flex items-center justify-end gap-3 mt-5">
+              <button 
+                type="button" 
+                onClick={() => setCatModal({ open: false, data: null })} 
+                className={`${ERP.btn} ${ERP.btnSecondary}`}
+              >
+                Cancel
+              </button>
+              <button 
+                type="submit" 
+                disabled={saving} 
+                className={`${ERP.btn} ${ERP.btnPrimary}`}
+              >
+                {saving ? 'Saving…' : 'Save'}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {locationModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 overflow-y-auto">
+          <form onSubmit={saveLocationToAllCategories} className="w-full max-w-md bg-white rounded-2xl p-6 shadow-lg my-8">
+            <h3 className="font-black text-lg mb-4 flex items-center gap-2">
+              <span>📍</span> Set Location for All Categories
+            </h3>
+            <div className="space-y-3 max-h-[60vh] overflow-y-auto">
+              
+              <div className="bg-blue-50 border border-blue-200 p-3 rounded-lg">
+                <p className="text-xs text-blue-700 font-bold">ℹ️ This location will apply to all {categories.length} categories and their menu items</p>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold mb-2 text-slate-700">Capture Location</label>
+                <button 
+                  type="button" 
+                  onClick={handleCaptureLocation}
+                  disabled={locating}
+                  className="w-full px-4 py-2.5 bg-blue-500 text-white rounded-lg font-bold text-sm hover:bg-blue-600 disabled:opacity-70"
+                >
+                  {locating ? '📍 Getting location...' : '📍 Capture Current Location'}
+                </button>
+              </div>
+
+              <div className="bg-slate-50 p-3 rounded-lg space-y-2">
+                <p className="text-xs text-slate-600 font-bold">Or manually enter:</p>
+                
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="block text-xs font-bold mb-1">Latitude</label>
+                    <input 
+                      type="number" 
+                      step="0.000001"
+                      value={locationForm.latitude} 
+                      onChange={e => setLocationForm(f => ({ ...f, latitude: e.target.value }))} 
+                      placeholder="28.6139"
+                      className="w-full px-3 py-2 border-2 border-slate-200 rounded-lg text-xs" 
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold mb-1">Longitude</label>
+                    <input 
+                      type="number" 
+                      step="0.000001"
+                      value={locationForm.longitude} 
+                      onChange={e => setLocationForm(f => ({ ...f, longitude: e.target.value }))} 
+                      placeholder="77.2090"
+                      className="w-full px-3 py-2 border-2 border-slate-200 rounded-lg text-xs" 
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {locationForm.latitude && locationForm.longitude && (
+                <div className="bg-green-50 border-2 border-green-300 rounded-lg p-3">
+                  <p className="text-xs font-bold text-green-700">✅ Location Set</p>
+                  <p className="text-xs text-green-600 mt-1 font-mono">{locationForm.latitude}, {locationForm.longitude}</p>
+                </div>
+              )}
+
+              <div className="bg-slate-50 p-3 rounded-lg">
+                <label className="block text-xs font-bold mb-1 text-slate-700">Geo-Limit (Delivery Radius in meters)</label>
+                <div className="flex gap-2">
+                  <input 
+                    type="number" 
+                    value={locationForm.geoLimit} 
+                    onChange={e => setLocationForm(f => ({ ...f, geoLimit: e.target.value }))} 
+                    placeholder="5000"
+                    className="flex-1 px-3 py-2 border-2 border-slate-200 rounded-lg text-sm" 
+                  />
+                  <div className="px-3 py-2 bg-blue-100 border border-blue-200 rounded-lg text-xs font-bold text-blue-700 whitespace-nowrap flex items-center">
+                    {locationForm.geoLimit ? `${(Number(locationForm.geoLimit) / 1000).toFixed(1)}km` : '—'}
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+            <div className="flex items-center justify-end gap-3 mt-6">
+              <button 
+                type="button" 
+                onClick={() => setLocationModal(false)} 
+                className={`${ERP.btn} ${ERP.btnSecondary}`}
+              >
+                Cancel
+              </button>
+              <button 
+                type="submit" 
+                disabled={locationSaving || locating || !locationForm.latitude || !locationForm.longitude} 
+                className={`${ERP.btn} ${ERP.btnPrimary}`}
+              >
+                {locationSaving ? 'Saving…' : `Apply to ${categories.length} Categories`}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function SubscriptionsTab({ subscriptions, expandedRow, setExpandedRow, fetchAll, headers, API_URL }: any) {
   return (
     <div className={ERP.page}>
@@ -1381,9 +1731,15 @@ export function LegalTab({ legal, setLegal, legalSaving, setLegalSaving, headers
   );
 }
 
-export function HomestyleTab({ hsVideos, setHsVideos, hsVideoUploading, hsSaving, saveHomestyle, uploadVideo }: any) {
+export function HomestyleTab({ 
+  hsVideos, setHsVideos, hsVideoUploading, hsSaving, saveHomestyle, uploadVideo,
+  hsScheduleBannerImages, setHsScheduleBannerImages, hsScheduleBannerUploading, setHsScheduleBannerUploading,
+  hsScheduleSectionImages, setHsScheduleSectionImages, hsSectionUploading, setHsSectionUploading,
+  uploadImage
+}: any) {
   return (
-    <div className="space-y-6">
+    <div className="space-y-12 pb-20">
+      {/* Cinematic Content Section */}
       <div className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-sm space-y-6">
         <div className="flex items-center justify-between">
           <div>
@@ -1425,14 +1781,164 @@ export function HomestyleTab({ hsVideos, setHsVideos, hsVideoUploading, hsSaving
           </div>
         )}
       </div>
+
+      {/* Schedule Banner Section */}
+      <div className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-sm space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="font-black text-slate-900 text-lg flex items-center gap-2">
+              <Camera className="w-5 h-5 text-orange-500" />
+              Schedule Page Banners
+            </h3>
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Sliding Banners (20vh Height)</p>
+          </div>
+          <label className="cursor-pointer px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white text-[10px] font-black uppercase tracking-widest rounded-full shadow-lg shadow-blue-100 transition active:scale-95">
+            {hsScheduleBannerUploading ? 'Uploading…' : '+ Add Banner'}
+            <input type="file" accept="image/*" className="hidden" disabled={hsScheduleBannerUploading} onChange={async e => { 
+              const file = e.target.files?.[0]; 
+              if (!file) return; 
+              try { 
+                setHsScheduleBannerUploading(true);
+                const url = await uploadImage(file); 
+                setHsScheduleBannerImages((v: string[]) => [...v, url]); 
+              } catch { 
+                alert('Upload failed'); 
+              } finally {
+                setHsScheduleBannerUploading(false);
+              }
+            }} />
+          </label>
+        </div>
+
+        {hsScheduleBannerImages.length === 0 ? (
+          <div className="text-center py-16 border-4 border-dashed border-slate-50 rounded-[2.5rem]">
+            <Camera className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+            <p className="text-slate-400 font-bold">No banner images uploaded</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+            {hsScheduleBannerImages.map((url: string, i: number) => (
+              <div key={i} className="group relative bg-slate-50 rounded-[1.5rem] overflow-hidden aspect-[16/6] border-2 border-slate-100 shadow-lg">
+                <img src={url} className="w-full h-full object-cover" />
+                <div className="absolute top-2 right-2 flex gap-2">
+                  <button
+                    onClick={() => setHsScheduleBannerImages((v: string[]) => v.filter((_, idx) => idx !== i))}
+                    className="w-8 h-8 rounded-full bg-white/90 text-red-500 shadow-md hover:bg-red-500 hover:text-white transition flex items-center justify-center opacity-0 group-hover:opacity-100"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Schedule Categories Section */}
+      <div className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-sm space-y-8">
+        <div>
+          <h3 className="font-black text-slate-900 text-lg flex items-center gap-2">
+            <Layout className="w-5 h-5 text-orange-500" />
+            Schedule Category Sections
+          </h3>
+          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Distinct UI Section Images</p>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+          {[
+            { id: 'regular', label: 'Regular' },
+            { id: 'shahiThali', label: 'Shahi Thali' },
+            { id: 'corporateOrder', label: 'Corporate Order' },
+            { id: 'schoolTiffins', label: 'School Tiffins' }
+          ].map(section => (
+            <div key={section.id} className="space-y-4">
+              <div className="flex items-center justify-between px-2">
+                <label className="text-[11px] font-black text-slate-700 uppercase tracking-widest">{section.label}</label>
+                {hsScheduleSectionImages[section.id] && (
+                  <span className="text-[9px] font-black text-green-500 uppercase tracking-widest bg-green-50 px-2 py-1 rounded-full">Active</span>
+                )}
+              </div>
+              
+              <div className="group relative bg-slate-50 rounded-[2rem] overflow-hidden aspect-[4/3] border-4 border-double border-slate-200 flex items-center justify-center transition-all hover:border-orange-200">
+                {hsScheduleSectionImages[section.id] ? (
+                  <div className="w-full h-full relative">
+                    <img src={hsScheduleSectionImages[section.id]} className="w-full h-full object-cover" />
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all backdrop-blur-[2px]">
+                      <label 
+                        className="px-6 py-3 bg-white text-slate-900 rounded-full text-[10px] font-black uppercase tracking-widest cursor-pointer hover:bg-slate-50 transition active:scale-95"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        Change Image
+                        <input 
+                          type="file" 
+                          accept="image/*" 
+                          className="hidden" 
+                          onChange={async e => {
+                            const file = e.target.files?.[0];
+                            if (!file) return;
+                            try {
+                              setHsSectionUploading(section.id);
+                              const url = await uploadImage(file);
+                              setHsScheduleSectionImages((prev: any) => ({ ...prev, [section.id]: url }));
+                            } catch {
+                              alert('Upload failed');
+                            } finally {
+                              setHsSectionUploading(null);
+                            }
+                          }} 
+                        />
+                      </label>
+                    </div>
+                  </div>
+                ) : (
+                  <label className="w-full h-full flex flex-col items-center justify-center cursor-pointer hover:bg-slate-100/50 transition">
+                    <input 
+                      type="file" 
+                      accept="image/*" 
+                      className="hidden" 
+                      onChange={async e => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        try {
+                          setHsSectionUploading(section.id);
+                          const url = await uploadImage(file);
+                          setHsScheduleSectionImages((prev: any) => ({ ...prev, [section.id]: url }));
+                        } catch {
+                          alert('Upload failed');
+                        } finally {
+                          setHsSectionUploading(null);
+                        }
+                      }} 
+                    />
+                    {hsSectionUploading === section.id ? (
+                      <div className="animate-spin rounded-full h-10 w-10 border-4 border-orange-500 border-t-transparent"></div>
+                    ) : (
+                      <>
+                        <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-sm mb-4">
+                          <Camera className="w-8 h-8 text-slate-300" />
+                        </div>
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Assign Image</p>
+                      </>
+                    )}
+                  </label>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
       <button
         onClick={saveHomestyle}
         disabled={hsSaving}
-        className="w-full py-4 bg-slate-900 text-white rounded-full font-black text-xs uppercase tracking-widest shadow-xl shadow-slate-200 hover:bg-slate-800 disabled:opacity-50 transition active:scale-95"
+        className="w-full py-6 bg-slate-900 text-white rounded-full font-black text-sm uppercase tracking-widest shadow-2xl shadow-slate-200 hover:bg-slate-800 disabled:opacity-50 transition active:scale-95 flex items-center justify-center gap-3"
       >
-        <span className="flex items-center justify-center gap-2">
-          {hsSaving ? 'Saving Scene…' : <><Save className="w-4 h-4" /> Save Cinematic Layout</>}
-        </span>
+        {hsSaving ? (
+          <RefreshCw className="w-5 h-5 animate-spin" />
+        ) : (
+          <Save className="w-5 h-5" />
+        )}
+        {hsSaving ? 'Deploying Changes…' : 'Finalize & Sync All Configurations'}
       </button>
     </div>
   );

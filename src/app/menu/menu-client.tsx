@@ -140,10 +140,10 @@ export default function MenuClient() {
         </main>
 
         {getCartCount() > 0 && (
-            <footer className="fixed bottom-0 left-0 right-0 bg-white p-4 shadow-t-lg border-t">
+            <footer className="fixed bottom-20 left-4 right-4 z-40">
                 <button 
                     onClick={() => router.push('/schedule')}
-                    className="w-full bg-green-500 text-white py-3 rounded-lg font-semibold hover:bg-green-600 flex justify-center items-center gap-2">
+                    className="w-full bg-green-500 text-white py-4 rounded-2xl font-bold shadow-2xl hover:bg-green-600 flex justify-center items-center gap-2 transform active:scale-95 transition-all">
                     <span>View Schedule ({getCartCount()} items)</span>
                 </button>
             </footer>

@@ -1,13 +1,14 @@
 {
-  "version": "1.0.4",
-  "message": "Bug fixes and improved performance!",
-  "releaseDate": "2026-06-04",
+  "version": "1.0.5",
+  "message": "🎯 Location Detection Improvements - Update Now!",
+  "releaseDate": "2026-06-12",
   "changelog": [
-    "Fixed admin panel navbar spacing",
-    "Improved app update detection (now checks every 2 minutes)",
-    "Removed swipe page navigation in admin panel",
-    "Fixed menu addition on home page",
-    "Better offline support"
+    "✅ Fixed location capture not working on mobile",
+    "✅ Better error messages for location permission issues",
+    "✅ Increased GPS detection timeout (10s → 15s)",
+    "✅ High accuracy GPS enabled",
+    "✅ Detailed debug logging for location issues",
+    "✅ Improved geolocation error handling"
   ],
-  "critical": false
+  "critical": true
 }

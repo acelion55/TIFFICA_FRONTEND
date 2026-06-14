@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
@@ -28,8 +28,19 @@ export default function LoginPage() {
   const [legalContent, setLegalContent] = useState<{ terms: string; privacy: string }>({ terms: '', privacy: '' });
   
   const router = useRouter();
-  const { login } = useAuth();
+  const { login, user, token, loading: authLoading } = useAuth();
   const { canInstall, install } = usePWAInstall();
+
+  // If auth state is rehydrating, don't render the login form (avoids flash)
+  useEffect(() => {
+    if (!authLoading && token && user) {
+      if (user.role === 'delivery') router.replace('/delivery-partner/dashboard');
+      else if (user.role === 'admin' || user.role === 'kitchen-owner') router.replace('/admin');
+      else router.replace('/home');
+    }
+  }, [user, token, authLoading, router]);
+
+  if (authLoading) return null;
 
   const handleModeChange = (newMode: Mode) => {
     if (newMode === mode) return;
@@ -62,8 +73,8 @@ export default function LoginPage() {
   const handleOtpLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(''); setLoading(true);
-    if (!/^\d{8}$/.test(otp)) {
-      setError('OTP must be 8 digits');
+    if (!/^\d{4}$/.test(otp)) {
+      setError('OTP must be 4 digits');
       setLoading(false);
       return;
     }
@@ -89,9 +100,17 @@ export default function LoginPage() {
     setError(''); setLoading(true);
     if (!loginId || !password) { setError('ID and password required'); setLoading(false); return; }
     try {
+      // Normalize phone-like identifiers: strip non-digits and use last 10 digits
+      let identifierToSend = loginId;
+      const looksLikePhone = /^[+\d\s()-]+$/.test(loginId) && !loginId.includes('@');
+      if (looksLikePhone) {
+        const digits = loginId.replace(/\D/g, '');
+        identifierToSend = digits.length > 10 ? digits.slice(-10) : digits;
+      }
+
       const res = await fetch(`${API_URL}/auth/login`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ identifier: loginId, password }),
+        body: JSON.stringify({ identifier: identifierToSend, password }),
       });
       const data = await res.json();
       if (res.ok) {
@@ -150,7 +169,7 @@ export default function LoginPage() {
         <motion.div 
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+          transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] as any }}
           className="text-center mb-8"
         >
           <div className="inline-block p-1 bg-white/10 rounded-3xl backdrop-blur-xl mb-4 border border-white/5 shadow-2xl">
@@ -167,7 +186,7 @@ export default function LoginPage() {
         <motion.div 
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.5, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
+          transition={{ duration: 0.5, delay: 0.1, ease: [0.22, 1, 0.36, 1] as any }}
           className="bg-gray-900/50 backdrop-blur-3xl border border-white/10 rounded-[2rem] p-6 shadow-2xl relative overflow-hidden"
         >
           <div className="absolute inset-0 bg-gradient-to-b from-white/[0.04] to-transparent pointer-events-none" />

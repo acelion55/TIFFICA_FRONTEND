@@ -6,17 +6,18 @@ import { useAuth } from '@/context/AuthContext';
 import { useLiveCount } from '@/hooks/useLiveCount';
 import { Users, ShoppingBag, UtensilsCrossed, CreditCard, Store, BarChart2, LogOut, RefreshCw, Home, Bell, FileText, Tag, Activity, Volume2, VolumeX, TrendingUp, FileEdit, User, Lock, Camera, Sparkles, Save, Loader2, Search, MapPin, ChevronRight, X, Phone, Mail, Globe, Menu } from 'lucide-react';
 import {
-  OverviewTab, UsersTab, OrdersTab, MenuTab, KitchensTab,
+  OverviewTab, UsersTab, OrdersTab, MenuTab, KitchensTab, SettingsTab,
   SubscriptionsTab, NotificationsTab, LegalTab, HomestyleTab, CouponsTab, ScheduleOrdersTab, LeadsTab,
   EarningsTab
 } from './AdminContent';
 import { PayoutsTab } from './PayoutsTab';
 import { CouponModal } from './CouponModal';
 import { KitchenModal } from './KitchenModal';
+import AdminNotifications from '@/components/AdminNotifications';
 import { notificationSound, showAdminNotification } from '@/lib/notificationSound';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://tifficaapp-1.onrender.com/api';
-type Tab = 'stats' | 'users' | 'orders' | 'menu' | 'drafts' | 'kitchens' | 'subscriptions' | 'schedules' | 'homestyles' | 'notifications' | 'legal' | 'coupons' | 'leads' | 'earnings' | 'payouts';
+const API_URL = 'https://tifficaapp-1.onrender.com/api';
+type Tab = 'stats' | 'users' | 'orders' | 'menu' | 'kitchens' | 'settings' | 'subscriptions' | 'schedules' | 'homestyles' | 'notifications' | 'legal' | 'coupons' | 'leads' | 'earnings' | 'payouts';
 interface Stats { users: number; orders: number; menuItems: number; subscriptions: number; totalWalletBalance?: number; }
 
 export default function AdminDashboard() {
@@ -36,6 +37,7 @@ export default function AdminDashboard() {
   const [kitchens, setKitchens] = useState<any[]>([]);
   const [kitchenOwners, setKitchenOwners] = useState<any[]>([]);
   const [subscriptions, setSubscriptions] = useState<any[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
   const [scheduleOrders, setScheduleOrders] = useState<any[]>([]);
   const [leads, setLeads] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -55,6 +57,12 @@ export default function AdminDashboard() {
   const [hsVideos, setHsVideos] = useState<string[]>([]);
   const [hsVideoUploading, setHsVideoUploading] = useState(false);
   const [hsSaving, setHsSaving] = useState(false);
+  const [hsScheduleBannerImages, setHsScheduleBannerImages] = useState<string[]>([]);
+  const [hsScheduleBannerUploading, setHsScheduleBannerUploading] = useState(false);
+  const [hsScheduleSectionImages, setHsScheduleSectionImages] = useState<any>({
+    regular: '', shahiThali: '', corporateOrder: '', schoolTiffins: ''
+  });
+  const [hsSectionUploading, setHsSectionUploading] = useState<string | null>(null);
   const [kitchenModal, setKitchenModal] = useState<{ open: boolean; data: any }>({ open: false, data: null });
   const [menuModal, setMenuModal] = useState<{ open: boolean; data: any }>({ open: false, data: null });
   const [menuFormDirty, setMenuFormDirty] = useState(false);
@@ -63,9 +71,13 @@ export default function AdminDashboard() {
   const [saving, setSaving] = useState(false);
   const [imgUploading, setImgUploading] = useState(false);
   const [imgPreview, setImgPreview] = useState<string>('');
+  const [menuLatitude, setMenuLatitude] = useState<string>('');
+  const [menuLongitude, setMenuLongitude] = useState<string>('');
+  const [menuGeoLimit, setMenuGeoLimit] = useState<string>('');
+  const [locatingMenu, setLocatingMenu] = useState(false);
   const [isGeneratingDesc, setIsGeneratingDesc] = useState(false);
   const [isGenerateDisabled, setIsGenerateDisabled] = useState(false);
-  const [draftLoaded, setDraftLoaded] = useState(false);
+  // draft feature removed: no draftLoaded state
   const [orderSearch, setOrderSearch] = useState('');
   const [dateFilter, setDateFilter] = useState(() => {
     const today = new Date();
@@ -86,6 +98,10 @@ export default function AdminDashboard() {
   const [lastSubscriptionCount, setLastSubscriptionCount] = useState(0);
   const [recentNotifications, setRecentNotifications] = useState<Array<{ id: string, type: string, message: string, time: Date }>>([]);
   const [ownerProfileModal, setOwnerProfileModal] = useState({ open: false });
+  const [selectedCategory, setSelectedCategory] = useState<string>('regular');
+  const [categoryPrice, setCategoryPrice] = useState<number>(0);
+  const [sellingPrice, setSellingPrice] = useState<number>(0);
+  const [purchasePrice, setPurchasePrice] = useState<number>(0);
 
   const headers = { Authorization: `Bearer ${token}` };
 
@@ -96,11 +112,12 @@ export default function AdminDashboard() {
     try {
       console.log('📋 Admin fetchAll started...');
 
-      const [sRes, uRes, oRes, mRes, kRes, ownersRes, subRes, todayRes, dpRes, schedRes, leadsRes] = await Promise.all([
+      const [sRes, uRes, oRes, mRes, cRes, kRes, ownersRes, subRes, todayRes, dpRes, schedRes, leadsRes] = await Promise.all([
         fetch(`${API_URL}/admin/stats`, { headers }),
         fetch(`${API_URL}/admin/users?all=true`, { headers }),
         fetch(`${API_URL}/admin/orders`, { headers }),
         fetch(`${API_URL}/admin/menu`, { headers }),
+        fetch(`${API_URL}/admin/categories`, { headers }),
         fetch(`${API_URL}/admin/cloudkitchens`, { headers }),
         fetch(`${API_URL}/admin/kitchen-owners`, { headers }),
         fetch(`${API_URL}/admin/subscriptions`, { headers }),
@@ -125,8 +142,8 @@ export default function AdminDashboard() {
 
       if (sRes.status === 403) { setError('Access denied. Admin only.'); setLoading(false); return; }
 
-      const [s, u, o, m, k, owners, sub, t, dp, sched, leadsData] = await Promise.all([
-        sRes.json(), uRes.json(), oRes.json(), mRes.json(), kRes.json(), ownersRes.json(),
+      const [s, u, o, m, c, k, owners, sub, t, dp, sched, leadsData] = await Promise.all([
+        sRes.json(), uRes.json(), oRes.json(), mRes.json(), cRes.json(), kRes.json(), ownersRes.json(),
         subRes.json(), todayRes.json(), dpRes.json(), schedRes.json(), leadsRes.json()
       ]);
 
@@ -135,6 +152,7 @@ export default function AdminDashboard() {
         users: u.success ? `${u.users?.length || 0} users` : u.error,
         orders: o.success ? `${o.orders?.length || 0} orders` : o.error,
         menu: m.success ? `${m.items?.length || 0} items` : m.error,
+        categories: c.success ? `${c.categories?.length || 0} categories` : c.error,
         kitchens: k.success ? `${k.kitchens?.length || 0} kitchens` : k.error,
         subscriptions: sub.success ? `${sub.subscriptions?.length || 0} subs` : sub.error,
         today: t.success ? 'OK' : t.error,
@@ -157,6 +175,7 @@ export default function AdminDashboard() {
         setOrders([]);
       }
       if (m.items) setMenuItems(m.items);
+      if (c.categories) setCategories(c.categories);
       if (k.kitchens) setKitchens(k.kitchens);
       if (owners.owners) setKitchenOwners(owners.owners);
       if (sub.subscriptions) {
@@ -177,7 +196,18 @@ export default function AdminDashboard() {
       setError('Failed to load data. Check server connection.');
     }
     setLoading(false);
-    try { const r = await fetch(`${API_URL}/homestyles`); const d = await r.json(); if (d.success && d.data) { setHomestyle(d.data); setHsVideos(d.data.videoLinks || []); } } catch { }
+    try {
+      const r = await fetch(`${API_URL}/homestyles`);
+      const d = await r.json();
+      if (d.success && d.data) {
+        setHomestyle(d.data);
+        setHsVideos(d.data.videoLinks || []);
+        setHsScheduleBannerImages(d.data.scheduleBannerImages || []);
+        setHsScheduleSectionImages(d.data.scheduleSectionImages || {
+          regular: '', shahiThali: '', corporateOrder: '', schoolTiffins: ''
+        });
+      }
+    } catch { }
     try { const r = await fetch(`${API_URL}/notifications/admin`, { headers }); const d = await r.json(); if (d.success) setNotifications(d.notifications || []); } catch { }
     try { const r = await fetch(`${API_URL}/legalpages`); const d = await r.json(); if (d.success && d.data) { const te = d.data.find((p: any) => p.pageType === 'terms'); const pr = d.data.find((p: any) => p.pageType === 'privacy'); setLegal({ terms: te?.content || '', privacy: pr?.content || '' }); } } catch { }
     try { const r = await fetch(`${API_URL}/coupons`, { headers }); const d = await r.json(); if (d.success) setCoupons(d.coupons || []); } catch { }
@@ -255,6 +285,17 @@ export default function AdminDashboard() {
       // Push a new state when modal opens
       window.history.pushState(null, '', window.location.href);
 
+      // Initialize menu location fields when modal opens
+      if (menuModal.data?.latitude || menuModal.data?.longitude) {
+        setMenuLatitude(String(menuModal.data.latitude || ''));
+        setMenuLongitude(String(menuModal.data.longitude || ''));
+        setMenuGeoLimit(String(menuModal.data.geoLimit || ''));
+      } else {
+        setMenuLatitude('');
+        setMenuLongitude('');
+        setMenuGeoLimit('');
+      }
+
       document.addEventListener('keydown', handleKeyDown);
       window.addEventListener('beforeunload', handleBeforeUnload);
       window.addEventListener('popstate', handlePopState);
@@ -279,7 +320,14 @@ export default function AdminDashboard() {
   const saveHomestyle = async () => {
     if (hsVideos.length === 0) { alert('At least one video required'); return; }
     setHsSaving(true);
-    const payload = { videoLinks: hsVideos, substituteVideoLinks: homestyle?.substituteVideoLinks || [], bestseller: homestyle?.bestseller || [], categories: homestyle?.categories || [] };
+    const payload = {
+      videoLinks: hsVideos,
+      substituteVideoLinks: homestyle?.substituteVideoLinks || [],
+      bestseller: homestyle?.bestseller || [],
+      categories: homestyle?.categories || [],
+      scheduleBannerImages: hsScheduleBannerImages,
+      scheduleSectionImages: hsScheduleSectionImages
+    };
     const res = await fetch(`${API_URL}/homestyles`, { method: 'POST', headers: { ...headers, 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
     const data = await res.json(); setHsSaving(false);
     if (data.success) { setHomestyle(data.data); alert('Saved!'); } else alert(data.error || 'Failed');
@@ -397,31 +445,40 @@ export default function AdminDashboard() {
     setLoading(false);
   };
 
-  const saveMenu = async (event: any, isDraftParam?: boolean) => {
+  const saveMenu = async (event: any) => {
     if (event && event.preventDefault) event.preventDefault();
     const form = event.currentTarget.tagName === 'FORM' ? event.currentTarget : document.getElementById('menu-form');
     if (!form) return;
 
-    // Skip HTML validation for drafts, but enforce it for live
-    if (!isDraftParam) {
-      if (!(form as HTMLFormElement).checkValidity()) {
-        (form as HTMLFormElement).reportValidity();
-        return;
-      }
-    }
-
     setSaving(true);
     const fd = new FormData(form as HTMLFormElement);
 
+    // Decide cloudKitchen: prefer explicit form value, then existing item value, then kitchen-owner's kitchen
+    const fdCloudKitchen = fd.get('cloudKitchen');
+    let cloudKitchenValue: any = null;
+    if (fdCloudKitchen) cloudKitchenValue = fdCloudKitchen;
+    else if (menuModal.data?.cloudKitchen) cloudKitchenValue = (menuModal.data?.cloudKitchen as any)?._id || menuModal.data?.cloudKitchen;
+    else if (user?.role === 'kitchen-owner') cloudKitchenValue = (user as any).kitchenId || (user as any).assignedKitchen || null;
+
+    const mealTypes = fd.getAll ? fd.getAll('mealTypes') : [];
+    const mealType = (fd.get('mealType') as any) || (mealTypes && mealTypes.length > 0 ? mealTypes[0] : null);
+
     const body: any = {
-      name: fd.get('title'),
-      description: fd.get('description'),
-      category: fd.get('category'),
-      price: Number(fd.get('price')),
+      name: fd.get('title') || `Menu Item ${new Date().getTime()}`,
+      description: fd.get('description') || '',
+      category: selectedCategory || fd.get('category') || 'regular',
+      price: sellingPrice || menuModal.data?.price || 0,
+      kitchenEarning: purchasePrice || menuModal.data?.kitchenEarning || 0,
       image: imgPreview || fd.get('imageUrl'),
       isVeg: true,
-      cloudKitchen: fd.get('cloudKitchen') || null,
-      isDraft: isDraftParam ?? menuModal.data?.isDraft ?? false
+      isInstant: fd.get('isInstant') === 'true',
+      isSpecial: fd.get('isSpecial') === 'true',
+      cloudKitchen: cloudKitchenValue || null,
+      mealType: mealType || null,
+      mealTypes: mealTypes || [],
+      latitude: menuLatitude ? Number(menuLatitude) : null,
+      longitude: menuLongitude ? Number(menuLongitude) : null,
+      geoLimit: menuGeoLimit ? Number(menuGeoLimit) : null,
     };
 
     console.log('Saving menu with data:', body);
@@ -438,31 +495,41 @@ export default function AdminDashboard() {
       setMenuModal({ open: false, data: null });
       setImgPreview('');
       setMenuFormDirty(false);
-      localStorage.removeItem('menuDraft');
-
-      // Force delete backend ephemeral draft and wait for it
-      try {
-        await fetch(`${API_URL}/admin/draft/menu_item`, { method: 'DELETE', headers });
-      } catch (e) { }
-
+      setSelectedCategory('regular');
+      setSellingPrice(0);
+      setPurchasePrice(0);
       setIsGenerateDisabled(false);
+      setMenuLatitude('');
+      setMenuLongitude('');
+      setMenuGeoLimit('');
       fetchAll();
     } else {
       alert(data.error || 'Failed to save menu item');
     }
   };
 
-  // Helper to save draft to DB
-  const saveDraftToDB = async (formData: any) => {
-    try {
-      await fetch(`${API_URL}/admin/draft`, {
-        method: 'POST',
-        headers: { ...headers, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ type: 'menu_item', data: formData })
-      });
-    } catch (e) {
-      console.error('Draft save failed', e);
+  // Capture current location for menu item
+  const handleCaptureMenuLocation = async () => {
+    if (!navigator.geolocation) {
+      alert('Geolocation not supported');
+      return;
     }
+    setLocatingMenu(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setMenuLatitude(String(pos.coords.latitude.toFixed(6)));
+        setMenuLongitude(String(pos.coords.longitude.toFixed(6)));
+        setMenuFormDirty(true);
+        console.log('✅ Menu location captured:', pos.coords.latitude, pos.coords.longitude);
+        setLocatingMenu(false);
+      },
+      (err) => {
+        console.error('❌ Location error:', err);
+        alert('Failed to get location: ' + err.message);
+        setLocatingMenu(false);
+      },
+      { timeout: 10000, enableHighAccuracy: true }
+    );
   };
 
   const generateDescriptionWithAI = async (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -493,13 +560,9 @@ export default function AdminDashboard() {
         setIsGenerateDisabled(true);
         setMenuFormDirty(true);
 
-        // Auto save to draft (Local & DB)
+        // mark form dirty when description is generated
         if (!menuModal.data) {
-          const fd = new FormData(form as HTMLFormElement);
-          const draft = Object.fromEntries(fd.entries());
-          if (imgPreview) draft.imageUrl = imgPreview;
-          localStorage.setItem('menuDraft', JSON.stringify(draft));
-          saveDraftToDB(draft);
+          setMenuFormDirty(true);
         }
       }
     } catch (err: any) {
@@ -509,66 +572,7 @@ export default function AdminDashboard() {
     }
   };
 
-  useEffect(() => {
-    const loadDraft = async () => {
-      if (menuModal.open && !menuModal.data && !draftLoaded) {
-        let draft: any = null;
-
-        // 1. Try Backend first
-        try {
-          const res = await fetch(`${API_URL}/admin/draft/menu_item`, { headers });
-          const resData = await res.json();
-          if (resData.success && resData.draft) {
-            draft = resData.draft.data;
-          }
-        } catch (e) { }
-
-        // 2. Fallback to LocalStorage
-        if (!draft) {
-          const draftStr = localStorage.getItem('menuDraft');
-          if (draftStr) draft = JSON.parse(draftStr);
-        }
-
-        if (draft) {
-          try {
-            const form = document.querySelector('form#menu-form') as HTMLFormElement;
-            if (form) {
-              let hasDesc = false;
-              Object.keys(draft).forEach(key => {
-                const input = form.elements.namedItem(key);
-                if (input && input instanceof HTMLInputElement) {
-                  if (input.type === 'checkbox') {
-                    input.checked = draft[key] === 'on' || draft[key] === true;
-                  } else if (input.type === 'radio') {
-                    if (input.value === draft[key]) input.checked = true;
-                  } else {
-                    input.value = draft[key];
-                  }
-                } else if (input && input instanceof HTMLTextAreaElement) {
-                  input.value = draft[key];
-                  if (key === 'description' && draft[key]?.trim()) hasDesc = true;
-                } else if (input && input instanceof HTMLSelectElement) {
-                  input.value = draft[key];
-                }
-              });
-              setIsGenerateDisabled(hasDesc);
-              if (draft.imageUrl) {
-                setImgPreview(draft.imageUrl);
-              }
-            }
-          } catch (e) { }
-        }
-        setDraftLoaded(true);
-      }
-    };
-
-    loadDraft();
-
-    if (!menuModal.open) {
-      setDraftLoaded(false);
-      setIsGenerateDisabled(false);
-    }
-  }, [menuModal.open, menuModal.data, draftLoaded, headers]);
+  // draft loading removed
 
   const isKitchenOwner = user?.role === 'kitchen-owner';
   const isAdmin = user?.role === 'admin';
@@ -582,6 +586,7 @@ export default function AdminDashboard() {
     { id: 'orders', label: 'Orders', icon: ShoppingBag, count: orders.length },
     { id: 'menu', label: 'Menu', icon: UtensilsCrossed, count: menuItems.length },
     { id: 'kitchens', label: 'Kitchens', icon: Store, count: kitchens.length },
+    { id: 'settings', label: 'Settings', icon: Tag },
     { id: 'stats', label: 'Analytics', icon: BarChart2 },
     { id: 'earnings', label: 'Earnings', icon: CreditCard },
     { id: 'payouts', label: 'Payouts', icon: CreditCard },
@@ -604,7 +609,7 @@ export default function AdminDashboard() {
     setShowMoreMenu(false);
   };
 
-  const inputCls = 'w-full border border-slate-200 rounded-full px-6 py-3 text-sm focus:outline-none focus:border-orange-500 focus:ring-4 focus:ring-orange-100 transition bg-white/50 backdrop-blur-sm';
+  const inputCls = 'w-full border border-black rounded-[1rem] px-6 py-3 text-sm focus:outline-none focus:border-orange-500 focus:ring-4 focus:ring-orange-100 transition bg-white/50 backdrop-blur-sm';
 
   if (error) return (
     <div className="min-h-screen flex items-center justify-center bg-[#fcfcfc]">
@@ -688,12 +693,12 @@ export default function AdminDashboard() {
           <div className="flex items-center gap-2">
             {/* Live User Count via WebSocket - Front App Users */}
             <div className={`hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold transition-all ${isConnected
-                ? 'bg-green-50 border border-green-200 text-green-700'
-                : 'bg-gray-50 border border-gray-200 text-gray-500'
+              ? 'bg-green-50 border border-green-200 text-green-700'
+              : 'bg-gray-50 border border-gray-200 text-gray-500'
               }`} title={`Live users in front app (${isConnected ? 'connected' : 'disconnected'})`}>
               <div className={`w-2 h-2 rounded-full ${isConnected
-                  ? 'bg-green-500 animate-pulse'
-                  : 'bg-gray-400'
+                ? 'bg-green-500 animate-pulse'
+                : 'bg-gray-400'
                 }`} />
               <span className="tabular-nums">{liveCount}</span>
               <span className="text-[10px] uppercase tracking-wider">Live</span>
@@ -706,16 +711,7 @@ export default function AdminDashboard() {
             >
               <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
             </button>
-            <button
-              onClick={() => setTab('notifications')}
-              title="Notifications"
-              className="relative w-9 h-9 flex items-center justify-center rounded-md border border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
-            >
-              <Bell className="w-4 h-4" />
-              {recentNotifications.length > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-red-600 border-2 border-white rounded-full" />
-              )}
-            </button>
+            <AdminNotifications />
             <div className="relative">
               <button
                 onClick={() => setShowProfileMenu(!showProfileMenu)}
@@ -785,10 +781,13 @@ export default function AdminDashboard() {
                 <OrdersTab orders={orders} search={orderSearch} setSearch={setOrderSearch} dateFilter={dateFilter} setDateFilter={setDateFilter} deliveryPartners={deliveryPartners} kitchens={kitchens} users={users} {...commonProps} />
               )}
               {tab === 'menu' && (
-                <MenuTab menuItems={menuItems} search={search} setSearch={setSearch} expandedRow={expandedRow} setExpandedRow={setExpandedRow} setMenuModal={setMenuModal} setImgPreview={setImgPreview} kitchens={kitchens} {...commonProps} />
+                <MenuTab menuItems={menuItems} search={search} setSearch={setSearch} expandedRow={expandedRow} setExpandedRow={setExpandedRow} setMenuModal={setMenuModal} setImgPreview={setImgPreview} kitchens={kitchens} setSelectedCategory={setSelectedCategory} setSellingPrice={setSellingPrice} setPurchasePrice={setPurchasePrice} categories={categories} {...commonProps} />
               )}
               {tab === 'kitchens' && isAdmin && (
                 <KitchensTab kitchens={kitchens} menuItems={menuItems} users={users} kitchenOwners={kitchenOwners} setKitchenModal={setKitchenModal} {...commonProps} />
+              )}
+              {tab === 'settings' && isAdmin && (
+                <SettingsTab categories={categories} {...commonProps} />
               )}
               {tab === 'subscriptions' && isAdmin && (
                 <SubscriptionsTab subscriptions={subscriptions} expandedRow={expandedRow} setExpandedRow={setExpandedRow} {...commonProps} />
@@ -803,7 +802,23 @@ export default function AdminDashboard() {
                 <LegalTab legal={legal} setLegal={setLegal} legalSaving={legalSaving} setLegalSaving={setLegalSaving} {...commonProps} />
               )}
               {tab === 'homestyles' && isAdmin && (
-                <HomestyleTab hsVideos={hsVideos} setHsVideos={setHsVideos} hsVideoUploading={hsVideoUploading} hsSaving={hsSaving} saveHomestyle={saveHomestyle} uploadVideo={uploadVideo} />
+                <HomestyleTab
+                  hsVideos={hsVideos}
+                  setHsVideos={setHsVideos}
+                  hsVideoUploading={hsVideoUploading}
+                  hsSaving={hsSaving}
+                  saveHomestyle={saveHomestyle}
+                  uploadVideo={uploadVideo}
+                  hsScheduleBannerImages={hsScheduleBannerImages}
+                  setHsScheduleBannerImages={setHsScheduleBannerImages}
+                  hsScheduleBannerUploading={hsScheduleBannerUploading}
+                  setHsScheduleBannerUploading={setHsScheduleBannerUploading}
+                  hsScheduleSectionImages={hsScheduleSectionImages}
+                  setHsScheduleSectionImages={setHsScheduleSectionImages}
+                  hsSectionUploading={hsSectionUploading}
+                  setHsSectionUploading={setHsSectionUploading}
+                  uploadImage={uploadImage}
+                />
               )}
               {tab === 'coupons' && isAdmin && (
                 <CouponsTab coupons={coupons} userPerformance={userPerformance} setCouponModal={setCouponModal} performanceDateFrom={performanceDateFrom} setPerformanceDateFrom={setPerformanceDateFrom} performanceDateTo={performanceDateTo} setPerformanceDateTo={setPerformanceDateTo} {...commonProps} />
@@ -981,8 +996,6 @@ export default function AdminDashboard() {
           }
         }}>
           <div className="bg-white rounded-[1rem] w-full max-w-2xl p-4 my-4 shadow-2xl animate-in zoom-in-95 duration-300">
-
-
             <form
               id="menu-form"
               noValidate
@@ -990,21 +1003,7 @@ export default function AdminDashboard() {
               onChange={(e) => {
                 const descTextarea = e.currentTarget.querySelector('textarea[name="description"]') as HTMLTextAreaElement;
                 setIsGenerateDisabled(!!descTextarea?.value.trim());
-
-                if (!menuModal.data) {
-                  const formNode = e.currentTarget as HTMLFormElement;
-                  const fd = new FormData(formNode);
-                  const draft = Object.fromEntries(fd.entries());
-                  if (imgPreview) draft.imageUrl = imgPreview;
-
-                  localStorage.setItem('menuDraft', JSON.stringify(draft));
-
-                  // Auto save to DB (Debounced internally by browser/react or just fire and forget)
-                  // For better UX, we can use a small timeout to avoid spamming
-                  const timer = (window as any)._draftTimer;
-                  if (timer) clearTimeout(timer);
-                  (window as any)._draftTimer = setTimeout(() => saveDraftToDB(draft), 1000);
-                }
+                setMenuFormDirty(true);
               }}
               className="space-y-2 max-h-[70vh] overflow-y-auto pr-4"
             >
@@ -1024,54 +1023,136 @@ export default function AdminDashboard() {
               </div>
 
               <div className="space-y-2">
-                <div className="flex items-center justify-between px-4">
-                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Basic Information</p>
-                  <button
-                    type="button"
-                    onClick={generateDescriptionWithAI}
-                    disabled={isGeneratingDesc || isGenerateDisabled}
-                    className={`text-[10px] font-bold px-2 py-1 rounded-full transition ${isGeneratingDesc || isGenerateDisabled ? "text-slate-400 bg-slate-100 cursor-not-allowed" : "text-orange-500 hover:text-orange-600 bg-orange-50"}`}
-                  >
-                    <span className="flex items-center justify-center gap-2">
-                      {isGeneratingDesc ? 'Generating...' : <><Sparkles className="w-4 h-4" /> Auto Generate</>}
-                    </span>
-                  </button>
+                <textarea name="description" defaultValue={menuModal.data?.description || ''} placeholder="Menu Description (Optional)" rows={3} className={`${inputCls} resize-none`} />
+              </div>
+
+              {/* Instant & Today's Special Checkboxes - Only for Admin */}
+              {isAdmin && (
+                <div className="pt-2">
+                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-4 mb-3">Menu Flags</p>
+                  <div className="flex gap-4 px-4">
+                    <label className="inline-flex items-center gap-2 text-sm">
+                      <input type="checkbox" name="isInstant" value="true" defaultChecked={menuModal.data?.isInstant} />
+                      <span>Instant</span>
+                    </label>
+                    <label className="inline-flex items-center gap-2 text-sm">
+                      <input type="checkbox" name="isSpecial" value="true" defaultChecked={menuModal.data?.isSpecial} />
+                      <span>Today's Special</span>
+                    </label>
+                  </div>
                 </div>
-                <input name="title" defaultValue={menuModal.data?.name || ''} placeholder="Menu Title" className={inputCls} required />
-                <textarea name="description" defaultValue={menuModal.data?.description || ''} placeholder="Menu Description" rows={3} className={`${inputCls} resize-none`} required />
+              )}
+
+              {/* Meal type selection for kitchen owners (Lunch / Dinner) */}
+              <div className="pt-2">
+                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-4 mb-2">Meal Types</p>
+                <div className="flex gap-3 px-4">
+                  <label className="inline-flex items-center gap-2 text-sm">
+                    <input type="checkbox" name="mealTypes" value="lunch" defaultChecked={menuModal.data?.mealTypes?.includes?.('lunch')} />
+                    <span>Lunch</span>
+                  </label>
+                  <label className="inline-flex items-center gap-2 text-sm">
+                    <input type="checkbox" name="mealTypes" value="dinner" defaultChecked={menuModal.data?.mealTypes?.includes?.('dinner')} />
+                    <span>Dinner</span>
+                  </label>
+                </div>
               </div>
 
               <div className="space-y-2">
                 <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-4">Category Selection</p>
-                <select name="category" defaultValue={menuModal.data?.category || 'regular'} className={inputCls} required onChange={(e) => {
-                  const priceInput = document.querySelector('input[name="price"]') as HTMLInputElement;
-                  if (priceInput) {
-                    if (e.target.value === 'regular') {
-                      priceInput.value = '100';
-                    } else if (e.target.value === 'gold') {
-                      priceInput.value = '120';
-                    }
+                <select
+                  value={selectedCategory}
+                  onChange={(e) => {
+                    const categoryName = e.target.value;
+                    setSelectedCategory(categoryName);
                     setMenuFormDirty(true);
-                  }
-                }}>
-                  <option value="regular">Regular</option>
-                  <option value="gold">Gold</option>
+
+                    // Find category and update price
+                    const selectedCat = categories?.find((c: any) => c.name === categoryName);
+                    if (selectedCat) {
+                      setSellingPrice(selectedCat.sellPrice || 0);
+                      setPurchasePrice(selectedCat.purchasePrice || 0);
+                      console.log('Category changed to:', categoryName, 'Price:', selectedCat.sellPrice);
+                    }
+                  }}
+                  className={inputCls}
+                >
+                  {(categories && categories.length > 0) ? (
+                    (categories || []).map((c: any) => (
+                      <option key={c._id} value={c.name}>{c.name}</option>
+                    ))
+                  ) : (
+                    <>
+                      <option value="regular">Regular</option>
+                      <option value="gold">Gold</option>
+                    </>
+                  )}
                 </select>
               </div>
 
-              <div className="space-y-2">
-                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-4">Price</p>
-                <input
-                  name="price"
-                  defaultValue={menuModal.data?.price || (menuModal.data?.category === 'gold' ? '120' : '100')}
-                  placeholder="Price (₹)"
-                  type="number"
-                  step="0.01"
-                  className={inputCls}
-                  required
-                  readOnly
-                />
-              </div>
+              {/* Location Settings for Menu Item - Admin Only */}
+              {isAdmin && (
+                <>
+                  <hr className="my-3" />
+                  <h4 className="text-sm font-bold text-gray-700 px-4">📍 Delivery Location Settings (Optional)</h4>
+
+                  <div className="px-4">
+                    <label className="block text-xs font-bold mb-2">Set Menu Item Location</label>
+                    <button
+                      type="button"
+                      onClick={handleCaptureMenuLocation}
+                      disabled={locatingMenu}
+                      className="w-full px-4 py-2 bg-blue-500 text-white rounded-lg font-bold text-sm hover:bg-blue-600 disabled:opacity-70"
+                    >
+                      {locatingMenu ? '📍 Getting location...' : '📍 Capture Current Location'}
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 px-4">
+                    <div>
+                      <label className="block text-xs font-bold mb-1">Latitude</label>
+                      <input
+                        type="number"
+                        step="0.000001"
+                        value={menuLatitude}
+                        onChange={e => { setMenuLatitude(e.target.value); setMenuFormDirty(true); }}
+                        placeholder="28.6139"
+                        className="w-full px-3 py-2 border rounded-lg text-xs"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold mb-1">Longitude</label>
+                      <input
+                        type="number"
+                        step="0.000001"
+                        value={menuLongitude}
+                        onChange={e => { setMenuLongitude(e.target.value); setMenuFormDirty(true); }}
+                        placeholder="77.2090"
+                        className="w-full px-3 py-2 border rounded-lg text-xs"
+                      />
+                    </div>
+                  </div>
+
+                  {menuLatitude && menuLongitude && (
+                    <div className="bg-green-50 border border-green-200 rounded-lg p-3 mx-4">
+                      <p className="text-xs font-bold text-green-700">✅ Location set</p>
+                      <p className="text-xs text-green-600 mt-1">{menuLatitude}, {menuLongitude}</p>
+                    </div>
+                  )}
+
+                  <div className="px-4">
+                    <label className="block text-xs font-bold mb-1">Geo-Limit (Delivery Radius in meters)</label>
+                    <input
+                      type="number"
+                      value={menuGeoLimit}
+                      onChange={e => { setMenuGeoLimit(e.target.value); setMenuFormDirty(true); }}
+                      placeholder="5000"
+                      className="w-full px-3 py-2 border rounded-lg"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">Current: {menuGeoLimit ? `${(Number(menuGeoLimit) / 1000).toFixed(1)}km` : 'Not set'}</p>
+                  </div>
+                </>
+              )}
 
               <div className="flex gap-4 pt-6 sticky bottom-0 bg-white">
                 <button
@@ -1083,16 +1164,7 @@ export default function AdminDashboard() {
                 </button>
                 <div className="flex-[2] flex gap-2">
                   <button
-                    type="button"
-                    onClick={(e) => saveMenu(e, true)}
-                    disabled={saving || imgUploading}
-                    className="flex-1 py-4 bg-orange-50 text-orange-600 border border-orange-100 rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-orange-100 transition disabled:opacity-50"
-                  >
-                    {saving ? 'Saving...' : 'Draft'}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={(e) => saveMenu(e, false)}
+                    type="submit"
                     disabled={saving || imgUploading}
                     className="flex-2 py-4 bg-slate-900 text-white rounded-full text-[10px] font-black uppercase tracking-widest shadow-xl shadow-slate-200 transition disabled:opacity-50 px-8"
                   >
@@ -1140,12 +1212,15 @@ export default function AdminDashboard() {
 function OwnerProfileModal({ isOpen, onClose, API_URL, headers, user, inputCls }: any) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [locating, setLocating] = useState(false);
   const [data, setData] = useState({
     kitchenName: '',
     address: '',
     ownerName: '',
     phone: '',
-    email: ''
+    email: '',
+    latitude: '',
+    longitude: ''
   });
 
   useEffect(() => {
@@ -1165,13 +1240,42 @@ function OwnerProfileModal({ isOpen, onClose, API_URL, headers, user, inputCls }
           address: k.address?.fullAddress || k.address?.street || '',
           ownerName: k.ownerName || k.owner?.name || user?.name || '',
           phone: k.ownerPhone || k.owner?.phone || user?.phone || '',
-          email: k.ownerEmail || k.owner?.email || user?.email || ''
+          email: k.ownerEmail || k.owner?.email || user?.email || '',
+          latitude: k.location?.coordinates?.[1] || '',
+          longitude: k.location?.coordinates?.[0] || ''
         });
       }
     } catch (e) {
       console.error(e);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSetLocation = async () => {
+    setLocating(true);
+    try {
+      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 0
+        });
+      });
+
+      const { latitude, longitude } = position.coords;
+      setData(p => ({
+        ...p,
+        latitude: latitude.toString(),
+        longitude: longitude.toString()
+      }));
+
+      alert(`✅ Location captured!\nLatitude: ${latitude.toFixed(6)}\nLongitude: ${longitude.toFixed(6)}`);
+    } catch (error) {
+      console.error('Error getting location:', error);
+      alert('❌ Failed to get location. Please enable location permission in your browser.');
+    } finally {
+      setLocating(false);
     }
   };
 
@@ -1188,7 +1292,11 @@ function OwnerProfileModal({ isOpen, onClose, API_URL, headers, user, inputCls }
           ownerName: data.ownerName,
           ownerPhone: data.phone,
           ownerEmail: data.email,
-          address: { street: data.address, fullAddress: data.address }
+          address: { street: data.address, fullAddress: data.address },
+          location: data.latitude && data.longitude ? {
+            type: 'Point',
+            coordinates: [parseFloat(data.longitude), parseFloat(data.latitude)]
+          } : undefined
         })
       });
 
@@ -1250,6 +1358,33 @@ function OwnerProfileModal({ isOpen, onClose, API_URL, headers, user, inputCls }
             <div className="space-y-1">
               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-4">Owner Email</label>
               <input value={data.email} onChange={e => setData(p => ({ ...p, email: e.target.value }))} required placeholder="Email Address" type="email" className={inputCls} />
+            </div>
+
+            {/* Location Section */}
+            <div className="space-y-2 pt-2 border-t border-slate-200">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-4">Kitchen Location</label>
+              {data.latitude && data.longitude ? (
+                <div className="px-4 py-2 bg-green-50 border border-green-200 rounded-lg">
+                  <p className="text-xs font-semibold text-green-700">✅ Location Set</p>
+                  <p className="text-[10px] text-green-600 mt-1">
+                    Latitude: {parseFloat(data.latitude).toFixed(6)}<br />
+                    Longitude: {parseFloat(data.longitude).toFixed(6)}
+                  </p>
+                </div>
+              ) : (
+                <div className="px-4 py-2 bg-amber-50 border border-amber-200 rounded-lg">
+                  <p className="text-[10px] text-amber-700">📍 No location set</p>
+                </div>
+              )}
+              <button
+                type="button"
+                onClick={handleSetLocation}
+                disabled={locating}
+                className="w-full py-3 bg-blue-500 text-white rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-blue-600 transition disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {locating ? <Loader2 className="w-3 h-3 animate-spin" /> : <MapPin className="w-3 h-3" />}
+                {locating ? 'Capturing Location…' : 'Set Location'}
+              </button>
             </div>
 
             <div className="flex gap-3 pt-4">

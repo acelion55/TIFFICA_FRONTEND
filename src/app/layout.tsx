@@ -11,6 +11,7 @@ import CouponPopup from "@/components/CouponPopup";
 import RoleRedirect from "@/components/role-redirect";
 import CapacitorInit from "@/components/capacitor-init";
 import Navbar from "@/components/navbar";
+import CartBar from "@/components/CartBar";
 import WalletBar from "@/components/wallet-bar";
 import { AppUpdateNotification } from "@/components/AppUpdateNotification";
 import ActivityTracker from "@/components/ActivityTracker";
@@ -42,6 +43,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                     <ActivityTracker />
                     <WalletBar />
                     {children}
+                    <CartBar />
                     <Navbar />
                     <LocationModal />
                     <CouponPopup />
