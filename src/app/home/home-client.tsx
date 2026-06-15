@@ -21,13 +21,13 @@ import { API_URL } from '@/config/api';
 const FALLBACK_IMG = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&auto=format&fit=crop';
 const FALLBACK_VIDEO = 'https://assets.mixkit.co/videos/preview/mixkit-fresh-vegetables-being-prepared-for-a-salad-40432-large.mp4';
 const CATEGORIES: { id: string; label: string; Icon: LucideIcon }[] = [
-  { id: 'All',       label: 'All',        Icon: LayoutGrid },
-  { id: 'Under79',   label: 'Under ₹79',  Icon: IndianRupee },
-  { id: 'Under99',   label: 'Under ₹99',  Icon: Tag },
-  { id: 'Breakfast', label: 'Breakfast',  Icon: Coffee },
-  { id: 'Lunch',     label: 'Lunch',      Icon: UtensilsCrossed },
-  { id: 'Dinner',    label: 'Dinner',     Icon: Moon },
-  { id: 'Snack',     label: 'Snack',      Icon: Sandwich },
+  { id: 'All', label: 'All', Icon: LayoutGrid },
+  { id: 'Under79', label: 'Under ₹79', Icon: IndianRupee },
+  { id: 'Under99', label: 'Under ₹99', Icon: Tag },
+  { id: 'Breakfast', label: 'Breakfast', Icon: Coffee },
+  { id: 'Lunch', label: 'Lunch', Icon: UtensilsCrossed },
+  { id: 'Dinner', label: 'Dinner', Icon: Moon },
+  { id: 'Snack', label: 'Snack', Icon: Sandwich },
 ];
 
 interface MenuItem {
@@ -51,9 +51,9 @@ function getGreeting(name?: string) {
   let Icon = Sunrise;
   let greeting = 'Good Morning';
   let color = 'text-amber-300';
-  if (h >= 12 && h < 17) { Icon = Sun;    greeting = 'Good Afternoon'; color = 'text-yellow-300'; }
-  else if (h >= 17 && h < 21) { Icon = Sunset; greeting = 'Good Evening';   color = 'text-orange-300'; }
-  else if (h >= 21 || h < 5)  { Icon = Moon;   greeting = 'Good Night';     color = 'text-blue-300'; }
+  if (h >= 12 && h < 17) { Icon = Sun; greeting = 'Good Afternoon'; color = 'text-yellow-300'; }
+  else if (h >= 17 && h < 21) { Icon = Sunset; greeting = 'Good Evening'; color = 'text-orange-300'; }
+  else if (h >= 21 || h < 5) { Icon = Moon; greeting = 'Good Night'; color = 'text-blue-300'; }
   return { Icon, greeting, color, firstName: name?.split(' ')[0] || '' };
 }
 
@@ -63,12 +63,12 @@ export default function HomeClient() {
   const { unreadCount } = useNotifications();
 
   const router = useRouter();
-  const [items, setItems]             = useState<MenuItem[]>([]);
+  const [items, setItems] = useState<MenuItem[]>([]);
   const [todaySpecial, setTodaySpecial] = useState<MenuItem[]>([]);
-  const [activeCat, setActiveCat]     = useState('All');
-  const [loading, setLoading]         = useState(true);
-  const [videoUrl, setVideoUrl]       = useState(FALLBACK_VIDEO);
-  const [greeting, setGreeting]       = useState(() => getGreeting());
+  const [activeCat, setActiveCat] = useState('All');
+  const [loading, setLoading] = useState(true);
+  const [videoUrl, setVideoUrl] = useState(FALLBACK_VIDEO);
+  const [greeting, setGreeting] = useState(() => getGreeting());
 
   // Update greeting every minute
   useEffect(() => {
@@ -85,7 +85,7 @@ export default function HomeClient() {
         const links: string[] = d?.data?.videoLinks || [];
         if (links.length > 0) setVideoUrl(links[0]);
       })
-      .catch(() => {});
+      .catch(() => { });
   }, []);
 
   // Fetch menu
@@ -95,19 +95,19 @@ export default function HomeClient() {
     const headers = { Authorization: `Bearer ${token}` };
     try {
       // Always use location-based endpoints if location is set
-      const menuUrl    = locationSet ? `${API_URL}/menu/by-location` : `${API_URL}/menu`;
-      const specialUrl  = locationSet ? `${API_URL}/menu/today-special/by-location` : `${API_URL}/menu/today-special`;
-      
+      const menuUrl = locationSet ? `${API_URL}/menu/by-location` : `${API_URL}/menu`;
+      const specialUrl = locationSet ? `${API_URL}/menu/today-special/by-location` : `${API_URL}/menu/today-special`;
+
       console.log('📍 Fetching menus...');
       console.log('Location set:', locationSet);
       console.log('Menu URL:', menuUrl);
-      
+
       const [menuRes, specialRes] = await Promise.all([
-        fetch(menuUrl,   { headers }),
+        fetch(menuUrl, { headers }),
         fetch(specialUrl, { headers }),
       ]);
-      
-      if (menuRes.ok) { 
+
+      if (menuRes.ok) {
         const d = await menuRes.json();
         console.log('📦 Menu response:', d);
         const menuItems = d.items || d.menuItems || [];
@@ -116,8 +116,8 @@ export default function HomeClient() {
       } else {
         console.error('❌ Menu fetch failed:', menuRes.status, menuRes.statusText);
       }
-      
-      if (specialRes.ok) { 
+
+      if (specialRes.ok) {
         const d = await specialRes.json();
         console.log('🔥 Special response:', d);
         const specialItems = d.items || [];
@@ -139,8 +139,8 @@ export default function HomeClient() {
     if (activeCat === 'Under79') return items.filter(i => i.price < 79);
     if (activeCat === 'Under99') return items.filter(i => i.price < 99);
     // Check both mealType (old) and mealTypes (new array)
-    return items.filter(item => 
-      item.mealType === activeCat || 
+    return items.filter(item =>
+      item.mealType === activeCat ||
       item.category === activeCat ||
       (item.mealTypes && item.mealTypes.includes(activeCat))
     );
@@ -179,7 +179,7 @@ export default function HomeClient() {
                 </p>
               </div>
               <h1 className="text-3xl font-black text-white leading-tight tracking-tight drop-shadow-md">
-                What&apos;s cooking today? 
+                What&apos;s cooking today?
               </h1>
             </motion.div>
 
@@ -193,7 +193,7 @@ export default function HomeClient() {
                 <span className="flex-1 text-left text-sm font-medium text-gray-400">Search homemade dishes...</span>
                 <SlidersHorizontal className="text-orange-500 shrink-0" size={18} />
               </button>
-              
+
               <button
                 onClick={() => router.push('/notifications')}
                 className="w-12 h-12 bg-white rounded-2xl shadow-xl flex items-center justify-center relative active:scale-95 transition"
@@ -217,11 +217,10 @@ export default function HomeClient() {
             <button
               key={c.id}
               onClick={() => setActiveCat(c.id)}
-              className={`whitespace-nowrap px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 flex-shrink-0 flex items-center gap-1.5 ${
-                activeCat === c.id
-                  ? 'bg-gray-900 text-white shadow-md'
-                  : 'bg-gray-100 text-gray-500'
-              }`}
+              className={`whitespace-nowrap px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 flex-shrink-0 flex items-center gap-1.5 ${activeCat === c.id
+                ? 'bg-gray-900 text-white shadow-md'
+                : 'bg-gray-100 text-gray-500'
+                }`}
             >
               <c.Icon size={16} strokeWidth={2} />
               <span>{c.label}</span>
@@ -302,8 +301,8 @@ function SpecialCard({ item }: { item: MenuItem }) {
             <span className="text-xs text-gray-400 line-through">₹{item.originalPrice}</span>
           )}
         </div>
-        <button 
-          onClick={handleAdd} 
+        <button
+          onClick={handleAdd}
           className="bg-gray-900 text-white p-2 rounded-xl hover:bg-gray-800 transition active:scale-90"
         >
           <Plus size={16} />
@@ -364,7 +363,9 @@ function MenuCard({ item, token, user }: { item: MenuItem; token: string | null;
             <span className="text-[9px] font-bold">25 min</span>
           </div>
         </div>
-        <h3 className="text-sm font-black text-gray-900 line-clamp-1 mb-3">{item.name}</h3>
+        {item.description && (
+          <p className="text-sm font-black text-gray-900 mb-0.5">{item.description}</p>
+        )}
         <div className="flex items-center justify-between">
           <div className="flex flex-col">
             <span className="text-lg font-black text-gray-900">₹{item.price}</span>

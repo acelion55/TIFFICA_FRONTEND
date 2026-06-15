@@ -59,6 +59,8 @@ export default function AdminDashboard() {
   const [hsSaving, setHsSaving] = useState(false);
   const [hsScheduleBannerImages, setHsScheduleBannerImages] = useState<string[]>([]);
   const [hsScheduleBannerUploading, setHsScheduleBannerUploading] = useState(false);
+  const [hsSubscriptionBanners, setHsSubscriptionBanners] = useState<string[]>([]);
+  const [hsSubscriptionBannerUploading, setHsSubscriptionBannerUploading] = useState(false);
   const [hsScheduleSectionImages, setHsScheduleSectionImages] = useState<any>({
     regular: '', shahiThali: '', corporateOrder: '', schoolTiffins: ''
   });
@@ -203,6 +205,7 @@ export default function AdminDashboard() {
         setHomestyle(d.data);
         setHsVideos(d.data.videoLinks || []);
         setHsScheduleBannerImages(d.data.scheduleBannerImages || []);
+        setHsSubscriptionBanners(d.data.subscriptionBanners || []);
         setHsScheduleSectionImages(d.data.scheduleSectionImages || {
           regular: '', shahiThali: '', corporateOrder: '', schoolTiffins: ''
         });
@@ -324,8 +327,9 @@ export default function AdminDashboard() {
       videoLinks: hsVideos,
       substituteVideoLinks: homestyle?.substituteVideoLinks || [],
       bestseller: homestyle?.bestseller || [],
-      categories: homestyle?.categories || [],
+      categories: categories.filter((c: any) => c.isHomestyle).map((c: any) => c._id),
       scheduleBannerImages: hsScheduleBannerImages,
+      subscriptionBanners: hsSubscriptionBanners,
       scheduleSectionImages: hsScheduleSectionImages
     };
     const res = await fetch(`${API_URL}/homestyles`, { method: 'POST', headers: { ...headers, 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
@@ -473,6 +477,7 @@ export default function AdminDashboard() {
       isVeg: true,
       isInstant: fd.get('isInstant') === 'true',
       isSpecial: fd.get('isSpecial') === 'true',
+      isSubscription: fd.get('isSubscription') === 'true',
       cloudKitchen: cloudKitchenValue || null,
       mealType: mealType || null,
       mealTypes: mealTypes || [],
@@ -813,6 +818,10 @@ export default function AdminDashboard() {
                   setHsScheduleBannerImages={setHsScheduleBannerImages}
                   hsScheduleBannerUploading={hsScheduleBannerUploading}
                   setHsScheduleBannerUploading={setHsScheduleBannerUploading}
+                  hsSubscriptionBanners={hsSubscriptionBanners}
+                  setHsSubscriptionBanners={setHsSubscriptionBanners}
+                  hsSubscriptionBannerUploading={hsSubscriptionBannerUploading}
+                  setHsSubscriptionBannerUploading={setHsSubscriptionBannerUploading}
                   hsScheduleSectionImages={hsScheduleSectionImages}
                   setHsScheduleSectionImages={setHsScheduleSectionImages}
                   hsSectionUploading={hsSectionUploading}
@@ -1038,6 +1047,10 @@ export default function AdminDashboard() {
                     <label className="inline-flex items-center gap-2 text-sm">
                       <input type="checkbox" name="isSpecial" value="true" defaultChecked={menuModal.data?.isSpecial} />
                       <span>Today's Special</span>
+                    </label>
+                    <label className="inline-flex items-center gap-2 text-sm">
+                      <input type="checkbox" name="isSubscription" value="true" defaultChecked={menuModal.data?.isSubscription} />
+                      <span>Subscription</span>
                     </label>
                   </div>
                 </div>

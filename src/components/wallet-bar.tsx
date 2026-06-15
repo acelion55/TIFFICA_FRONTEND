@@ -75,7 +75,7 @@ export default function WalletBar() {
 
             {/* Wallet pill */}
             <button
-              onClick={() => router.push('/subscriptions')}
+              onClick={() => router.push('/wallet')}
               className={`flex items-center gap-2 rounded-2xl px-3 py-2 active:scale-95 transition-all duration-300 ${
                 showBg ? 'bg-gray-100 border border-gray-200' : 'bg-white/15 border border-white/25 backdrop-blur-md'
               }`}

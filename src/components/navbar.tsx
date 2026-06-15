@@ -10,7 +10,7 @@ import { useState, useEffect } from 'react';
 const userNavItems = [
   { href: '/home',          label: 'HOME',         icon: Home },
   { href: '/schedule',      label: 'SCHEDULE',     icon: Calendar },
-  { href: '/subscriptions', label: 'SUBSCRIPTION', icon: CreditCard },
+  { href: '/subscriptions', label: 'TIFFICA',      icon: UtensilsCrossed },
   { href: '/reorder',       label: 'REORDER',      icon: RotateCcw },
 ];
 

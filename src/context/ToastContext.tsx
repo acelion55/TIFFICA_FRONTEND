@@ -58,44 +58,49 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
 
 function ToastContainer({ toasts, removeToast }: { toasts: Toast[]; removeToast: (id: string) => void }) {
   return (
-    <div className="fixed bottom-20 left-5 right-5 z-[999] space-y-2 pointer-events-none md:max-w-sm md:right-5 md:left-auto">
-      <AnimatePresence>
+    <div className="fixed top-6 right-6 z-[9999] space-y-3 pointer-events-none w-[320px] flex flex-col items-end">
+      <AnimatePresence mode="popLayout">
         {toasts.map(toast => (
           <motion.div
             key={toast.id}
-            initial={{ opacity: 0, y: 20, x: 400 }}
-            animate={{ opacity: 1, y: 0, x: 0 }}
-            exit={{ opacity: 0, y: 20, x: 400 }}
-            className={`flex items-center gap-3 px-4 py-3 rounded-2xl shadow-lg font-semibold text-sm pointer-events-auto ${
+            layout
+            initial={{ opacity: 0, y: -20, x: 20, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, x: 0, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.85, transition: { duration: 0.2 } }}
+            className={`group flex items-center gap-3 px-4 py-3.5 rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.12)] font-bold text-sm pointer-events-auto backdrop-blur-xl border border-white/40 ring-1 ring-black/5 ${
               toast.type === 'success'
-                ? 'bg-green-500 text-white'
+                ? 'bg-orange-500/90 text-white'
                 : toast.type === 'error'
-                ? 'bg-red-500 text-white'
-                : 'bg-orange-500 text-white'
+                ? 'bg-red-500/90 text-white'
+                : 'bg-white/80 text-gray-900'
             }`}
           >
-            {toast.type === 'success' && <CheckCircle className="w-5 h-5 flex-shrink-0" />}
-            {toast.type === 'error' && <AlertCircle className="w-5 h-5 flex-shrink-0" />}
-            {toast.type === 'info' && <Info className="w-5 h-5 flex-shrink-0" />}
+            <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
+              toast.type === 'success' ? 'bg-white/20' : toast.type === 'error' ? 'bg-white/20' : 'bg-gray-100'
+            }`}>
+              {toast.type === 'success' && <CheckCircle className="w-4 h-4" />}
+              {toast.type === 'error' && <AlertCircle className="w-4 h-4" />}
+              {toast.type === 'info' && <Info className="w-4 h-4" />}
+            </div>
             
-            <div className="flex-1">
+            <div className="flex-1 min-w-0 pr-2">
               {toast.action ? (
                 <button
                   onClick={toast.action.onClick}
-                  className="hover:underline font-bold"
+                  className="hover:underline text-left leading-tight"
                 >
-                  {toast.message} • {toast.action.label}
+                  {toast.message} <span className="opacity-70 font-black ml-1 uppercase text-[10px] tracking-widest">{toast.action.label}</span>
                 </button>
               ) : (
-                <p>{toast.message}</p>
+                <p className="leading-tight truncate">{toast.message}</p>
               )}
             </div>
 
             <button
               onClick={() => removeToast(toast.id)}
-              className="flex-shrink-0 hover:opacity-75 transition"
+              className="p-1 rounded-full hover:bg-black/10 transition-colors opacity-0 group-hover:opacity-100"
             >
-              <X className="w-4 h-4" />
+              <X className="w-3.5 h-3.5" />
             </button>
           </motion.div>
         ))}

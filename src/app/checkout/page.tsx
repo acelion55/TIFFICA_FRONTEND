@@ -38,10 +38,10 @@ export default function CheckoutPage() {
   const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
 
   useEffect(() => {
-    if (cart.length === 0) {
+    if (cart.length === 0 && !isOrderSuccess) {
       router.push('/home');
     }
-  }, [cart.length, router]);
+  }, [cart.length, router, isOrderSuccess]);
 
   useEffect(() => {
     if (!token) return;
@@ -53,6 +53,9 @@ export default function CheckoutPage() {
         const def = addrs.find((a: any) => a.isDefault) || addrs[0];
         setSelectedAddress(def);
         setWalletBalance(d.walletBalance || 0);
+        if (d.walletBalance > 0) {
+          setUseWallet(true);
+        }
       })
       .catch(() => { });
   }, [token]);
@@ -178,8 +181,10 @@ export default function CheckoutPage() {
             if (!response.ok) {
               console.error('❌ Order creation failed:', result);
               addToast(`Payment successful but order save failed: ${result.error || 'Unknown error'}`, 'error');
+              setPaying(false);
             } else {
               setIsOrderSuccess(true);
+              setPaying(false);
             }
           } catch (e) {
             console.error('❌ Order save failed:', e);
@@ -211,6 +216,7 @@ export default function CheckoutPage() {
     setPaying(true);
 
     try {
+      console.log('👛 Processing wallet payment...');
       const orderData = {
         items: cart.map(item => ({
           menuItemId: item._id,
@@ -233,23 +239,30 @@ export default function CheckoutPage() {
       });
 
       const result = await response.json();
+      console.log('👛 Wallet order response:', result);
 
       if (!response.ok) {
         addToast(result.error || 'Failed to place order using wallet', 'error');
         setPaying(false);
       } else {
+        console.log('✅ Wallet order successful!');
         setIsOrderSuccess(true);
+        setPaying(false);
+        addToast('Order placed successfully!', 'success');
         clearCart();
-        setTimeout(() => router.push('/reorder'), 2000);
+        // Redirect after a short delay to let success animation show
+        setTimeout(() => {
+          router.push('/reorder');
+        }, 3000);
       }
     } catch (e) {
-      console.error('Wallet order error:', e);
+      console.error('❌ Wallet order error:', e);
       addToast('Error placing wallet order', 'error');
       setPaying(false);
     }
   };
 
-  if (cart.length === 0) {
+  if (cart.length === 0 && !isOrderSuccess) {
     return (
       <div className="min-h-screen bg-linear-to-b from-orange-50 to-white flex items-center justify-center px-5">
         <div className="text-center">

@@ -1,333 +1,121 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
-import { gsap } from 'gsap';
-import { Wallet, Plus, CheckCircle, Zap, Shield, Loader2, TrendingUp, UtensilsCrossed, Lock, RotateCcw, CreditCard } from 'lucide-react';
-import type { LucideIcon } from 'lucide-react';
-import { openRazorpay } from '@/hooks/useRazorpay';
+import { Plus, UtensilsCrossed } from 'lucide-react';
+import { useCart } from '@/context/CartContext';
+import { useToast } from '@/context/ToastContext';
 
 const API_URL = 'https://tifficaapp-1.onrender.com/api';
 
-const PLANS = [
-  { amount: 199,  bonus: 0,   popular: false },
-  { amount: 499,  bonus: 25,  popular: true  },
-  { amount: 999,  bonus: 75,  popular: false },
-  { amount: 1999, bonus: 200, popular: false },
-];
-const QUICK = [100, 200, 500, 1000];
-
 export default function SubscriptionsPage() {
-  const { token, user, updateUser } = useAuth();
+  const { token } = useAuth();
   const router = useRouter();
-  const [balance, setBalance]       = useState(user?.walletBalance ?? 0);
-  const [recharging, setRecharging] = useState<number | null>(null);
-  const [customAmt, setCustomAmt]   = useState('');
-  const [success, setSuccess]       = useState<number | null>(null);
-  const [error, setError]           = useState('');
-
-  const balanceRef = useRef<HTMLDivElement>(null);
-  const plansRef = useRef<HTMLDivElement>(null);
+  const [subMenus, setSubMenus] = useState<any[]>([]);
+  const [banners, setBanners] = useState<string[]>([]);
+  const { addToCart } = useCart();
+  const { addToast } = useToast();
 
   useEffect(() => {
-    if (!token) { router.push('/login'); return; }
-    fetch(`${API_URL}/auth/profile`, { headers: { Authorization: `Bearer ${token}` } })
+    if (!token) return;
+
+    fetch(`${API_URL}/homestyles`)
       .then(r => r.json())
-      .then(d => setBalance(d.walletBalance ?? 0))
+      .then(d => {
+        if (d?.data?.subscriptionBanners?.length > 0) {
+          setBanners(d.data.subscriptionBanners);
+        } else {
+          setBanners([
+            'https://images.unsplash.com/photo-1504674900247-0877df9cc836?q=80&w=2070',
+            'https://images.unsplash.com/photo-1490818387583-1b5fb224fc9c?q=80&w=2070'
+          ]);
+        }
+      })
       .catch(() => {});
-  }, [token, router]);
 
-  useEffect(() => {
-    if (balanceRef.current) {
-      gsap.fromTo(balanceRef.current,
-        { scale: 0.9, opacity: 0 },
-        { scale: 1, opacity: 1, duration: 0.5, ease: 'back.out(1.5)' }
-      );
-    }
-  }, []);
-
-  useEffect(() => {
-    if (plansRef.current) {
-      const cards = plansRef.current.querySelectorAll('.plan-card');
-      gsap.fromTo(cards,
-        { opacity: 0, y: 20 },
-        { opacity: 1, y: 0, duration: 0.3, stagger: 0.08, ease: 'power2.out' }
-      );
-    }
-  }, []);
-
-  /** payAmount = Razorpay charge; walletCredit = total added to wallet (pay + bonus) */
-  const handleRecharge = async (payAmount: number, walletCredit?: number) => {
-    if (!token || recharging !== null) return;
-    const credit = walletCredit ?? payAmount;
-    const bonus = credit - payAmount;
-    setRecharging(payAmount);
-    setError('');
-
-    const description =
-      bonus > 0
-        ? `Tiffica Wallet ₹${payAmount} (+₹${bonus} bonus → ₹${credit} in wallet)`
-        : `Tiffica Wallet Recharge ₹${payAmount}`;
-
-    try {
-      await openRazorpay({
-        amount: payAmount,
-        description,
-        token,
-        userName:  user?.name,
-        userEmail: user?.email,
-        userPhone: user?.phone,
-        onSuccess: async (paymentId) => {
-          const res = await fetch(`${API_URL}/payments/wallet-credit`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-            body: JSON.stringify({
-              amount: credit,
-              payAmount,
-              bonus: bonus > 0 ? bonus : 0,
-              paymentId,
-            }),
-          });
-          if (res.ok) {
-            const d = await res.json();
-            setBalance(d.walletBalance);
-            updateUser(d.user);
-            setSuccess(credit);
-            setTimeout(() => setSuccess(null), 4000);
-          }
-          setRecharging(null);
-        },
-        onFailure: (err) => {
-          if (err !== 'dismissed') setError('Payment failed. Please try again.');
-          setRecharging(null);
-        },
-      });
-    } catch {
-      setError('Something went wrong. Please try again.');
-      setRecharging(null);
-    }
-  };
-
-  const handleCustom = () => {
-    const amt = parseInt(customAmt);
-    if (!amt || amt < 10) { setError('Minimum recharge is ₹10'); return; }
-    setCustomAmt('');
-    handleRecharge(amt);
-  };
+    fetch(`${API_URL}/menu`, { headers: { Authorization: `Bearer ${token}` } })
+      .then(r => r.json())
+      .then(d => {
+        const items = d.items || d.menuItems || [];
+        setSubMenus(items.filter((i: any) => 
+          i.isSubscription || 
+          i.category === 'Subscription' || 
+          (i.mealTypes && i.mealTypes.includes('Subscription'))
+        ));
+      })
+      .catch(() => {});
+  }, [token]);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#FAF7F5] to-orange-50/30 pb-24">
-
-      <div className="px-6 pt-20 space-y-5">
-
-        <AnimatePresence>
-          {success && (
-            <motion.div 
-              initial={{ opacity: 0, y: -20, scale: 0.9 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -20, scale: 0.9 }}
-              transition={{ duration: 0.3 }}
-              className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-3xl px-5 py-4 flex items-center gap-3 shadow-lg"
-            >
-              <motion.div
-                animate={{ rotate: [0, 360] }}
-                transition={{ duration: 0.5 }}
-              >
-                <CheckCircle className="w-6 h-6 text-green-500 flex-shrink-0" />
-              </motion.div>
-              <p className="text-green-700 font-bold text-sm">₹{success} credited to your wallet!</p>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        <AnimatePresence>
-          {error && (
-            <motion.div 
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="bg-red-50 border-2 border-red-200 rounded-3xl px-5 py-4 shadow-md"
-            >
-              <p className="text-red-600 text-sm font-bold">{error}</p>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Quick recharge */}
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="bg-white rounded-3xl p-6 shadow-lg border border-orange-100"
-        >
-          <h3 className="font-extrabold text-gray-900 text-lg mb-5 flex items-center gap-2">
-            <motion.div
-              animate={{ rotate: [0, 15, -15, 0] }}
-              transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
-            >
-              <Zap className="w-5 h-5 text-orange-500" />
-            </motion.div>
-            Quick Recharge
-          </h3>
-          <div className="grid grid-cols-4 gap-3 mb-5">
-            {QUICK.map((amt, i) => (
-              <motion.button 
-                key={amt} 
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.1 + i * 0.05 }}
-                whileHover={{ scale: 1.05, y: -2 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => handleRecharge(amt)}
-                disabled={recharging !== null}
-                className="py-3.5 rounded-2xl border-2 border-orange-200 bg-orange-50 text-orange-600 font-extrabold text-sm transition disabled:opacity-50 shadow-sm"
-              >
-                ₹{amt}
-              </motion.button>
+      <div className="px-6 pt-20 space-y-6">
+        
+        {/* Sliding Banner */}
+        {banners.length > 0 && (
+          <div className="relative w-full rounded-3xl overflow-hidden h-40 shadow-lg snap-x snap-mandatory flex overflow-x-auto scrollbar-hide shrink-0">
+            {banners.map((url, index) => (
+              <div key={index} className="w-full flex-shrink-0 snap-center h-full">
+                <img src={url} alt={`Banner ${index}`} className="w-full h-full object-cover" />
+              </div>
             ))}
           </div>
-          <div className="flex gap-3">
-            <motion.div 
-              whileFocus={{ scale: 1.02 }}
-              className="flex-1 flex items-center gap-2 bg-gray-50 border-2 border-gray-200 rounded-2xl px-4 py-3.5 focus-within:border-orange-300 transition-colors"
-            >
-              <span className="text-gray-500 font-bold text-lg">₹</span>
-              <input type="number" placeholder="Enter amount" value={customAmt}
-                onChange={e => setCustomAmt(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && handleCustom()}
-                className="flex-1 bg-transparent text-sm font-bold text-gray-800 focus:outline-none placeholder:text-gray-400"
-                min={10} />
-            </motion.div>
-            <motion.button 
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={handleCustom} 
-              disabled={!customAmt || recharging !== null}
-              className="px-6 py-3.5 bg-gradient-to-r from-orange-500 to-orange-600 text-white font-extrabold rounded-2xl disabled:opacity-50 shadow-lg shadow-orange-200"
-            >
-              <Plus className="w-5 h-5" />
-            </motion.button>
-          </div>
-        </motion.div>
+        )}
 
-        {/* Plans */}
-        <div>
-          <motion.h3 
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.2 }}
-            className="font-extrabold text-gray-900 text-lg mb-4 flex items-center gap-2"
-          >
-            <TrendingUp className="w-5 h-5 text-orange-500" />
-            Recharge Plans
-          </motion.h3>
-          <div ref={plansRef} className="space-y-4">
-            {PLANS.map((plan, index) => {
-              const walletTotal = plan.amount + plan.bonus;
-              const isLoading = recharging === plan.amount;
-              return (
-                <motion.div 
-                  key={plan.amount}
-                  whileHover={{ y: -4, boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)' }}
-                  transition={{ duration: 0.2 }}
-                  className={`plan-card bg-white rounded-3xl p-5 shadow-lg border-2 relative overflow-hidden ${
-                    plan.popular ? 'border-orange-500 bg-gradient-to-br from-white to-orange-50/30' : 'border-gray-100'
-                  }`}
-                >
-                  {plan.popular && (
-                    <motion.div 
-                      initial={{ x: 100, opacity: 0 }}
-                      animate={{ x: 0, opacity: 1 }}
-                      transition={{ delay: 0.3 + index * 0.1 }}
-                      className="absolute top-0 right-0 bg-gradient-to-r from-orange-500 to-orange-600 text-white text-[10px] font-extrabold px-4 py-1.5 rounded-bl-2xl shadow-lg"
-                    >
-                      ⭐ BEST VALUE
-                    </motion.div>
-                  )}
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="text-2xl font-extrabold text-gray-900">₹{plan.amount}</span>
-                        {plan.bonus > 0 && (
-                          <motion.span 
-                            initial={{ scale: 0 }}
-                            animate={{ scale: 1 }}
-                            transition={{ delay: 0.4 + index * 0.1, type: 'spring' }}
-                            className="bg-gradient-to-r from-green-100 to-emerald-100 text-green-700 text-xs font-extrabold px-3 py-1 rounded-full border border-green-200"
-                          >
-                            +₹{plan.bonus} bonus
-                          </motion.span>
-                        )}
+        {/* Subscription Menus */}
+        <div className="pt-2">
+           <h3 className="font-extrabold text-gray-900 text-lg mb-4 flex items-center gap-2">
+              <UtensilsCrossed className="w-5 h-5 text-orange-500" />
+              Subscription Meals
+           </h3>
+           
+           {subMenus.length === 0 ? (
+             <div className="text-center py-12 text-gray-500">
+                <p>No subscription meals available right now.</p>
+             </div>
+           ) : (
+             <div className="space-y-4">
+                {subMenus.map(item => (
+                  <motion.div 
+                    key={item._id} 
+                    whileTap={{ scale: 0.98 }}
+                    className="bg-white p-3 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4"
+                  >
+                    <img 
+                      src={item.image || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c'} 
+                      className="w-24 h-24 object-cover rounded-xl shrink-0 border border-gray-100" 
+                      alt={item.name}
+                    />
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-black text-sm text-gray-900 leading-tight mb-1">{item.name}</h4>
+                      {item.description && (
+                        <p className="text-[10px] text-gray-500 line-clamp-2 leading-snug">{item.description}</p>
+                      )}
+                      {item.isVeg !== undefined && (
+                        <span className={`inline-block mt-1 text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full ${item.isVeg ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                          {item.isVeg ? 'Veg' : 'Non-Veg'}
+                        </span>
+                      )}
+                      
+                      <div className="mt-2 flex items-center justify-between">
+                        <span className="font-black text-base text-gray-900">₹{item.price}</span>
+                        <button 
+                          onClick={() => {
+                            addToCart({ _id: item._id, name: item.name, price: item.price, image: item.image });
+                            addToast(`Added ${item.name}`, 'success');
+                          }}
+                          className="bg-orange-500 hover:bg-orange-600 text-white rounded-full p-2.5 transition shadow-sm hover:shadow active:scale-95"
+                        >
+                          <Plus className="w-4 h-4" />
+                        </button>
                       </div>
-                      <p className="text-xs text-gray-500 font-medium">
-                        {plan.bonus > 0
-                          ? `Pay ₹${plan.amount} · get ₹${walletTotal} in wallet`
-                          : 'Added directly to wallet'}
-                      </p>
                     </div>
-                    <motion.button 
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => handleRecharge(plan.amount, walletTotal)}
-                      disabled={recharging !== null}
-                      className={`px-6 py-3.5 rounded-2xl font-extrabold text-sm transition disabled:opacity-50 flex items-center gap-2 shadow-md ${
-                        plan.popular 
-                          ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-orange-200' 
-                          : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
-                      }`}
-                    >
-                      {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Recharge'}
-                    </motion.button>
-                  </div>
-                </motion.div>
-              );
-            })}
-          </div>
+                  </motion.div>
+                ))}
+             </div>
+           )}
         </div>
-
-        {/* How it works */}
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="bg-gradient-to-br from-white to-blue-50/30 rounded-3xl p-6 shadow-lg border border-blue-100"
-        >
-          <h3 className="font-extrabold text-gray-900 text-lg mb-5">How it works</h3>
-          <div className="space-y-4">
-            {([
-              { Icon: CreditCard, text: 'Recharge your wallet with any amount' },
-              { Icon: UtensilsCrossed, text: 'Use wallet balance to schedule & lock meals' },
-              { Icon: Lock, text: 'Locked meals are deducted from wallet instantly' },
-              { Icon: RotateCcw, text: 'Cancelled meals are refunded to wallet' },
-            ] as { Icon: LucideIcon; text: string }[]).map(({ Icon, text }, i) => (
-              <motion.div 
-                key={text}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.4 + i * 0.1 }}
-                whileHover={{ x: 4 }}
-                className="flex items-center gap-3 p-3 rounded-2xl hover:bg-white/50 transition-colors"
-              >
-                <div className="w-10 flex items-center justify-center text-orange-500">
-                  <Icon className="w-5 h-5" strokeWidth={2} />
-                </div>
-                <p className="text-sm text-gray-700 font-semibold">{text}</p>
-              </motion.div>
-            ))}
-          </div>
-        </motion.div>
-
-        <motion.div 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.5 }}
-          className="flex items-center gap-3 bg-gradient-to-r from-gray-50 to-gray-100 rounded-2xl px-5 py-4 border border-gray-200"
-        >
-          <Shield className="w-5 h-5 text-gray-500 flex-shrink-0" />
-          <p className="text-xs text-gray-600 font-medium">Payments secured by Razorpay. Wallet balance never expires.</p>
-        </motion.div>
       </div>
     </div>
   );

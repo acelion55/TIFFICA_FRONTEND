@@ -35,7 +35,6 @@ export default function ReorderClient() {
   const { token } = useAuth();
   const router = useRouter();
   const [orders, setOrders] = useState<any[]>([]);
-  const [schedules, setSchedules] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -43,39 +42,23 @@ export default function ReorderClient() {
     
     const fetchData = async () => {
       try {
-        // Fetch regular orders
-        const ordersRes = await fetch(`${API_URL}/orders/my-orders`, { 
-          headers: { Authorization: `Bearer ${token}` } 
-        });
-        const ordersData = await ordersRes.json();
-        console.log('📦 My orders response:', ordersData);
-        // Sort orders by creation date (latest first)
-        const sortedOrders = (ordersData.orders || []).sort((a: any, b: any) => 
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        );
-        setOrders(sortedOrders);
+        const [ordersRes, schedulesRes] = await Promise.all([
+          fetch(`${API_URL}/orders/my-orders`, { headers: { Authorization: `Bearer ${token}` } }),
+          fetch(`${API_URL}/schedule/history`, { headers: { Authorization: `Bearer ${token}` } })
+        ]);
 
-        // Fetch scheduled meals
-        console.log('🔍 Fetching schedule history...');
-        const schedulesRes = await fetch(`${API_URL}/schedule/history`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        
-        console.log('📅 Schedule response status:', schedulesRes.status);
-        
-        if (schedulesRes.ok) {
-          const schedulesData = await schedulesRes.json();
-          console.log('📅 Scheduled meals response:', schedulesData);
-          console.log('📅 Number of schedules:', schedulesData.schedules?.length || 0);
-          // Sort schedules by date (latest first)
-          const sortedSchedules = (schedulesData.schedules || []).sort((a: any, b: any) => 
-            new Date(b.date).getTime() - new Date(a.date).getTime()
-          );
-          setSchedules(sortedSchedules);
-        } else {
-          const errorText = await schedulesRes.text();
-          console.error('❌ Schedule fetch failed:', errorText);
-        }
+        const ordersData = await ordersRes.json();
+        const schedulesData = schedulesRes.ok ? await schedulesRes.json() : { schedules: [] };
+
+        // Combine both into a single history list
+        const combinedOrders = [
+          ...(ordersData.orders || []).map((o: any) => ({ ...o, type: 'order', timestamp: new Date(o.createdAt).getTime() })),
+          ...(schedulesData.schedules || []).map((s: any) => ({ ...s, type: 'schedule', timestamp: new Date(s.date).getTime() }))
+        ];
+
+        // Sort by timestamp desc (latest first)
+        combinedOrders.sort((a, b) => b.timestamp - a.timestamp);
+        setOrders(combinedOrders);
       } catch (err) {
         console.error('❌ Error fetching data:', err);
       } finally {
@@ -100,7 +83,7 @@ export default function ReorderClient() {
           <div key={i} className="h-32 bg-white rounded-2xl animate-pulse" />
         ))}
 
-        {!loading && orders.length === 0 && schedules.length === 0 && (
+        {!loading && orders.length === 0 && (
           <div className="text-center py-20">
             <RefreshCw className="w-16 h-16 text-gray-200 mx-auto mb-4" />
             <h3 className="text-lg font-bold text-gray-700">No past orders</h3>
@@ -114,174 +97,116 @@ export default function ReorderClient() {
           </div>
         )}
 
-        {!loading && (orders.length > 0 || schedules.length > 0) && (
+        {!loading && orders.length > 0 && (
           <div className="mb-3">
             <p className="text-xs font-bold text-gray-500 uppercase tracking-wide px-1">
-              {schedules.length} Scheduled Meal{schedules.length !== 1 ? 's' : ''} · {orders.length} Delivered Order{orders.length !== 1 ? 's' : ''}
+              {orders.length} Past Activity Found
             </p>
           </div>
         )}
 
-        {/* Scheduled Meals */}
-        {!loading && schedules.map(schedule => (
-          <div key={`schedule-${schedule._id}`} className="bg-white rounded-2xl shadow-sm overflow-hidden">
-            <div className="p-4">
-              {/* Header */}
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-12 h-12 rounded-2xl bg-blue-50 flex items-center justify-center flex-shrink-0">
-                  <ShoppingBag className="w-6 h-6 text-blue-500" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-bold text-gray-900">
-                    {schedule.meals?.length} meal(s) scheduled
-                  </p>
-                  <p className="text-xs text-gray-400 flex items-center gap-1">
-                    <Calendar className="w-3.5 h-3.5" />
-                    {fmt(schedule.date)}
-                  </p>
-                </div>
-                <div className="text-right flex-shrink-0">
-                  <p className="font-extrabold text-gray-900">
-                    ₹{schedule.meals?.reduce((sum: number, m: any) => sum + (m.mealPrice || m.menuItem?.price || 0), 0)}
-                  </p>
-                </div>
-              </div>
-
-              {/* Meals List */}
-              <div className="space-y-3 mb-4">
-                {schedule.meals?.map((meal: any, i: number) => {
-                  const deliveryStatus = getDeliveryStatus(schedule.date, meal.deliveryTime || '08:00');
-                  const StatusIcon = deliveryStatus.icon;
-                  
-                  return (
-                    <div key={i} className="border border-gray-100 rounded-2xl p-3">
-                      <div className="flex items-center gap-3 mb-2">
-                        <img
-                          src={meal.menuItem?.image || FALLBACK}
-                          className="w-14 h-14 rounded-xl object-cover flex-shrink-0"
-                          alt=""
-                        />
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-bold text-gray-800 truncate">
-                            {meal.menuItem?.name || 'Item'}
-                          </p>
-                          <p className="text-xs text-gray-400">
-                            {meal.mealType} · {formatTime12Hour(meal.deliveryTime || '08:00')}
-                          </p>
-                          <p className="text-sm font-bold text-gray-900 mt-0.5">
-                            ₹{meal.mealPrice || meal.menuItem?.price || 0}
-                          </p>
-                        </div>
-                      </div>
-
-                      {/* Progress Bar */}
-                      <div className="mt-3">
-                        <div className="flex items-center justify-between mb-1.5">
-                          <div className="flex items-center gap-1.5">
-                            <StatusIcon className={`w-3.5 h-3.5 text-${deliveryStatus.color}-500`} />
-                            <span className={`text-xs font-bold text-${deliveryStatus.color}-600`}>
-                              {deliveryStatus.label}
-                            </span>
-                          </div>
-                          <span className="text-xs text-gray-400">{deliveryStatus.progress}%</span>
-                        </div>
-                        <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
-                          <div 
-                            className={`h-full bg-gradient-to-r transition-all duration-500 ${
-                              deliveryStatus.color === 'green' ? 'from-green-400 to-green-500' :
-                              deliveryStatus.color === 'blue' ? 'from-blue-400 to-blue-500' :
-                              deliveryStatus.color === 'orange' ? 'from-orange-400 to-orange-500' :
-                              'from-gray-300 to-gray-400'
-                            }`}
-                            style={{ width: `${deliveryStatus.progress}%` }}
-                          />
-                        </div>
-                      </div>
+        {/* Unified History List */}
+        {!loading && orders.map(item => {
+          if (item.type === 'schedule') {
+            const schedule = item;
+            return (
+              <div key={`schedule-${schedule._id}`} className="bg-white rounded-2xl shadow-sm overflow-hidden border border-gray-100">
+                <div className="p-4">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-12 h-12 rounded-2xl bg-blue-50 flex items-center justify-center flex-shrink-0">
+                      <Calendar className="w-6 h-6 text-blue-500" />
                     </div>
-                  );
-                })}
-              </div>
-
-              {/* Reorder Button */}
-              <button
-                onClick={() => router.push('/home')}
-                className="w-full py-3 bg-gradient-to-r from-orange-500 to-amber-500 text-white font-bold rounded-2xl flex items-center justify-center gap-2 shadow active:scale-95 transition"
-              >
-                <RefreshCw className="w-4 h-4" /> Reorder
-              </button>
-            </div>
-          </div>
-        ))}
-
-        {/* Regular Delivered Orders */}
-        {!loading && orders.map(order => (
-          <div key={order._id} className="bg-white rounded-2xl shadow-sm overflow-hidden">
-            <div className="p-4">
-              {/* Header */}
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-12 h-12 rounded-2xl bg-green-50 flex items-center justify-center flex-shrink-0">
-                  <CheckCircle className="w-6 h-6 text-green-500" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-bold text-gray-900">
-                    {order.items?.length} item(s)
-                  </p>
-                  <p className="text-xs text-gray-400">
-                    {fmt(order.createdAt)}
-                  </p>
-                  <span className={`text-xs px-2 py-0.5 rounded-full font-bold inline-flex items-center gap-1 mt-1 ${
-                    order.status === 'delivered' ? 'bg-green-100 text-green-700' :
-                    order.status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
-                    order.status === 'preparing' ? 'bg-blue-100 text-blue-700' :
-                    'bg-gray-100 text-gray-700'
-                  }`}>
-                    {order.status === 'delivered' ? (
-                      <><CheckCircle className="w-3 h-3" /> Delivered</>
-                    ) : order.status === 'pending' ? (
-                      <><Clock className="w-3 h-3" /> Pending</>
-                    ) : order.status === 'preparing' ? (
-                      <><ChefHat className="w-3 h-3" /> Preparing</>
-                    ) : order.status}
-                  </span>
-                </div>
-                <div className="text-right flex-shrink-0">
-                  <p className="font-extrabold text-gray-900">₹{order.totalAmount}</p>
-                </div>
-              </div>
-
-              {/* Items List */}
-              <div className="space-y-2 mb-4">
-                {order.items?.map((orderItem: any, i: number) => (
-                  <div key={i} className="flex items-center gap-3 border border-gray-100 rounded-xl p-2">
-                    <img
-                      src={orderItem.menuItem?.image || FALLBACK}
-                      className="w-12 h-12 rounded-xl object-cover flex-shrink-0"
-                      alt=""
-                    />
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-gray-800 truncate">
-                        {orderItem.menuItem?.name || 'Item'}
+                      <p className="text-sm font-bold text-gray-900">
+                        {schedule.meals?.length} meal(s) scheduled
                       </p>
-                      <p className="text-xs text-gray-400">
-                        ×{orderItem.quantity} · ₹{orderItem.price}
+                      <p className="text-xs text-gray-400 flex items-center gap-1">
+                         {fmt(schedule.date)}
+                      </p>
+                      <span className="text-[10px] bg-blue-100 text-blue-600 font-bold px-2 py-0.5 rounded-full mt-1 inline-block uppercase tracking-wider">Scheduled Plan</span>
+                    </div>
+                    <div className="text-right flex-shrink-0">
+                      <p className="font-extrabold text-gray-900">
+                        ₹{schedule.meals?.reduce((sum: number, m: any) => sum + (m.mealPrice || m.menuItem?.price || 0), 0)}
                       </p>
                     </div>
                   </div>
-                ))}
-              </div>
 
-              {/* Reorder Button */}
-              <button
-                onClick={() => router.push('/home')}
-                className="w-full py-3 bg-gradient-to-r from-orange-500 to-amber-500 text-white font-bold rounded-2xl flex items-center justify-center gap-2 shadow active:scale-95 transition"
-              >
-                <RefreshCw className="w-4 h-4" /> Reorder
-              </button>
-            </div>
-          </div>
-        ))}
+                  <div className="space-y-3 mb-4">
+                    {schedule.meals?.map((meal: any, i: number) => {
+                      const deliveryStatus = getDeliveryStatus(schedule.date, meal.deliveryTime || '08:00');
+                      const StatusIcon = deliveryStatus.icon;
+                      return (
+                        <div key={`${schedule._id}-meal-${i}`} className="border border-gray-100 rounded-2xl p-3 bg-gray-50/30">
+                          <div className="flex items-center gap-3">
+                            <img src={meal.menuItem?.image || FALLBACK} className="w-12 h-12 rounded-xl object-cover" alt="" />
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-bold text-gray-800 truncate">{meal.menuItem?.name || 'Item'}</p>
+                              <p className="text-[10px] text-gray-500 font-bold uppercase">{meal.mealType} · {formatTime12Hour(meal.deliveryTime || '08:00')}</p>
+                            </div>
+                            <div className="text-right">
+                              <div className="flex items-center gap-1 text-[10px] font-bold text-gray-400">
+                                <StatusIcon className="w-3 h-3" />
+                                {deliveryStatus.label}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <button onClick={() => router.push('/home')} className="w-full py-3 bg-gray-900 text-white font-bold rounded-2xl flex items-center justify-center gap-2 shadow active:scale-95 transition text-sm">
+                    Re-Book Plan
+                  </button>
+                </div>
+              </div>
+            );
+          } else {
+            const order = item;
+            return (
+              <div key={`order-${order._id}`} className="bg-white rounded-2xl shadow-sm overflow-hidden border border-gray-100">
+                <div className="p-4">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-12 h-12 rounded-2xl bg-green-50 flex items-center justify-center flex-shrink-0">
+                      <ShoppingBag className="w-6 h-6 text-green-500" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-bold text-gray-900">{order.items?.length} item(s) ordered</p>
+                      <p className="text-xs text-gray-400">{fmt(order.createdAt)}</p>
+                      <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold inline-flex items-center gap-1 mt-1 uppercase tracking-wider ${
+                        order.status === 'delivered' ? 'bg-green-100 text-green-700' :
+                        order.status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
+                        'bg-blue-100 text-blue-700'
+                      }`}>
+                        {order.status}
+                      </span>
+                    </div>
+                    <div className="text-right flex-shrink-0">
+                      <p className="font-extrabold text-gray-900">₹{order.totalAmount}</p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2 mb-4">
+                    {order.items?.map((orderItem: any, i: number) => (
+                      <div key={`${order._id}-item-${i}`} className="flex items-center gap-3 border border-gray-100 rounded-xl p-2 bg-gray-50/30">
+                        <img src={orderItem.menuItem?.image || FALLBACK} className="w-10 h-10 rounded-lg object-cover" alt="" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-semibold text-gray-800 truncate">{orderItem.menuItem?.name || 'Item'}</p>
+                          <p className="text-[10px] text-gray-500 font-bold uppercase">×{orderItem.quantity}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <button onClick={() => router.push('/home')} className="w-full py-3 bg-orange-500 text-white font-bold rounded-2xl flex items-center justify-center gap-2 shadow active:scale-95 transition text-sm">
+                    Reorder Items
+                  </button>
+                </div>
+              </div>
+            );
+          }
+        })}
       </div>
     </div>
   );
 }
-

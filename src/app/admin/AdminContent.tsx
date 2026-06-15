@@ -1734,6 +1734,7 @@ export function LegalTab({ legal, setLegal, legalSaving, setLegalSaving, headers
 export function HomestyleTab({ 
   hsVideos, setHsVideos, hsVideoUploading, hsSaving, saveHomestyle, uploadVideo,
   hsScheduleBannerImages, setHsScheduleBannerImages, hsScheduleBannerUploading, setHsScheduleBannerUploading,
+  hsSubscriptionBanners, setHsSubscriptionBanners, hsSubscriptionBannerUploading, setHsSubscriptionBannerUploading,
   hsScheduleSectionImages, setHsScheduleSectionImages, hsSectionUploading, setHsSectionUploading,
   uploadImage
 }: any) {
@@ -1823,6 +1824,58 @@ export function HomestyleTab({
                 <div className="absolute top-2 right-2 flex gap-2">
                   <button
                     onClick={() => setHsScheduleBannerImages((v: string[]) => v.filter((_, idx) => idx !== i))}
+                    className="w-8 h-8 rounded-full bg-white/90 text-red-500 shadow-md hover:bg-red-500 hover:text-white transition flex items-center justify-center opacity-0 group-hover:opacity-100"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Subscription Banner Section */}
+      <div className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-sm space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="font-black text-slate-900 text-lg flex items-center gap-2">
+              <Camera className="w-5 h-5 text-orange-500" />
+              Subscription Page Banners
+            </h3>
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Sliding Banners for the Subscription page</p>
+          </div>
+          <label className="cursor-pointer px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white text-[10px] font-black uppercase tracking-widest rounded-full shadow-lg shadow-blue-100 transition active:scale-95">
+            {hsSubscriptionBannerUploading ? 'Uploading…' : '+ Add Banner'}
+            <input type="file" accept="image/*" className="hidden" disabled={hsSubscriptionBannerUploading} onChange={async e => { 
+              const file = e.target.files?.[0]; 
+              if (!file) return; 
+              try { 
+                setHsSubscriptionBannerUploading(true);
+                const url = await uploadImage(file); 
+                setHsSubscriptionBanners((v: string[]) => [...v, url]); 
+              } catch { 
+                alert('Upload failed'); 
+              } finally {
+                setHsSubscriptionBannerUploading(false);
+              }
+            }} />
+          </label>
+        </div>
+
+        {hsSubscriptionBanners.length === 0 ? (
+          <div className="text-center py-16 border-4 border-dashed border-slate-50 rounded-[2.5rem]">
+            <Camera className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+            <p className="text-slate-400 font-bold">No banner images uploaded</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+            {hsSubscriptionBanners.map((url: string, i: number) => (
+              <div key={i} className="group relative bg-slate-50 rounded-[1.5rem] overflow-hidden aspect-[16/6] border-2 border-slate-100 shadow-lg">
+                <img src={url} className="w-full h-full object-cover" />
+                <div className="absolute top-2 right-2 flex gap-2">
+                  <button
+                    onClick={() => setHsSubscriptionBanners((v: string[]) => v.filter((_, idx) => idx !== i))}
                     className="w-8 h-8 rounded-full bg-white/90 text-red-500 shadow-md hover:bg-red-500 hover:text-white transition flex items-center justify-center opacity-0 group-hover:opacity-100"
                   >
                     <Trash2 className="w-4 h-4" />
