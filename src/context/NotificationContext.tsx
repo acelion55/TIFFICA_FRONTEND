@@ -1,7 +1,8 @@
 'use client';
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { useAuth } from './AuthContext';
 import { API_URL } from '@/lib/config';
+import { usePushNotifications } from '@/hooks/usePushNotifications';
 
 interface NotificationContextType {
   unreadCount: number;
@@ -18,8 +19,9 @@ export const useNotifications = () => useContext(NotificationContext);
 export function NotificationProvider({ children }: { children: ReactNode }) {
   const { token } = useAuth();
   const [unreadCount, setUnreadCount] = useState(0);
+  usePushNotifications(token);
 
-  const refreshUnreadCount = async () => {
+  const refreshUnreadCount = useCallback(async () => {
     if (!token) return;
     try {
       const res = await fetch(`${API_URL}/notifications/unread-count`, {
@@ -30,13 +32,16 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
         setUnreadCount(data.count || 0);
       }
     } catch {}
-  };
+  }, [token]);
 
   useEffect(() => {
-    refreshUnreadCount();
+    const firstRefresh = window.setTimeout(refreshUnreadCount, 0);
     const interval = setInterval(refreshUnreadCount, 30000); // Refresh every 30s
-    return () => clearInterval(interval);
-  }, [token]);
+    return () => {
+      clearTimeout(firstRefresh);
+      clearInterval(interval);
+    };
+  }, [refreshUnreadCount]);
 
   return (
     <NotificationContext.Provider value={{ unreadCount, refreshUnreadCount }}>
