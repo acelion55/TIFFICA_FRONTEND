@@ -36,6 +36,11 @@ dependencies {
     implementation "androidx.coordinatorlayout:coordinatorlayout:$androidxCoordinatorLayoutVersion"
     implementation "androidx.core:core-splashscreen:$coreSplashScreenVersion"
     implementation project(':capacitor-android')
+        // Import the Firebase BoM to manage Firebase library versions
+        implementation platform('com.google.firebase:firebase-bom:34.14.1')
+
+        // Add Firebase Analytics (version managed by the BoM)
+        implementation 'com.google.firebase:firebase-analytics'
     testImplementation "junit:junit:$junitVersion"
     androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"
     androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"

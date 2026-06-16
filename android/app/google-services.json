@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "39290881537",
+    "project_id": "einvitations-c7e80",
+    "storage_bucket": "einvitations-c7e80.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:39290881537:android:043e90277589afb7fa6200",
+        "android_client_info": {
+          "package_name": "com.tiffica.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "39290881537-ig66mj6m69df9m5g4jo8qlolcbdcokoj.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDLyOvxugz_a7EivlFr2fhpZZH32ihRo80"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "39290881537-ig66mj6m69df9m5g4jo8qlolcbdcokoj.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

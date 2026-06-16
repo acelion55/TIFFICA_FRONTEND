@@ -466,6 +466,8 @@ export default function AdminDashboard() {
 
     const mealTypes = fd.getAll ? fd.getAll('mealTypes') : [];
     const mealType = (fd.get('mealType') as any) || (mealTypes && mealTypes.length > 0 ? mealTypes[0] : null);
+    const homeCategories = fd.getAll ? fd.getAll('homeCategories') : [];
+    const scheduleSections = fd.getAll ? fd.getAll('scheduleSections') : [];
 
     const body: any = {
       name: fd.get('title') || `Menu Item ${new Date().getTime()}`,
@@ -481,6 +483,8 @@ export default function AdminDashboard() {
       cloudKitchen: cloudKitchenValue || null,
       mealType: mealType || null,
       mealTypes: mealTypes || [],
+      homeCategories: homeCategories || [],
+      scheduleSections: scheduleSections || [],
       latitude: menuLatitude ? Number(menuLatitude) : null,
       longitude: menuLongitude ? Number(menuLongitude) : null,
       geoLimit: menuGeoLimit ? Number(menuGeoLimit) : null,
@@ -1031,7 +1035,55 @@ export default function AdminDashboard() {
                 </div>
               </div>
 
-              <div className="space-y-2">
+                <div className="pt-2">
+                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-4 mb-2">Home Categories (show on Home)</p>
+                  <div className="flex gap-3 px-4 flex-wrap">
+                    <label className="inline-flex items-center gap-2 text-sm">
+                      <input type="checkbox" name="homeCategories" value="Lunch" defaultChecked={menuModal.data?.homeCategories?.includes?.('Lunch')} />
+                      <span>Lunch</span>
+                    </label>
+                    <label className="inline-flex items-center gap-2 text-sm">
+                      <input type="checkbox" name="homeCategories" value="Dinner" defaultChecked={menuModal.data?.homeCategories?.includes?.('Dinner')} />
+                      <span>Dinner</span>
+                    </label>
+                    <label className="inline-flex items-center gap-2 text-sm">
+                      <input type="checkbox" name="homeCategories" value="Healthy" defaultChecked={menuModal.data?.homeCategories?.includes?.('Healthy')} />
+                      <span>Healthy</span>
+                    </label>
+                    <label className="inline-flex items-center gap-2 text-sm">
+                      <input type="checkbox" name="homeCategories" value="Shahi Thali" defaultChecked={menuModal.data?.homeCategories?.includes?.('Shahi Thali')} />
+                      <span>Shahi Thali</span>
+                    </label>
+                    <label className="inline-flex items-center gap-2 text-sm">
+                      <input type="checkbox" name="homeCategories" value="Breakfast" defaultChecked={menuModal.data?.homeCategories?.includes?.('Breakfast')} />
+                      <span>Breakfast</span>
+                    </label>
+                  </div>
+                </div>
+
+                <div className="pt-2">
+                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-4 mb-2">Schedule Sections</p>
+                  <div className="flex gap-3 px-4 flex-wrap">
+                    <label className="inline-flex items-center gap-2 text-sm">
+                      <input type="checkbox" name="scheduleSections" value="Regular" defaultChecked={menuModal.data?.scheduleSections?.includes?.('Regular')} />
+                      <span>Regular</span>
+                    </label>
+                    <label className="inline-flex items-center gap-2 text-sm">
+                      <input type="checkbox" name="scheduleSections" value="Shahi Thali" defaultChecked={menuModal.data?.scheduleSections?.includes?.('Shahi Thali')} />
+                      <span>Shahi Thali</span>
+                    </label>
+                    <label className="inline-flex items-center gap-2 text-sm">
+                      <input type="checkbox" name="scheduleSections" value="Corporate Order" defaultChecked={menuModal.data?.scheduleSections?.includes?.('Corporate Order')} />
+                      <span>Corporate Order</span>
+                    </label>
+                    <label className="inline-flex items-center gap-2 text-sm">
+                      <input type="checkbox" name="scheduleSections" value="School Tiffins" defaultChecked={menuModal.data?.scheduleSections?.includes?.('School Tiffins')} />
+                      <span>School Tiffins</span>
+                    </label>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
                 <textarea name="description" defaultValue={menuModal.data?.description || ''} placeholder="Menu Description (Optional)" rows={3} className={`${inputCls} resize-none`} />
               </div>
 

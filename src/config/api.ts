@@ -1,5 +1,9 @@
 // Centralized API configuration
-// Use environment variable or default to localhost in development
+// Prefer NEXT_PUBLIC_API_URL when set. Ensure it includes `/api` suffix.
+const rawApi = process.env.NEXT_PUBLIC_API_URL || 'https://tifficaapp-1.onrender.com/api';
+const normalized = rawApi.endsWith('/api') ? rawApi.replace(/\/$/, '') : rawApi.replace(/\/$/, '') + '/api';
+export const API_URL = normalized;
 
-export const API_URL = 'https://tifficaapp-1.onrender.com/api';
-export const WS_URL = 'wss://tifficaapp-1.onrender.com/ws';
+// WebSocket URL: prefer NEXT_PUBLIC_WS_URL or derive from API_URL
+const rawWs = process.env.NEXT_PUBLIC_WS_URL || '';
+export const WS_URL = rawWs || (API_URL.startsWith('https') ? API_URL.replace(/^https/, 'wss').replace(/\/api$/, '/ws') : API_URL.replace(/^http/, 'ws').replace(/\/api$/, '/ws'));
