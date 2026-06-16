@@ -197,6 +197,7 @@ Create a `.env.local` file:
 ```env
 NEXT_PUBLIC_API_URL=http://localhost:5000/api
 NEXT_PUBLIC_VAPID_PUBLIC_KEY=<your_vapid_public_key>
+NEXT_PUBLIC_GOOGLE_CLIENT_ID=<your_google_web_client_id>
 ```
 
 ### 3. Run

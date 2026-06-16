@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import { usePWAInstall } from '@/hooks/usePWAInstall';
+import GoogleSignInButton from '@/components/GoogleSignInButton';
 import { Eye, EyeOff, Mail, Lock, ArrowRight, Download, Loader2, X, Phone } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -124,6 +125,39 @@ export default function LoginPage() {
     } catch (err) {
       setError('Cannot connect to server.');
     } finally { setLoading(false); }
+  };
+
+  const handleGoogleLogin = async (credential: string) => {
+    setError('');
+    setInfo('');
+    setLoading(true);
+    try {
+      const res = await fetch(`${API_URL}/auth/google`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ credential }),
+      });
+      const data = await res.json();
+
+      if (res.ok && data.token) {
+        await login(data.token);
+        if (data.role === 'delivery') router.push('/delivery-partner/dashboard');
+        else if (data.role === 'admin' || data.role === 'kitchen-owner') router.push('/admin');
+        else router.push('/home');
+      } else if (res.ok && data.requiresPhone && data.signupToken) {
+        sessionStorage.setItem('googleSignup', JSON.stringify({
+          signupToken: data.signupToken,
+          profile: data.profile,
+        }));
+        router.push('/signup?google=1');
+      } else {
+        setError(data.msg || 'Google sign-in failed. Please try again.');
+      }
+    } catch {
+      setError('Cannot connect to server.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -357,6 +391,18 @@ export default function LoginPage() {
               )}
             </motion.div>
           </AnimatePresence>
+
+          <div className="relative flex items-center gap-4 my-6">
+            <div className="h-px flex-1 bg-white/10" />
+            <span className="text-xs font-semibold uppercase tracking-[0.2em] text-white/35">or</span>
+            <div className="h-px flex-1 bg-white/10" />
+          </div>
+
+          <GoogleSignInButton
+            disabled={loading}
+            onCredential={handleGoogleLogin}
+            onUnavailable={() => setError('Google sign-in needs NEXT_PUBLIC_GOOGLE_CLIENT_ID to be configured.')}
+          />
 
           <p className="text-center text-sm text-gray-400 mt-8 relative z-10">
             Don't have an account?{' '}

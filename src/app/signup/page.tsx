@@ -1,9 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
+import GoogleSignInButton from '@/components/GoogleSignInButton';
 import { Eye, EyeOff, Mail, Lock, User, Phone, ArrowRight, Loader2, X, UtensilsCrossed } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -17,25 +18,84 @@ export default function SignUpPage() {
   const [showPass, setShowPass] = useState(false);
   const [error, setError]       = useState('');
   const [loading, setLoading]   = useState(false);
+  const [googleSignupToken, setGoogleSignupToken] = useState('');
   const [legalTab, setLegalTab] = useState<'terms' | 'privacy'>('terms');
   const [showLegal, setShowLegal] = useState(false);
   const [legalContent, setLegalContent] = useState<{ terms: string; privacy: string }>({ terms: '', privacy: '' });
   const router = useRouter();
   const { login } = useAuth();
 
+  useEffect(() => {
+    const pendingGoogleSignup = sessionStorage.getItem('googleSignup');
+    if (!pendingGoogleSignup) return;
+
+    try {
+      const data = JSON.parse(pendingGoogleSignup);
+      if (data.signupToken && data.profile) {
+        setGoogleSignupToken(data.signupToken);
+        setName(data.profile.name || '');
+        setEmail(data.profile.email || '');
+      }
+    } catch {
+      sessionStorage.removeItem('googleSignup');
+    }
+  }, []);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(''); setLoading(true);
     try {
-      const res  = await fetch(`${API_URL}/auth/register`, {
+      const endpoint = googleSignupToken ? '/auth/google/complete' : '/auth/register';
+      const body = googleSignupToken
+        ? { signupToken: googleSignupToken, phone }
+        : { name, email, phone, password };
+      const res  = await fetch(`${API_URL}${endpoint}`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, phone, password }),
+        body: JSON.stringify(body),
       });
       const data = await res.json();
-      if (res.ok) { await login(data.token); router.push('/onboarding'); }
+      if (res.ok) {
+        sessionStorage.removeItem('googleSignup');
+        await login(data.token);
+        router.push('/onboarding');
+      }
       else setError(data.msg || 'Registration failed. Please try again.');
     } catch { setError('Connection error. Please try again.'); }
     finally { setLoading(false); }
+  };
+
+  const handleGoogleLogin = async (credential: string) => {
+    setError('');
+    setLoading(true);
+    try {
+      const res = await fetch(`${API_URL}/auth/google`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ credential }),
+      });
+      const data = await res.json();
+
+      if (res.ok && data.token) {
+        await login(data.token);
+        if (data.role === 'delivery') router.push('/delivery-partner/dashboard');
+        else if (data.role === 'admin' || data.role === 'kitchen-owner') router.push('/admin');
+        else router.push('/home');
+      } else if (res.ok && data.requiresPhone && data.signupToken) {
+        sessionStorage.setItem('googleSignup', JSON.stringify({
+          signupToken: data.signupToken,
+          profile: data.profile,
+        }));
+        setGoogleSignupToken(data.signupToken);
+        setName(data.profile.name || '');
+        setEmail(data.profile.email || '');
+      } else {
+        setError(data.msg || 'Google sign-up failed. Please try again.');
+      }
+    } catch {
+      setError('Cannot connect to server.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -105,8 +165,8 @@ export default function SignUpPage() {
                   <User className="w-5 h-5 text-gray-500 group-focus-within:text-orange-400 transition-colors" />
                 </div>
                 <input type="text" value={name} onChange={e => setName(e.target.value)}
-                  placeholder="Full Name" required
-                  className="w-full bg-black/40 border border-white/10 rounded-2xl pl-12 pr-4 py-4 text-white placeholder:text-gray-500 focus:outline-none focus:border-orange-500/50 focus:ring-1 focus:ring-orange-500/50 transition-all" />
+                  placeholder="Full Name" required disabled={Boolean(googleSignupToken)}
+                  className="w-full bg-black/40 border border-white/10 rounded-2xl pl-12 pr-4 py-4 text-white placeholder:text-gray-500 focus:outline-none focus:border-orange-500/50 focus:ring-1 focus:ring-orange-500/50 transition-all disabled:opacity-60" />
               </div>
 
               <div className="relative group">
@@ -114,8 +174,8 @@ export default function SignUpPage() {
                   <Mail className="w-5 h-5 text-gray-500 group-focus-within:text-orange-400 transition-colors" />
                 </div>
                 <input type="email" value={email} onChange={e => setEmail(e.target.value)}
-                  placeholder="Email Address" required
-                  className="w-full bg-black/40 border border-white/10 rounded-2xl pl-12 pr-4 py-4 text-white placeholder:text-gray-500 focus:outline-none focus:border-orange-500/50 focus:ring-1 focus:ring-orange-500/50 transition-all" />
+                  placeholder="Email Address" required disabled={Boolean(googleSignupToken)}
+                  className="w-full bg-black/40 border border-white/10 rounded-2xl pl-12 pr-4 py-4 text-white placeholder:text-gray-500 focus:outline-none focus:border-orange-500/50 focus:ring-1 focus:ring-orange-500/50 transition-all disabled:opacity-60" />
               </div>
 
               <div className="relative group">
@@ -127,7 +187,7 @@ export default function SignUpPage() {
                   className="w-full bg-black/40 border border-white/10 rounded-2xl pl-12 pr-4 py-4 text-white placeholder:text-gray-500 focus:outline-none focus:border-orange-500/50 focus:ring-1 focus:ring-orange-500/50 transition-all" />
               </div>
 
-              <div className="relative group">
+              {!googleSignupToken && <div className="relative group">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                   <Lock className="w-5 h-5 text-gray-500 group-focus-within:text-orange-400 transition-colors" />
                 </div>
@@ -137,19 +197,35 @@ export default function SignUpPage() {
                 <button type="button" onClick={() => setShowPass(v => !v)} className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-500 hover:text-white transition-colors">
                   {showPass ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
-              </div>
+              </div>}
             </div>
 
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               type="submit"
-              disabled={loading || phone.length !== 10 || password.length < 6}
+              disabled={loading || phone.length !== 10 || (!googleSignupToken && password.length < 6)}
               className="w-full py-4 mt-2 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-white font-bold rounded-2xl shadow-[0_0_40px_-10px_rgba(249,115,22,0.4)] flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed mt-4"
             >
-              {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <>Complete Sign Up <ArrowRight className="w-4 h-4 ml-1" /></>}
+              {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <>{googleSignupToken ? 'Finish Google Sign Up' : 'Complete Sign Up'} <ArrowRight className="w-4 h-4 ml-1" /></>}
             </motion.button>
           </form>
+
+          {!googleSignupToken && (
+            <>
+              <div className="relative flex items-center gap-4 my-6">
+                <div className="h-px flex-1 bg-white/10" />
+                <span className="text-xs font-semibold uppercase tracking-[0.2em] text-white/35">or</span>
+                <div className="h-px flex-1 bg-white/10" />
+              </div>
+
+              <GoogleSignInButton
+                disabled={loading}
+                onCredential={handleGoogleLogin}
+                onUnavailable={() => setError('Google sign-in needs NEXT_PUBLIC_GOOGLE_CLIENT_ID to be configured.')}
+              />
+            </>
+          )}
 
           <p className="text-center text-sm text-gray-400 mt-8 relative z-10">
             Already have an account?{' '}
