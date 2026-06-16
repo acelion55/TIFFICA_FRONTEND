@@ -9,6 +9,7 @@ import {
   Sunrise, Sun, Sunset, Moon, MapPin, Bell,
   UtensilsCrossed, IndianRupee, Tag, Coffee, Sandwich, LayoutGrid
 } from 'lucide-react';
+import { Leaf } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useLocation } from '@/context/LocationContext';
@@ -22,12 +23,11 @@ const FALLBACK_IMG = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?
 const FALLBACK_VIDEO = 'https://assets.mixkit.co/videos/preview/mixkit-fresh-vegetables-being-prepared-for-a-salad-40432-large.mp4';
 const CATEGORIES: { id: string; label: string; Icon: LucideIcon }[] = [
   { id: 'All', label: 'All', Icon: LayoutGrid },
-  { id: 'Under79', label: 'Under ₹79', Icon: IndianRupee },
-  { id: 'Under99', label: 'Under ₹99', Icon: Tag },
-  { id: 'Breakfast', label: 'Breakfast', Icon: Coffee },
   { id: 'Lunch', label: 'Lunch', Icon: UtensilsCrossed },
   { id: 'Dinner', label: 'Dinner', Icon: Moon },
-  { id: 'Snack', label: 'Snack', Icon: Sandwich },
+  { id: 'Healthy', label: 'Healthy', Icon: Leaf },
+  { id: 'Shahi Thali', label: 'Shahi Thali', Icon: Star },
+  { id: 'Breakfast', label: 'Breakfast', Icon: Coffee },
 ];
 
 interface MenuItem {
@@ -135,16 +135,35 @@ export default function HomeClient() {
   useEffect(() => { fetchData(); }, [fetchData]);
 
   const filteredItems = useMemo(() => {
-    if (activeCat === 'All') return items;
-    if (activeCat === 'Under79') return items.filter(i => i.price < 79);
-    if (activeCat === 'Under99') return items.filter(i => i.price < 99);
-    // Check both mealType (old) and mealTypes (new array)
-    return items.filter(item =>
+    // Only show items that have been tagged as Instant by admin
+    const base = items.filter(i => (i as any).isInstant || (i.mealTypes && i.mealTypes.includes('Instant')));
+
+    if (activeCat === 'All') return base;
+    if (activeCat === 'Under79') return base.filter(i => i.price < 79);
+    if (activeCat === 'Under99') return base.filter(i => i.price < 99);
+
+    // Filter by the selected category (mealType/category/mealTypes)
+    return base.filter(item =>
       item.mealType === activeCat ||
       item.category === activeCat ||
-      (item.mealTypes && item.mealTypes.includes(activeCat))
+      (item.mealTypes && item.mealTypes.includes(activeCat)) ||
+      ((item as any).homeCategories && (item as any).homeCategories.includes(activeCat))
     );
   }, [items, activeCat]);
+
+  // Derive today's specials for display: prefer API result, fallback to flags in `items`
+  const displayTodaySpecial = useMemo(() => {
+    if (todaySpecial && todaySpecial.length > 0) return todaySpecial;
+    return items.filter(i => (i as any).isTodaySpecial || (i as any).isSpecial);
+  }, [todaySpecial, items]);
+
+  // Order filtered items so today's specials (that match the filter) appear first
+  const orderedItems = useMemo(() => {
+    const specialIds = new Set((displayTodaySpecial || []).map((i: any) => i._id));
+    const inSpecial = filteredItems.filter(i => specialIds.has(i._id));
+    const notSpecial = filteredItems.filter(i => !specialIds.has(i._id));
+    return [...inSpecial, ...notSpecial];
+  }, [filteredItems, displayTodaySpecial]);
 
   return (
     <div className="bg-[#F8F9FB] min-h-screen pb-24 font-sans antialiased">
@@ -210,6 +229,7 @@ export default function HomeClient() {
         </div>
       </header>
 
+
       {/* ── CATEGORY BAR — sticky below top bar ── */}
       <nav className="sticky top-[52px] z-30 bg-white/95 backdrop-blur-xl border-b border-gray-100 shadow-sm transition-all duration-300">
         <div className="flex gap-2 overflow-x-auto px-5 py-3 scrollbar-hide">
@@ -231,21 +251,6 @@ export default function HomeClient() {
 
       <main className="px-5 mt-5 space-y-8">
 
-        {/* ── TODAY'S SPECIALS ── */}
-        {todaySpecial.length > 0 && (
-          <section>
-            <div className="flex items-center gap-2 mb-4">
-              <div className="bg-orange-100 p-1.5 rounded-xl">
-                <Flame size={18} className="text-orange-600" />
-              </div>
-              <h2 className="text-lg font-black text-gray-900 uppercase tracking-tight">Today's Hot Deals</h2>
-            </div>
-            <div className="flex gap-4 overflow-x-auto pb-2 -mx-5 px-5 scrollbar-hide">
-              {todaySpecial.map(item => <SpecialCard key={item._id} item={item} />)}
-            </div>
-          </section>
-        )}
-
         {/* ── MENU GRID ── */}
         <section>
           <div className="flex items-center justify-between mb-4">
@@ -257,10 +262,10 @@ export default function HomeClient() {
             <div className="grid grid-cols-2 gap-4">
               {[1, 2, 3, 4].map(i => <div key={i} className="h-60 bg-gray-200 rounded-3xl animate-pulse" />)}
             </div>
-          ) : filteredItems.length > 0 ? (
+          ) : orderedItems.length > 0 ? (
             <div className="grid grid-cols-2 gap-4">
               <AnimatePresence>
-                {filteredItems.map(item => <MenuCard key={item._id} item={item} token={token} user={user} />)}
+                {orderedItems.map(item => <MenuCard key={item._id} item={item} token={token} user={user} />)}
               </AnimatePresence>
             </div>
           ) : (
