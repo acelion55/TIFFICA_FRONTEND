@@ -259,11 +259,11 @@ export default function HomeClient() {
           </div>
 
           {loading ? (
-            <div className="grid grid-cols-2 gap-4">
-              {[1, 2, 3, 4].map(i => <div key={i} className="h-60 bg-gray-200 rounded-3xl animate-pulse" />)}
+            <div className="space-y-4">
+              {[1, 2, 3, 4].map(i => <div key={i} className="h-28 bg-gray-200 rounded-2xl animate-pulse" />)}
             </div>
           ) : orderedItems.length > 0 ? (
-            <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-4">
               <AnimatePresence>
                 {orderedItems.map(item => <MenuCard key={item._id} item={item} token={token} user={user} />)}
               </AnimatePresence>
@@ -333,8 +333,7 @@ function MenuCard({ item, token, user }: { item: MenuItem; token: string | null;
     }
   };
 
-  // Check if item has Instant flag
-  const isInstant = (item as any)?.isInstant || (item.mealTypes && item.mealTypes.includes('Instant'));
+  // Check if item is Today's Special
   const isTodaySpecial = (item as any)?.isTodaySpecial || (item as any)?.isSpecial;
 
   return (
@@ -343,37 +342,25 @@ function MenuCard({ item, token, user }: { item: MenuItem; token: string | null;
       initial={{ opacity: 0, scale: 0.92 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.92 }}
-      className="bg-white rounded-3xl p-3 shadow-sm border border-gray-50"
+      className="bg-white rounded-2xl overflow-hidden shadow-md border border-slate-50 flex items-center gap-4 p-4"
     >
-      <div className="relative h-40 rounded-2xl overflow-hidden mb-3">
-        <img src={item.image || FALLBACK_IMG} className="w-full h-full object-cover" alt={item.name} />
-        {/* Instant badge */}
-        {isInstant && (
-          <div className="absolute top-2 left-2 bg-blue-500 text-white px-2.5 py-1 rounded-full text-[10px] font-black">
-            ⚡ Instant
-          </div>
-        )}
-        {/* Today's Special badge */}
-        {isTodaySpecial && (
-          <div className="absolute top-2 right-2 bg-red-500 text-white px-2.5 py-1 rounded-full text-[10px] font-black flex items-center gap-1">
-            <Flame size={10} /> Special
-          </div>
-        )}
-      </div>
-      <div className="px-1">
-        <div className="flex items-center justify-between mb-1">
+      {/* Description Left */}
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2 mb-1">
           <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">{item.category || 'Meal'}</span>
-          <div className="flex items-center gap-1 text-gray-400">
-            <Clock size={9} />
-            <span className="text-[9px] font-bold">25 min</span>
-          </div>
+          {isTodaySpecial && (
+            <div className="bg-red-500 text-white px-2 py-0.5 rounded-full text-[9px] font-black flex items-center gap-1">
+              <Flame size={8} /> Special
+            </div>
+          )}
         </div>
+        <h3 className="text-base font-bold text-slate-900 truncate">{item.name}</h3>
         {item.description && (
-          <p className="text-sm font-black text-gray-900 mb-0.5">{item.description}</p>
+          <p className="text-xs text-slate-500 line-clamp-2 mt-1">{item.description}</p>
         )}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between mt-3">
           <div className="flex flex-col">
-            <span className="text-lg font-black text-gray-900">₹{item.price}</span>
+            <span className="text-lg font-black text-orange-500">₹{item.price}</span>
             {item.originalPrice && item.originalPrice > item.price && (
               <span className="text-xs text-gray-400 line-through">₹{item.originalPrice}</span>
             )}
@@ -386,6 +373,11 @@ function MenuCard({ item, token, user }: { item: MenuItem; token: string | null;
             Add
           </motion.button>
         </div>
+      </div>
+      
+      {/* Image Right */}
+      <div className="w-24 h-24 rounded-xl overflow-hidden flex-shrink-0">
+        <img src={item.image || FALLBACK_IMG} className="w-full h-full object-cover" alt={item.name} />
       </div>
     </motion.div>
   );

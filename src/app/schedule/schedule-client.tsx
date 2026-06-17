@@ -3,9 +3,9 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  ChevronLeft, ChevronRight, Search, Star, 
-  Loader2, UtensilsCrossed, ArrowRight,
-  TrendingUp, Sparkles, MapPin, Clock
+  ChevronLeft, ChevronRight, X, 
+  Loader2, Calendar, ShoppingCart,
+  Clock
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/context/ToastContext';
@@ -31,7 +31,11 @@ export default function ScheduleClient() {
   const [selectedSection, setSelectedSection] = useState<string | null>(null);
   const [menuItems, setMenuItems] = useState<any[]>([]);
   const [menuLoading, setMenuLoading] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
+  
+  // Dialog state
+  const [selectedItem, setSelectedItem] = useState<any>(null);
+  const [selectedMealType, setSelectedMealType] = useState<'lunch' | 'dinner'>('lunch');
+  const [selectedDate, setSelectedDate] = useState('');
 
   // Fetch Homestyle data for banners and section images
   useEffect(() => {
@@ -52,8 +56,6 @@ export default function ScheduleClient() {
     if (!section) return;
 
     setMenuLoading(true);
-    // Assuming there's an endpoint to filter by tag or we fetch all and filter
-    // For now, let's fetch all menu items or use a search/filter endpoint if available
     fetch(`${API_URL}/menu/search/${section.tag}`)
       .then(r => r.json())
       .then(d => {
@@ -72,10 +74,32 @@ export default function ScheduleClient() {
     return () => clearInterval(interval);
   }, [homestyle]);
 
+  // Initialize date to today
+  useEffect(() => {
+    const today = new Date().toISOString().split('T')[0];
+    setSelectedDate(today);
+  }, []);
+
   const banners = homestyle?.scheduleBannerImages || [
     'https://images.unsplash.com/photo-1543353071-10c8ba85a904?w=1200&h=400&fit=crop',
     'https://images.unsplash.com/photo-1547523916-7c73a6de352d?w=1200&h=400&fit=crop'
   ];
+
+  const handleCheckout = () => {
+    if (!token) {
+      addToast('Please login to schedule meals', 'error');
+      router.push('/login');
+      return;
+    }
+
+    // Navigate to checkout with selected item details
+    const params = new URLSearchParams({
+      itemId: selectedItem._id,
+      mealType: selectedMealType,
+      date: selectedDate
+    });
+    router.push(`/checkout?${params.toString()}`);
+  };
 
   if (loading) {
     return (
@@ -177,35 +201,22 @@ export default function ScheduleClient() {
                 <h2 className="text-2xl font-black text-slate-900">
                   {SECTIONS.find(s => s.id === selectedSection)?.label}
                 </h2>
-                <div className="flex items-center gap-2 text-orange-500">
-                  <Sparkles className="w-3 h-3 fill-orange-500" />
-                  <span className="text-[10px] font-black uppercase tracking-widest">Available Now</span>
-                </div>
+                <p className="text-sm text-slate-500 font-medium">
+                  {SECTIONS.find(s => s.id === selectedSection)?.desc}
+                </p>
               </div>
             </div>
 
-            {/* Search Bar */}
-            <div className="relative">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-              <input 
-                type="text" 
-                placeholder="Search favorite items..."
-                value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
-                className="w-full bg-white border-2 border-slate-100 rounded-full py-4 pl-12 pr-6 text-sm font-bold shadow-sm focus:border-orange-500 outline-none transition-all"
-              />
-            </div>
-
-            {/* Menu Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* Menu List - Description Left, Image Right */}
+            <div className="space-y-4">
               {menuLoading ? (
                 Array.from({ length: 4 }).map((_, i) => (
-                  <div key={i} className="bg-white rounded-[2rem] h-64 animate-pulse" />
+                  <div key={i} className="bg-white rounded-2xl h-24 animate-pulse" />
                 ))
-              ) : menuItems.filter(item => item.name.toLowerCase().includes(searchQuery.toLowerCase())).length === 0 ? (
-                <div className="col-span-full py-20 text-center space-y-4">
+              ) : menuItems.length === 0 ? (
+                <div className="py-20 text-center space-y-4">
                   <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mx-auto">
-                    <UtensilsCrossed className="w-10 h-10 text-slate-300" />
+                    <Loader2 className="w-10 h-10 text-slate-300" />
                   </div>
                   <div>
                     <p className="font-black text-slate-900">No items found</p>
@@ -213,63 +224,148 @@ export default function ScheduleClient() {
                   </div>
                 </div>
               ) : (
-                menuItems
-                  .filter(item => item.name.toLowerCase().includes(searchQuery.toLowerCase()))
-                  .map((item, idx) => (
-                    <motion.div
-                      key={item._id}
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ delay: idx * 0.05 }}
-                      className="bg-white rounded-[2rem] overflow-hidden shadow-md border border-slate-50 flex flex-col"
-                    >
-                      <div className="relative h-48">
-                        <img src={item.image} className="w-full h-full object-cover" />
-                        <div className="absolute top-4 right-4 bg-white/95 backdrop-blur px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-lg">
-                          <Star className="w-3.5 h-3.5 fill-orange-500 text-orange-500" />
-                          <span className="text-xs font-black text-slate-900">{item.rating || '4.8'}</span>
-                        </div>
-                        {item.isBestseller && (
-                          <div className="absolute top-4 left-4 bg-orange-500 text-white px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest flex items-center gap-1.5">
-                            <TrendingUp className="w-3 h-3" /> Bestseller
-                          </div>
-                        )}
-                      </div>
-                      <div className="p-6 flex-1 flex flex-col">
-                        <div className="flex items-start justify-between gap-4">
-                          <div className="flex-1 min-w-0">
-                            <h3 className="text-lg font-black text-slate-900 truncate">{item.name}</h3>
-                            <p className="text-slate-400 text-xs font-medium line-clamp-1 mt-1">{item.description}</p>
-                          </div>
-                          <div className="text-right">
-                            <p className="text-xl font-black text-orange-500">₹{item.price}</p>
-                            {item.originalPrice && (
-                              <p className="text-[10px] text-slate-300 line-through font-bold">₹{item.originalPrice}</p>
-                            )}
-                          </div>
-                        </div>
-                        
-                        <div className="flex items-center gap-3 mt-6">
-                          <div className="flex-1 flex flex-wrap gap-2">
-                             <div className="flex items-center gap-1 text-[10px] font-black text-slate-400 uppercase tracking-widest bg-slate-50 px-2.5 py-1.5 rounded-full">
-                               <Clock className="w-3 h-3" /> {item.mealType || 'Daily'}
-                             </div>
-                          </div>
-                          <button 
-                            onClick={() => router.push(`/menu?id=${item._id}`)}
-                            className="bg-slate-900 text-white px-6 py-2.5 rounded-full text-[10px] font-black uppercase tracking-widest shadow-lg shadow-slate-200 active:scale-95 transition"
-                          >
-                            Order Now
-                          </button>
-                        </div>
-                      </div>
-                    </motion.div>
-                  ))
+                menuItems.map((item, idx) => (
+                  <motion.div
+                    key={item._id}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: idx * 0.05 }}
+                    onClick={() => setSelectedItem(item)}
+                    className="bg-white rounded-2xl overflow-hidden shadow-md border border-slate-50 flex items-center gap-4 p-4 cursor-pointer active:scale-[0.98] transition-transform"
+                  >
+                    {/* Description Left */}
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-lg font-bold text-slate-900 truncate">{item.name}</h3>
+                      <p className="text-slate-500 text-sm line-clamp-2 mt-1">{item.description}</p>
+                      <p className="text-orange-500 font-black text-lg mt-2">₹{item.price}</p>
+                    </div>
+                    
+                    {/* Image Right */}
+                    <div className="w-24 h-24 rounded-xl overflow-hidden flex-shrink-0">
+                      <img src={item.image} className="w-full h-full object-cover" alt={item.name} />
+                    </div>
+                  </motion.div>
+                ))
               )}
             </div>
           </div>
         )}
       </div>
+
+      {/* Detail Dialog - Bottom to Top Animation */}
+      <AnimatePresence>
+        {selectedItem && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setSelectedItem(null)}
+              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50"
+            />
+
+            {/* Dialog */}
+            <motion.div
+              initial={{ y: '100%' }}
+              animate={{ y: 0 }}
+              exit={{ y: '100%' }}
+              transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+              className="fixed inset-x-0 bottom-0 bg-white rounded-t-[2rem] z-50 max-h-[85vh] overflow-y-auto"
+            >
+              {/* Close Button */}
+              <button
+                onClick={() => setSelectedItem(null)}
+                className="absolute top-4 right-4 w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center z-10"
+              >
+                <X className="w-5 h-5 text-slate-900" />
+              </button>
+
+              {/* Image */}
+              <div className="relative h-64 w-full">
+                <img src={selectedItem.image} className="w-full h-full object-cover" alt={selectedItem.name} />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+              </div>
+
+              {/* Content */}
+              <div className="p-6 space-y-6">
+                {/* Title & Description */}
+                <div>
+                  <h2 className="text-2xl font-black text-slate-900">{selectedItem.name}</h2>
+                  <p className="text-slate-600 text-sm mt-2 leading-relaxed">{selectedItem.description}</p>
+                  <p className="text-orange-500 font-black text-2xl mt-3">₹{selectedItem.price}</p>
+                </div>
+
+                {/* Date Selector */}
+                <div>
+                  <label className="block text-sm font-bold text-slate-900 mb-2">Starting Date</label>
+                  <div className="relative">
+                    <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                    <input
+                      type="date"
+                      value={selectedDate}
+                      onChange={(e) => setSelectedDate(e.target.value)}
+                      min={new Date().toISOString().split('T')[0]}
+                      className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl py-3 pl-12 pr-4 text-sm font-medium focus:border-orange-500 outline-none transition-all"
+                    />
+                  </div>
+                </div>
+
+                {/* Meal Type Selection */}
+                <div>
+                  <label className="block text-sm font-bold text-slate-900 mb-3">Select Meal Time</label>
+                  <div className="grid grid-cols-2 gap-3">
+                    {/* Lunch */}
+                    <button
+                      onClick={() => setSelectedMealType('lunch')}
+                      className={`p-4 rounded-xl border-2 transition-all ${
+                        selectedMealType === 'lunch'
+                          ? 'border-orange-500 bg-orange-50'
+                          : 'border-slate-200 bg-white'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2 mb-2">
+                        <Clock className={`w-4 h-4 ${selectedMealType === 'lunch' ? 'text-orange-500' : 'text-slate-400'}`} />
+                        <span className={`font-bold text-sm ${selectedMealType === 'lunch' ? 'text-orange-500' : 'text-slate-900'}`}>
+                          Lunch
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-500 font-medium">12:00 PM - 2:00 PM</p>
+                    </button>
+
+                    {/* Dinner */}
+                    <button
+                      onClick={() => setSelectedMealType('dinner')}
+                      className={`p-4 rounded-xl border-2 transition-all ${
+                        selectedMealType === 'dinner'
+                          ? 'border-orange-500 bg-orange-50'
+                          : 'border-slate-200 bg-white'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2 mb-2">
+                        <Clock className={`w-4 h-4 ${selectedMealType === 'dinner' ? 'text-orange-500' : 'text-slate-400'}`} />
+                        <span className={`font-bold text-sm ${selectedMealType === 'dinner' ? 'text-orange-500' : 'text-slate-900'}`}>
+                          Dinner
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-500 font-medium">7:00 PM - 9:00 PM</p>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Checkout Button */}
+                <button
+                  onClick={handleCheckout}
+                  className="w-full bg-gradient-to-r from-orange-500 to-amber-500 text-white font-black py-4 rounded-xl shadow-lg flex items-center justify-center gap-2 active:scale-95 transition-transform"
+                >
+                  <ShoppingCart className="w-5 h-5" />
+                  Proceed to Checkout
+                </button>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
