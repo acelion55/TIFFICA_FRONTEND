@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { useLiveCount } from '@/hooks/useLiveCount';
-import { Users, ShoppingBag, UtensilsCrossed, CreditCard, Store, BarChart2, LogOut, RefreshCw, Home, Bell, FileText, Tag, Activity, Volume2, VolumeX, TrendingUp, FileEdit, User, Lock, Camera, Sparkles, Save, Loader2, Search, MapPin, ChevronRight, X, Phone, Mail, Globe, Menu } from 'lucide-react';
+import { Users, ShoppingBag, UtensilsCrossed, CreditCard, Store, BarChart2, LogOut, RefreshCw, Home, Bell, FileText, Tag, Activity, Volume2, VolumeX, TrendingUp, FileEdit, User, Lock, Camera, Sparkles, Save, Loader2, Search, MapPin, ChevronRight, X, Phone, Mail, Globe, Menu, Plus, Trash2 } from 'lucide-react';
 import {
   OverviewTab, UsersTab, OrdersTab, MenuTab, KitchensTab, SettingsTab,
   SubscriptionsTab, NotificationsTab, LegalTab, HomestyleTab, CouponsTab, ScheduleOrdersTab, LeadsTab,
@@ -73,10 +73,6 @@ export default function AdminDashboard() {
   const [saving, setSaving] = useState(false);
   const [imgUploading, setImgUploading] = useState(false);
   const [imgPreview, setImgPreview] = useState<string>('');
-  const [menuLatitude, setMenuLatitude] = useState<string>('');
-  const [menuLongitude, setMenuLongitude] = useState<string>('');
-  const [menuGeoLimit, setMenuGeoLimit] = useState<string>('');
-  const [locatingMenu, setLocatingMenu] = useState(false);
   const [isGeneratingDesc, setIsGeneratingDesc] = useState(false);
   const [isGenerateDisabled, setIsGenerateDisabled] = useState(false);
   // draft feature removed: no draftLoaded state
@@ -104,6 +100,9 @@ export default function AdminDashboard() {
   const [categoryPrice, setCategoryPrice] = useState<number>(0);
   const [sellingPrice, setSellingPrice] = useState<number>(0);
   const [purchasePrice, setPurchasePrice] = useState<number>(0);
+  const [currentAddOns, setCurrentAddOns] = useState<any[]>([]);
+  const [currentTags, setCurrentTags] = useState<string>('');
+  const [currentDeliveryTime, setCurrentDeliveryTime] = useState<string>('');
 
   const headers = { Authorization: `Bearer ${token}` };
 
@@ -288,15 +287,14 @@ export default function AdminDashboard() {
       // Push a new state when modal opens
       window.history.pushState(null, '', window.location.href);
 
-      // Initialize menu location fields when modal opens
-      if (menuModal.data?.latitude || menuModal.data?.longitude) {
-        setMenuLatitude(String(menuModal.data.latitude || ''));
-        setMenuLongitude(String(menuModal.data.longitude || ''));
-        setMenuGeoLimit(String(menuModal.data.geoLimit || ''));
+      if (menuModal.data) {
+        setCurrentAddOns(menuModal.data.addOns || []);
+        setCurrentTags((menuModal.data.tags || []).join(', '));
+        setCurrentDeliveryTime(menuModal.data.deliveryTime || '');
       } else {
-        setMenuLatitude('');
-        setMenuLongitude('');
-        setMenuGeoLimit('');
+        setCurrentAddOns([]);
+        setCurrentTags('');
+        setCurrentDeliveryTime('');
       }
 
       document.addEventListener('keydown', handleKeyDown);
@@ -485,9 +483,9 @@ export default function AdminDashboard() {
       mealTypes: mealTypes || [],
       homeCategories: homeCategories || [],
       scheduleSections: scheduleSections || [],
-      latitude: menuLatitude ? Number(menuLatitude) : null,
-      longitude: menuLongitude ? Number(menuLongitude) : null,
-      geoLimit: menuGeoLimit ? Number(menuGeoLimit) : null,
+      addOns: currentAddOns,
+      deliveryTime: currentDeliveryTime,
+      tags: currentTags.split(',').map(t => t.trim()).filter(t => t),
     };
 
     console.log('Saving menu with data:', body);
@@ -508,37 +506,10 @@ export default function AdminDashboard() {
       setSellingPrice(0);
       setPurchasePrice(0);
       setIsGenerateDisabled(false);
-      setMenuLatitude('');
-      setMenuLongitude('');
-      setMenuGeoLimit('');
       fetchAll();
     } else {
       alert(data.error || 'Failed to save menu item');
     }
-  };
-
-  // Capture current location for menu item
-  const handleCaptureMenuLocation = async () => {
-    if (!navigator.geolocation) {
-      alert('Geolocation not supported');
-      return;
-    }
-    setLocatingMenu(true);
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        setMenuLatitude(String(pos.coords.latitude.toFixed(6)));
-        setMenuLongitude(String(pos.coords.longitude.toFixed(6)));
-        setMenuFormDirty(true);
-        console.log('✅ Menu location captured:', pos.coords.latitude, pos.coords.longitude);
-        setLocatingMenu(false);
-      },
-      (err) => {
-        console.error('❌ Location error:', err);
-        alert('Failed to get location: ' + err.message);
-        setLocatingMenu(false);
-      },
-      { timeout: 10000, enableHighAccuracy: true }
-    );
   };
 
   const generateDescriptionWithAI = async (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -1035,53 +1006,57 @@ export default function AdminDashboard() {
                 </div>
               </div>
 
-                <div className="pt-2">
-                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-4 mb-2">Home Categories (show on Home)</p>
-                  <div className="flex gap-3 px-4 flex-wrap">
-                    <label className="inline-flex items-center gap-2 text-sm">
-                      <input type="checkbox" name="homeCategories" value="Lunch" defaultChecked={menuModal.data?.homeCategories?.includes?.('Lunch')} />
-                      <span>Lunch</span>
-                    </label>
-                    <label className="inline-flex items-center gap-2 text-sm">
-                      <input type="checkbox" name="homeCategories" value="Dinner" defaultChecked={menuModal.data?.homeCategories?.includes?.('Dinner')} />
-                      <span>Dinner</span>
-                    </label>
-                    <label className="inline-flex items-center gap-2 text-sm">
-                      <input type="checkbox" name="homeCategories" value="Healthy" defaultChecked={menuModal.data?.homeCategories?.includes?.('Healthy')} />
-                      <span>Healthy</span>
-                    </label>
-                    <label className="inline-flex items-center gap-2 text-sm">
-                      <input type="checkbox" name="homeCategories" value="Shahi Thali" defaultChecked={menuModal.data?.homeCategories?.includes?.('Shahi Thali')} />
-                      <span>Shahi Thali</span>
-                    </label>
-                    <label className="inline-flex items-center gap-2 text-sm">
-                      <input type="checkbox" name="homeCategories" value="Breakfast" defaultChecked={menuModal.data?.homeCategories?.includes?.('Breakfast')} />
-                      <span>Breakfast</span>
-                    </label>
-                  </div>
-                </div>
+                {isAdmin && (
+                  <>
+                    <div className="pt-2">
+                      <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-4 mb-2">Home Categories (show on Home)</p>
+                      <div className="flex gap-3 px-4 flex-wrap">
+                        <label className="inline-flex items-center gap-2 text-sm">
+                          <input type="checkbox" name="homeCategories" value="Lunch" defaultChecked={menuModal.data?.homeCategories?.includes?.('Lunch')} />
+                          <span>Lunch</span>
+                        </label>
+                        <label className="inline-flex items-center gap-2 text-sm">
+                          <input type="checkbox" name="homeCategories" value="Dinner" defaultChecked={menuModal.data?.homeCategories?.includes?.('Dinner')} />
+                          <span>Dinner</span>
+                        </label>
+                        <label className="inline-flex items-center gap-2 text-sm">
+                          <input type="checkbox" name="homeCategories" value="Healthy" defaultChecked={menuModal.data?.homeCategories?.includes?.('Healthy')} />
+                          <span>Healthy</span>
+                        </label>
+                        <label className="inline-flex items-center gap-2 text-sm">
+                          <input type="checkbox" name="homeCategories" value="Shahi Thali" defaultChecked={menuModal.data?.homeCategories?.includes?.('Shahi Thali')} />
+                          <span>Shahi Thali</span>
+                        </label>
+                        <label className="inline-flex items-center gap-2 text-sm">
+                          <input type="checkbox" name="homeCategories" value="Breakfast" defaultChecked={menuModal.data?.homeCategories?.includes?.('Breakfast')} />
+                          <span>Breakfast</span>
+                        </label>
+                      </div>
+                    </div>
 
-                <div className="pt-2">
-                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-4 mb-2">Schedule Sections</p>
-                  <div className="flex gap-3 px-4 flex-wrap">
-                    <label className="inline-flex items-center gap-2 text-sm">
-                      <input type="checkbox" name="scheduleSections" value="Regular" defaultChecked={menuModal.data?.scheduleSections?.includes?.('Regular')} />
-                      <span>Regular</span>
-                    </label>
-                    <label className="inline-flex items-center gap-2 text-sm">
-                      <input type="checkbox" name="scheduleSections" value="Shahi Thali" defaultChecked={menuModal.data?.scheduleSections?.includes?.('Shahi Thali')} />
-                      <span>Shahi Thali</span>
-                    </label>
-                    <label className="inline-flex items-center gap-2 text-sm">
-                      <input type="checkbox" name="scheduleSections" value="Corporate Order" defaultChecked={menuModal.data?.scheduleSections?.includes?.('Corporate Order')} />
-                      <span>Corporate Order</span>
-                    </label>
-                    <label className="inline-flex items-center gap-2 text-sm">
-                      <input type="checkbox" name="scheduleSections" value="School Tiffins" defaultChecked={menuModal.data?.scheduleSections?.includes?.('School Tiffins')} />
-                      <span>School Tiffins</span>
-                    </label>
-                  </div>
-                </div>
+                    <div className="pt-2">
+                      <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-4 mb-2">Schedule Sections</p>
+                      <div className="flex gap-3 px-4 flex-wrap">
+                        <label className="inline-flex items-center gap-2 text-sm">
+                          <input type="checkbox" name="scheduleSections" value="Regular" defaultChecked={menuModal.data?.scheduleSections?.includes?.('Regular')} />
+                          <span>Regular</span>
+                        </label>
+                        <label className="inline-flex items-center gap-2 text-sm">
+                          <input type="checkbox" name="scheduleSections" value="Shahi Thali" defaultChecked={menuModal.data?.scheduleSections?.includes?.('Shahi Thali')} />
+                          <span>Shahi Thali</span>
+                        </label>
+                        <label className="inline-flex items-center gap-2 text-sm">
+                          <input type="checkbox" name="scheduleSections" value="Corporate Order" defaultChecked={menuModal.data?.scheduleSections?.includes?.('Corporate Order')} />
+                          <span>Corporate Order</span>
+                        </label>
+                        <label className="inline-flex items-center gap-2 text-sm">
+                          <input type="checkbox" name="scheduleSections" value="School Tiffins" defaultChecked={menuModal.data?.scheduleSections?.includes?.('School Tiffins')} />
+                          <span>School Tiffins</span>
+                        </label>
+                      </div>
+                    </div>
+                  </>
+                )}
 
                 <div className="space-y-2">
                 <textarea name="description" defaultValue={menuModal.data?.description || ''} placeholder="Menu Description (Optional)" rows={3} className={`${inputCls} resize-none`} />
@@ -1155,70 +1130,123 @@ export default function AdminDashboard() {
                 </select>
               </div>
 
-              {/* Location Settings for Menu Item - Admin Only */}
-              {isAdmin && (
-                <>
-                  <hr className="my-3" />
-                  <h4 className="text-sm font-bold text-gray-700 px-4">📍 Delivery Location Settings (Optional)</h4>
+              <div className="space-y-1">
+                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-4">Delivery Time</p>
+                <input
+                  type="text"
+                  name="deliveryTime"
+                  value={currentDeliveryTime}
+                  onChange={e => { setCurrentDeliveryTime(e.target.value); setMenuFormDirty(true); }}
+                  placeholder="e.g. 30-40 mins"
+                  className={inputCls}
+                />
+              </div>
 
-                  <div className="px-4">
-                    <label className="block text-xs font-bold mb-2">Set Menu Item Location</label>
-                    <button
-                      type="button"
-                      onClick={handleCaptureMenuLocation}
-                      disabled={locatingMenu}
-                      className="w-full px-4 py-2 bg-blue-500 text-white rounded-lg font-bold text-sm hover:bg-blue-600 disabled:opacity-70"
-                    >
-                      {locatingMenu ? '📍 Getting location...' : '📍 Capture Current Location'}
-                    </button>
-                  </div>
+              <div className="space-y-1">
+                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-4">Tags (comma separated)</p>
+                <input
+                  type="text"
+                  name="tags"
+                  value={currentTags}
+                  onChange={e => { setCurrentTags(e.target.value); setMenuFormDirty(true); }}
+                  placeholder="Street Food, Spicy"
+                  className={inputCls}
+                />
+              </div>
 
-                  <div className="grid grid-cols-2 gap-2 px-4">
-                    <div>
-                      <label className="block text-xs font-bold mb-1">Latitude</label>
-                      <input
-                        type="number"
-                        step="0.000001"
-                        value={menuLatitude}
-                        onChange={e => { setMenuLatitude(e.target.value); setMenuFormDirty(true); }}
-                        placeholder="28.6139"
-                        className="w-full px-3 py-2 border rounded-lg text-xs"
-                      />
+              <div className="space-y-3 pt-2">
+                <div className="flex items-center justify-between px-4">
+                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Add-ons</p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCurrentAddOns([...currentAddOns, { name: '', price: '', image: '' }]);
+                      setMenuFormDirty(true);
+                    }}
+                    className="text-[10px] font-bold text-orange-500 flex items-center gap-1"
+                  >
+                    <Plus className="w-3 h-3" /> Add Item
+                  </button>
+                </div>
+                
+                <div className="space-y-2 px-4 pb-4">
+                  {currentAddOns.map((addon, idx) => (
+                    <div key={idx} className="space-y-2 bg-slate-50 p-3 rounded-2xl border border-slate-100">
+                      <div className="flex gap-2 items-start">
+                        {/* Image Preview & Upload */}
+                        <div className="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0 bg-white border border-slate-200">
+                          <img src={addon.image || 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=64&h=64&fit=crop'} alt="addon" className="w-full h-full object-cover" />
+                        </div>
+                        
+                        {/* Input Fields */}
+                        <div className="flex-1 space-y-2">
+                          <input
+                            type="text"
+                            placeholder="Name (e.g. Achar)"
+                            value={addon.name}
+                            onChange={e => {
+                              const newList = [...currentAddOns];
+                              newList[idx].name = e.target.value;
+                              setCurrentAddOns(newList);
+                              setMenuFormDirty(true);
+                            }}
+                            className="w-full text-xs border border-slate-200 rounded-lg px-3 py-2 focus:outline-none bg-white"
+                          />
+                          <input
+                            type="number"
+                            placeholder="Price"
+                            value={addon.price}
+                            onChange={e => {
+                              const newList = [...currentAddOns];
+                              newList[idx].price = Number(e.target.value);
+                              setCurrentAddOns(newList);
+                              setMenuFormDirty(true);
+                            }}
+                            className="w-full text-xs border border-slate-200 rounded-lg px-3 py-2 focus:outline-none bg-white font-bold"
+                          />
+                        </div>
+
+                        {/* Delete Button */}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setCurrentAddOns(currentAddOns.filter((_, i) => i !== idx));
+                            setMenuFormDirty(true);
+                          }}
+                          className="p-1.5 text-slate-400 hover:text-red-500 transition flex-shrink-0"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+
+                      {/* Image Upload */}
+                      <label className="block cursor-pointer">
+                        <div className="py-2 bg-white border border-slate-200 rounded-lg text-center text-[9px] font-bold uppercase tracking-widest text-orange-500 shadow-sm hover:border-orange-300 transition">
+                          📷 Upload Image
+                        </div>
+                        <input 
+                          type="file" 
+                          accept="image/*" 
+                          className="hidden" 
+                          onChange={async e => { 
+                            const f = e.target.files?.[0]; 
+                            if (!f) return; 
+                            try { 
+                              const url = await uploadImage(f); 
+                              const newList = [...currentAddOns];
+                              newList[idx].image = url;
+                              setCurrentAddOns(newList);
+                              setMenuFormDirty(true);
+                            } catch { 
+                              alert('Upload failed'); 
+                            } 
+                          }} 
+                        />
+                      </label>
                     </div>
-                    <div>
-                      <label className="block text-xs font-bold mb-1">Longitude</label>
-                      <input
-                        type="number"
-                        step="0.000001"
-                        value={menuLongitude}
-                        onChange={e => { setMenuLongitude(e.target.value); setMenuFormDirty(true); }}
-                        placeholder="77.2090"
-                        className="w-full px-3 py-2 border rounded-lg text-xs"
-                      />
-                    </div>
-                  </div>
-
-                  {menuLatitude && menuLongitude && (
-                    <div className="bg-green-50 border border-green-200 rounded-lg p-3 mx-4">
-                      <p className="text-xs font-bold text-green-700">✅ Location set</p>
-                      <p className="text-xs text-green-600 mt-1">{menuLatitude}, {menuLongitude}</p>
-                    </div>
-                  )}
-
-                  <div className="px-4">
-                    <label className="block text-xs font-bold mb-1">Geo-Limit (Delivery Radius in meters)</label>
-                    <input
-                      type="number"
-                      value={menuGeoLimit}
-                      onChange={e => { setMenuGeoLimit(e.target.value); setMenuFormDirty(true); }}
-                      placeholder="5000"
-                      className="w-full px-3 py-2 border rounded-lg"
-                    />
-                    <p className="text-xs text-gray-500 mt-1">Current: {menuGeoLimit ? `${(Number(menuGeoLimit) / 1000).toFixed(1)}km` : 'Not set'}</p>
-                  </div>
-                </>
-              )}
-
+                  ))}
+                </div>
+              </div>
               <div className="flex gap-4 pt-6 sticky bottom-0 bg-white">
                 <button
                   type="button"

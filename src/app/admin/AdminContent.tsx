@@ -741,7 +741,7 @@ export function MenuTab({ menuItems, search, setSearch, setMenuModal, setImgPrev
                 {/* Image with overlay */}
                 <div className="relative h-48 bg-gradient-to-br from-orange-100 to-amber-100">
                   <img
-                    src={m.image?.startsWith('http') ? m.image : ''}
+                    src={m.image?.startsWith('http') ? m.image : 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&auto=format&fit=crop'}
                     alt={m.name}
                     className="w-full h-full object-cover"
                     onError={e => { (e.target as HTMLImageElement).src = ''; }}

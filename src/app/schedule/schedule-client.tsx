@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  ChevronLeft, ChevronRight, X, 
+import {
+  ChevronLeft, ChevronRight, X,
   Loader2, Calendar, ShoppingCart,
   Clock
 } from 'lucide-react';
@@ -31,7 +31,7 @@ export default function ScheduleClient() {
   const [selectedSection, setSelectedSection] = useState<string | null>(null);
   const [menuItems, setMenuItems] = useState<any[]>([]);
   const [menuLoading, setMenuLoading] = useState(false);
-  
+
   // Dialog state
   const [selectedItem, setSelectedItem] = useState<any>(null);
   const [selectedMealType, setSelectedMealType] = useState<'lunch' | 'dinner'>('lunch');
@@ -44,14 +44,14 @@ export default function ScheduleClient() {
       .then(d => {
         if (d.success) setHomestyle(d.data);
       })
-      .catch(() => {})
+      .catch(() => { })
       .finally(() => setLoading(false));
   }, []);
 
   // Fetch items based on selected section tag
   useEffect(() => {
     if (!selectedSection) return;
-    
+
     const section = SECTIONS.find(s => s.id === selectedSection);
     if (!section) return;
 
@@ -85,20 +85,24 @@ export default function ScheduleClient() {
     'https://images.unsplash.com/photo-1547523916-7c73a6de352d?w=1200&h=400&fit=crop'
   ];
 
-  const handleCheckout = () => {
+  const handleDirectCheckout = (item: any) => {
     if (!token) {
       addToast('Please login to schedule meals', 'error');
       router.push('/login');
       return;
     }
 
-    // Navigate to checkout with selected item details
     const params = new URLSearchParams({
-      itemId: selectedItem._id,
+      itemId: item._id,
       mealType: selectedMealType,
       date: selectedDate
     });
     router.push(`/checkout?${params.toString()}`);
+  };
+
+  const handleCheckout = () => {
+    if (!selectedItem) return;
+    handleDirectCheckout(selectedItem);
   };
 
   if (loading) {
@@ -125,29 +129,28 @@ export default function ScheduleClient() {
           />
         </AnimatePresence>
         <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/40" />
-        
+
         {banners.length > 1 && (
           <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5 focus-within:z-10">
             {banners.map((_: any, i: number) => (
               <button
                 key={i}
                 onClick={() => setCurrentBanner(i)}
-                className={`w-1.5 h-1.5 rounded-full transition-all ${
-                  currentBanner === i ? 'w-6 bg-white' : 'bg-white/40'
-                }`}
+                className={`w-1.5 h-1.5 rounded-full transition-all ${currentBanner === i ? 'w-6 bg-white' : 'bg-white/40'
+                  }`}
               />
             ))}
           </div>
         )}
 
         <div className="absolute top-1/2 -translate-y-1/2 left-6 right-6 flex items-center justify-between pointer-events-none">
-          <button 
+          <button
             onClick={() => setCurrentBanner(p => (p - 1 + banners.length) % banners.length)}
             className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center pointer-events-auto hover:bg-white/20 transition"
           >
             <ChevronLeft className="w-6 h-6 text-white" />
           </button>
-          <button 
+          <button
             onClick={() => setCurrentBanner(p => (p + 1) % banners.length)}
             className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center pointer-events-auto hover:bg-white/20 transition"
           >
@@ -191,7 +194,7 @@ export default function ScheduleClient() {
         ) : (
           <div className="space-y-6">
             <div className="flex items-center gap-4">
-              <button 
+              <button
                 onClick={() => setSelectedSection(null)}
                 className="w-12 h-12 rounded-full bg-white shadow-md flex items-center justify-center text-slate-900 active:scale-90 transition"
               >
@@ -230,16 +233,16 @@ export default function ScheduleClient() {
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: idx * 0.05 }}
-                    onClick={() => setSelectedItem(item)}
+                    onClick={() => handleDirectCheckout(item)}
                     className="bg-white rounded-2xl overflow-hidden shadow-md border border-slate-50 flex items-center gap-4 p-4 cursor-pointer active:scale-[0.98] transition-transform"
                   >
                     {/* Description Left */}
                     <div className="flex-1 min-w-0">
-                      <h3 className="text-lg font-bold text-slate-900 truncate">{item.name}</h3>
-                      <p className="text-slate-500 text-sm line-clamp-2 mt-1">{item.description}</p>
+                      <h3 className="text-lg font-bold text-slate-900 truncate">{item.description}</h3>
+
                       <p className="text-orange-500 font-black text-lg mt-2">₹{item.price}</p>
                     </div>
-                    
+
                     {/* Image Right */}
                     <div className="w-24 h-24 rounded-xl overflow-hidden flex-shrink-0">
                       <img src={item.image} className="w-full h-full object-cover" alt={item.name} />
@@ -318,11 +321,10 @@ export default function ScheduleClient() {
                     {/* Lunch */}
                     <button
                       onClick={() => setSelectedMealType('lunch')}
-                      className={`p-4 rounded-xl border-2 transition-all ${
-                        selectedMealType === 'lunch'
-                          ? 'border-orange-500 bg-orange-50'
-                          : 'border-slate-200 bg-white'
-                      }`}
+                      className={`p-4 rounded-xl border-2 transition-all ${selectedMealType === 'lunch'
+                        ? 'border-orange-500 bg-orange-50'
+                        : 'border-slate-200 bg-white'
+                        }`}
                     >
                       <div className="flex items-center gap-2 mb-2">
                         <Clock className={`w-4 h-4 ${selectedMealType === 'lunch' ? 'text-orange-500' : 'text-slate-400'}`} />
@@ -336,11 +338,10 @@ export default function ScheduleClient() {
                     {/* Dinner */}
                     <button
                       onClick={() => setSelectedMealType('dinner')}
-                      className={`p-4 rounded-xl border-2 transition-all ${
-                        selectedMealType === 'dinner'
-                          ? 'border-orange-500 bg-orange-50'
-                          : 'border-slate-200 bg-white'
-                      }`}
+                      className={`p-4 rounded-xl border-2 transition-all ${selectedMealType === 'dinner'
+                        ? 'border-orange-500 bg-orange-50'
+                        : 'border-slate-200 bg-white'
+                        }`}
                     >
                       <div className="flex items-center gap-2 mb-2">
                         <Clock className={`w-4 h-4 ${selectedMealType === 'dinner' ? 'text-orange-500' : 'text-slate-400'}`} />

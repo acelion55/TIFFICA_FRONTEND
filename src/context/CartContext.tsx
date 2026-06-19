@@ -9,6 +9,7 @@ interface CartItem {
   image?: string;
   quantity: number;
   cloudKitchen?: { _id: string; name: string };
+  selectedAddOns?: Array<{ name: string; price: number }>;
 }
 
 interface CartContextType {

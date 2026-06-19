@@ -7,7 +7,7 @@ import {
   Search, Flame,
   SlidersHorizontal, Plus, Star, Clock,
   Sunrise, Sun, Sunset, Moon, MapPin, Bell,
-  UtensilsCrossed, IndianRupee, Tag, Coffee, Sandwich, LayoutGrid
+  UtensilsCrossed, IndianRupee, Tag, Coffee, Sandwich, LayoutGrid, X
 } from 'lucide-react';
 import { Leaf } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
@@ -43,6 +43,9 @@ interface MenuItem {
   mealTypes?: string[];
   isVeg?: boolean;
   rating?: number;
+  addOns?: Array<{ name: string; price: number; image?: string }>;
+  deliveryTime?: string;
+  tags?: string[];
 }
 
 // ── Time-based greeting ──────────────────────────────────
@@ -69,6 +72,7 @@ export default function HomeClient() {
   const [loading, setLoading] = useState(true);
   const [videoUrl, setVideoUrl] = useState(FALLBACK_VIDEO);
   const [greeting, setGreeting] = useState(() => getGreeting());
+  const [selectedMeal, setSelectedMeal] = useState<MenuItem | null>(null);
 
   // Update greeting every minute
   useEffect(() => {
@@ -265,7 +269,7 @@ export default function HomeClient() {
           ) : orderedItems.length > 0 ? (
             <div className="space-y-4">
               <AnimatePresence>
-                {orderedItems.map(item => <MenuCard key={item._id} item={item} token={token} user={user} />)}
+                {orderedItems.map(item => <MenuCard key={item._id} item={item} token={token} user={user} onOpenDetail={() => setSelectedMeal(item)} />)}
               </AnimatePresence>
             </div>
           ) : (
@@ -273,6 +277,11 @@ export default function HomeClient() {
           )}
         </section>
       </main>
+
+      <MealDetailModal 
+        item={selectedMeal} 
+        onClose={() => setSelectedMeal(null)} 
+      />
     </div>
   );
 }
@@ -307,7 +316,7 @@ function SpecialCard({ item }: { item: MenuItem }) {
           )}
         </div>
         <button
-          onClick={handleAdd}
+          onClick={() => addToCart({ _id: item._id, name: item.name, price: item.price, image: item.image })}
           className="bg-gray-900 text-white p-2 rounded-xl hover:bg-gray-800 transition active:scale-90"
         >
           <Plus size={16} />
@@ -317,20 +326,13 @@ function SpecialCard({ item }: { item: MenuItem }) {
   );
 }
 
-function MenuCard({ item, token, user }: { item: MenuItem; token: string | null; user: any }) {
+function MenuCard({ item, token, user, onOpenDetail }: { item: MenuItem; token: string | null; user: any; onOpenDetail: () => void }) {
   const { addToCart } = useCart();
   const { addToast } = useToast() || { addToast: (msg: string) => console.log(msg) };
 
-  const handleAdd = () => {
-    console.log('🛒 Adding to cart:', item.name);
-    try {
-      addToCart({ _id: item._id, name: item.name, price: item.price, image: item.image });
-      console.log('✅ Added successfully');
-      if (addToast) addToast(`Added ${item.name}`, 'success');
-    } catch (err) {
-      console.error('❌ Error adding to cart:', err);
-      if (addToast) addToast(`Failed to add ${item.name}`, 'error');
-    }
+  const handleAdd = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onOpenDetail();
   };
 
   // Check if item is Today's Special
@@ -347,17 +349,15 @@ function MenuCard({ item, token, user }: { item: MenuItem; token: string | null;
       {/* Description Left */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-1">
-          <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">{item.category || 'Meal'}</span>
+          <span className="text-[1.4vh] font-bold text-gray-400 uppercase tracking-wide">{item.category || 'Meal'}</span>
           {isTodaySpecial && (
             <div className="bg-red-500 text-white px-2 py-0.5 rounded-full text-[9px] font-black flex items-center gap-1">
               <Flame size={8} /> Special
             </div>
           )}
         </div>
-        <h3 className="text-base font-bold text-slate-900 truncate">{item.name}</h3>
-        {item.description && (
-          <p className="text-xs text-slate-500 line-clamp-2 mt-1">{item.description}</p>
-        )}
+        <h3 className="text-base font-bold text-slate-900 truncate">{item.description}</h3>
+
         <div className="flex items-center justify-between mt-3">
           <div className="flex flex-col">
             <span className="text-lg font-black text-orange-500">₹{item.price}</span>
@@ -374,7 +374,7 @@ function MenuCard({ item, token, user }: { item: MenuItem; token: string | null;
           </motion.button>
         </div>
       </div>
-      
+
       {/* Image Right */}
       <div className="w-24 h-24 rounded-xl overflow-hidden flex-shrink-0">
         <img src={item.image || FALLBACK_IMG} className="w-full h-full object-cover" alt={item.name} />
@@ -401,6 +401,178 @@ function EmptyState({ locationSet }: { locationSet: boolean }) {
         </button>
       )}
     </div>
+  );
+}
+
+function MealDetailModal({ item, onClose }: { item: MenuItem | null; onClose: () => void }) {
+  const { addToCart } = useCart();
+  const { addToast } = useToast() || { addToast: (msg: string) => console.log(msg) };
+  const [selectedAddOns, setSelectedAddOns] = useState<any[]>([]);
+
+  useEffect(() => {
+    setSelectedAddOns([]);
+  }, [item]);
+
+  if (!item) return null;
+
+  const toggleAddOn = (addon: any) => {
+    setSelectedAddOns(prev => {
+      const exists = prev.find(a => a.name === addon.name);
+      if (exists) return prev.filter(a => a.name !== addon.name);
+      return [...prev, addon];
+    });
+  };
+
+  const totalPrice = item.price + selectedAddOns.reduce((s, a) => s + (a.price || 0), 0);
+
+  const handleConfirmAdd = () => {
+    try {
+      addToCart({
+        _id: item._id,
+        name: item.name,
+        price: totalPrice,
+        image: item.image,
+        selectedAddOns: selectedAddOns
+      });
+      if (addToast) addToast(`Added item to cart`, 'success');
+      onClose();
+    } catch (err) {
+      if (addToast) addToast('Failed to add to cart', 'error');
+    }
+  };
+
+  return (
+    <AnimatePresence>
+      {item && (
+        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center">
+          <motion.div
+             initial={{ opacity: 0 }}
+             animate={{ opacity: 1 }}
+             exit={{ opacity: 0 }}
+             onClick={onClose}
+             className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+          />
+          <motion.div
+            initial={{ y: '100%' }}
+            animate={{ y: 0 }}
+            exit={{ y: '100%' }}
+            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+            className="relative w-full max-w-lg bg-white rounded-t-[40px] sm:rounded-3xl overflow-hidden shadow-2xl max-h-[90vh] flex flex-col"
+          >
+            {/* Header Image */}
+            <div className="relative h-64 shrink-0">
+              <img src={item.image || FALLBACK_IMG} className="w-full h-full object-cover" alt={item.name} />
+              <button 
+                onClick={onClose}
+                className="absolute top-6 right-6 w-10 h-10 bg-black/20 backdrop-blur-md rounded-full flex items-center justify-center text-white hover:bg-black/40 transition"
+              >
+                <X size={20} />
+              </button>
+              <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/80 to-transparent text-white">
+                <div className="flex items-center gap-2 mb-2">
+                   <span className="px-2.5 py-1 bg-orange-500 rounded-full text-[10px] font-black uppercase tracking-widest leading-none">
+                      {item.category || 'Meal'}
+                   </span>
+                   {item.deliveryTime && (
+                     <span className="flex items-center gap-1 text-[10px] font-bold opacity-80 bg-black/20 backdrop-blur px-2 py-1 rounded-full">
+                        <Clock size={10} /> {item.deliveryTime}
+                     </span>
+                   )}
+                </div>
+                <h2 className="text-2xl font-black">{item.description}</h2>
+              </div>
+            </div>
+  
+            {/* Content */}
+            <div className="flex-1 overflow-y-auto p-6 space-y-6">
+              {/* Tags */}
+              {item.tags && item.tags.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {item.tags.map(tag => (
+                    <span key={tag} className="flex items-center gap-1 px-3 py-1 bg-slate-100 text-slate-600 rounded-full text-xs font-bold">
+                      <Tag size={12} className="text-orange-500" /> {tag}
+                    </span>
+                  ))}
+                </div>
+              )}
+  
+              {/* Price Detail */}
+              <div className="bg-orange-50 rounded-3xl p-4 flex items-center justify-between">
+                 <div>
+                    <p className="text-[10px] font-black text-orange-400 uppercase tracking-widest mb-1">Base Price</p>
+                    <p className="text-2xl font-black text-orange-600">₹{item.price}</p>
+                 </div>
+                 {item.originalPrice && item.originalPrice > item.price && (
+                   <div className="text-right">
+                      <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">MRP</p>
+                      <p className="text-sm font-bold text-gray-400 line-through">₹{item.originalPrice}</p>
+                   </div>
+                 )}
+              </div>
+  
+              {/* Add-ons */}
+              {item.addOns && item.addOns.length > 0 && (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-black text-slate-900">Customize Meal</h3>
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">Optional</span>
+                  </div>
+                  <div className="grid grid-cols-1 gap-3">
+                    {item.addOns.map((addon) => {
+                      const isSelected = selectedAddOns.some(a => a.name === addon.name);
+                      return (
+                        <button
+                          key={addon.name}
+                          onClick={() => toggleAddOn(addon)}
+                          className={`flex items-center gap-4 p-3 rounded-2xl border-2 transition-all group ${
+                            isSelected ? 'border-orange-500 bg-orange-50' : 'border-slate-100 hover:border-orange-200'
+                          }`}
+                        >
+                          <div className="w-14 h-14 rounded-xl bg-slate-200 overflow-hidden shrink-0">
+                            {addon.image ? (
+                              <img src={addon.image} className="w-full h-full object-cover" alt={addon.name} />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-slate-400">
+                                 <Plus size={20} />
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex-1 text-left min-w-0">
+                            <p className={`font-bold text-sm ${isSelected ? 'text-orange-900' : 'text-slate-900'}`}>
+                              {addon.name}
+                            </p>
+                            <p className="font-extrabold text-orange-500 text-xs">+ ₹{addon.price}</p>
+                          </div>
+                          <div className={`w-6 h-6 rounded-lg border-2 transition-all flex items-center justify-center ${
+                            isSelected ? 'bg-orange-500 border-orange-500' : 'border-slate-200'
+                          }`}>
+                            {isSelected && <Plus size={14} className="text-white" />}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+  
+            {/* Footer Actions */}
+            <div className="p-6 bg-white border-t border-slate-100 flex items-center gap-4 sticky bottom-0">
+               <div className="flex-1">
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Final Amount</p>
+                  <p className="text-2xl font-black text-slate-900">₹{totalPrice}</p>
+               </div>
+               <button
+                 onClick={handleConfirmAdd}
+                 className="flex-[2] bg-orange-500 text-white rounded-2xl py-4 font-black shadow-xl shadow-orange-200 active:scale-95 transition-all hover:bg-orange-600"
+               >
+                 Add to Bag
+               </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+    </AnimatePresence>
   );
 }
 
