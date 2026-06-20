@@ -10,6 +10,7 @@ import {
   SubscriptionsTab, NotificationsTab, LegalTab, HomestyleTab, CouponsTab, ScheduleOrdersTab, LeadsTab,
   EarningsTab
 } from './AdminContent';
+import { MapLocationTab } from './MapLocationTab';
 import { PayoutsTab } from './PayoutsTab';
 import { CouponModal } from './CouponModal';
 import { KitchenModal } from './KitchenModal';
@@ -17,7 +18,7 @@ import AdminNotifications from '@/components/AdminNotifications';
 import { notificationSound, showAdminNotification } from '@/lib/notificationSound';
 
 const API_URL = 'https://tifficaapp-1.onrender.com/api';
-type Tab = 'stats' | 'users' | 'orders' | 'menu' | 'kitchens' | 'settings' | 'subscriptions' | 'schedules' | 'homestyles' | 'notifications' | 'legal' | 'coupons' | 'leads' | 'earnings' | 'payouts';
+type Tab = 'stats' | 'users' | 'orders' | 'menu' | 'kitchens' | 'settings' | 'subscriptions' | 'schedules' | 'homestyles' | 'notifications' | 'legal' | 'coupons' | 'leads' | 'earnings' | 'payouts' | 'map';
 interface Stats { users: number; orders: number; menuItems: number; subscriptions: number; totalWalletBalance?: number; }
 
 export default function AdminDashboard() {
@@ -578,6 +579,7 @@ export default function AdminDashboard() {
     { id: 'homestyles', label: 'Media', icon: Home },
     { id: 'coupons', label: 'Coupons', icon: Tag, count: coupons.length },
     { id: 'leads', label: 'Sales Leads', icon: TrendingUp, count: leads.length },
+    { id: 'map', label: 'Map Location', icon: Globe },
   ];
 
   const handleTabChange = (newTab: Tab) => {
@@ -809,6 +811,9 @@ export default function AdminDashboard() {
               )}
               {tab === 'leads' && isAdmin && (
                 <LeadsTab leads={leads} expandedRow={expandedRow} setExpandedRow={setExpandedRow} search={leadsSearch} setSearch={setLeadsSearch} statusFilter={leadsStatusFilter} setStatusFilter={setLeadsStatusFilter} {...commonProps} />
+              )}
+              {tab === 'map' && isAdmin && (
+                <MapLocationTab users={users} kitchens={kitchens} orders={orders} {...commonProps} />
               )}
               {tab === 'earnings' && (
                 <EarningsTab orders={orders} />

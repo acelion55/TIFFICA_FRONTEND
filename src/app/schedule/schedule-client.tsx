@@ -10,6 +10,7 @@ import {
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/context/ToastContext';
 import { useRouter } from 'next/navigation';
+import { useCart } from '@/context/CartContext';
 
 const API_URL = 'https://tifficaapp-1.onrender.com/api';
 
@@ -24,6 +25,7 @@ export default function ScheduleClient() {
   const { token } = useAuth();
   const { addToast } = useToast();
   const router = useRouter();
+  const { addToCart } = useCart();
 
   const [homestyle, setHomestyle] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -31,6 +33,7 @@ export default function ScheduleClient() {
   const [selectedSection, setSelectedSection] = useState<string | null>(null);
   const [menuItems, setMenuItems] = useState<any[]>([]);
   const [menuLoading, setMenuLoading] = useState(false);
+  const [mealTypeFilter, setMealTypeFilter] = useState<'lunch' | 'dinner'>('lunch');
 
   // Dialog state
   const [selectedItem, setSelectedItem] = useState<any>(null);
@@ -59,11 +62,20 @@ export default function ScheduleClient() {
     fetch(`${API_URL}/menu/search/${section.tag}`)
       .then(r => r.json())
       .then(d => {
-        setMenuItems(d.menuItems || []);
+        console.log('📦 Menu items received:', d);
+        // Filter items by selected meal type
+        const filtered = (d.menuItems || []).filter((item: any) => {
+          const mealTypes = item.mealTypes || [item.mealType] || [];
+          return mealTypes.some((mt: string) => mt.toLowerCase() === mealTypeFilter.toLowerCase());
+        });
+        setMenuItems(filtered);
       })
-      .catch(() => setMenuItems([]))
+      .catch(err => {
+        console.error('❌ Error fetching menu:', err);
+        setMenuItems([]);
+      })
       .finally(() => setMenuLoading(false));
-  }, [selectedSection]);
+  }, [selectedSection, mealTypeFilter]);
 
   // Auto-slide banner
   useEffect(() => {
@@ -92,12 +104,20 @@ export default function ScheduleClient() {
       return;
     }
 
-    const params = new URLSearchParams({
-      itemId: item._id,
-      mealType: selectedMealType,
-      date: selectedDate
-    });
-    router.push(`/checkout?${params.toString()}`);
+    // Add item to cart
+    if (addToCart) {
+      addToCart({
+        _id: item._id,
+        name: item.name,
+        price: item.price,
+        image: item.image,
+        cloudKitchen: item.cloudKitchen
+      });
+      addToast(`${item.name} added to cart!`, 'success');
+    }
+
+    // Navigate to checkout
+    router.push('/checkout');
   };
 
   const handleCheckout = () => {
@@ -193,21 +213,30 @@ export default function ScheduleClient() {
           </>
         ) : (
           <div className="space-y-6">
-            <div className="flex items-center gap-4">
+           
+
+            {/* Meal Type Tabs */}
+            <div className="flex gap-3">
               <button
-                onClick={() => setSelectedSection(null)}
-                className="w-12 h-12 rounded-full bg-white shadow-md flex items-center justify-center text-slate-900 active:scale-90 transition"
+                onClick={() => setMealTypeFilter('lunch')}
+                className={`flex-1 py-3 px-4 rounded-xl font-bold text-sm transition-all ${
+                  mealTypeFilter === 'lunch'
+                    ? 'bg-orange-500 text-white shadow-lg'
+                    : 'bg-white border-2 border-slate-200 text-slate-900'
+                }`}
               >
-                <ChevronLeft className="w-6 h-6" />
+                🍽️ Lunch (12-2 PM)
               </button>
-              <div>
-                <h2 className="text-2xl font-black text-slate-900">
-                  {SECTIONS.find(s => s.id === selectedSection)?.label}
-                </h2>
-                <p className="text-sm text-slate-500 font-medium">
-                  {SECTIONS.find(s => s.id === selectedSection)?.desc}
-                </p>
-              </div>
+              <button
+                onClick={() => setMealTypeFilter('dinner')}
+                className={`flex-1 py-3 px-4 rounded-xl font-bold text-sm transition-all ${
+                  mealTypeFilter === 'dinner'
+                    ? 'bg-orange-500 text-white shadow-lg'
+                    : 'bg-white border-2 border-slate-200 text-slate-900'
+                }`}
+              >
+                🌙 Dinner (7-9 PM)
+              </button>
             </div>
 
             {/* Menu List - Description Left, Image Right */}
@@ -238,6 +267,12 @@ export default function ScheduleClient() {
                   >
                     {/* Description Left */}
                     <div className="flex-1 min-w-0">
+                      {/* Kitchen Name */}
+                      {item.cloudKitchen && (
+                        <p className="text-orange-500 font-bold text-xs uppercase tracking-wider mb-1">
+                          {item.cloudKitchen.name}
+                        </p>
+                      )}
                       <h3 className="text-lg font-bold text-slate-900 truncate">{item.description}</h3>
 
                       <p className="text-orange-500 font-black text-lg mt-2">₹{item.price}</p>

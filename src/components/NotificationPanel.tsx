@@ -5,8 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Tag, Bell, Package, Info, AlertCircle } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useNotifications } from '@/context/NotificationContext';
-
-const API_URL = 'https://tifficaapp-1.onrender.com/api';
+import { API_URL } from '@/lib/config';
 
 const TYPE_ICON: Record<string, any> = {
   offer: Tag,

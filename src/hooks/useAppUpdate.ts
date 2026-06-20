@@ -4,6 +4,7 @@ interface UpdateInfo {
   available: boolean;
   version: string;
   message: string;
+  critical?: boolean;
 }
 
 export function useAppUpdate() {
@@ -14,123 +15,131 @@ export function useAppUpdate() {
   });
   const [updateReady, setUpdateReady] = useState(false);
 
-  // Check for updates every 2 minutes (more frequently)
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-
-    const checkForUpdates = async () => {
-      try {
-        // Fetch version.json from server with cache busting
-        const response = await fetch('/version.json?t=' + Date.now(), {
-          cache: 'no-store',
-          headers: { 'pragma': 'no-cache', 'cache-control': 'no-cache' }
-        });
-        
-        if (!response.ok) {
-          console.log('[Update Check] Version check failed:', response.status);
-          return;
-        }
-
-        const data = await response.json();
-        const currentVersion = localStorage.getItem('appVersion') || '0.0.0';
-
-        console.log('[Update Check] Current:', currentVersion, 'Available:', data.version);
-
-        // If versions don't match, update is available
-        if (data.version !== currentVersion) {
-          console.log('[Update Check] Update available!');
-          setUpdateInfo({
-            available: true,
-            version: data.version,
-            message: data.message || 'A new version is available'
-          });
-
-          // Update service worker cache
-          if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-            navigator.serviceWorker.controller.postMessage({
-              type: 'UPDATE_CACHE_VERSION',
-              version: data.version
-            });
-          }
-        }
-      } catch (error) {
-        console.log('[Update Check] Failed:', error);
-      }
-    };
-
-    // Check immediately on load
-    checkForUpdates();
-
-    // Check every 2 minutes (120 seconds) instead of 5
-    const interval = setInterval(checkForUpdates, 2 * 60 * 1000);
-
-    return () => clearInterval(interval);
-  }, []);
-
-  // Listen for service worker updates
+  // Register service worker and handle updates
   useEffect(() => {
     if (typeof window === 'undefined' || !('serviceWorker' in navigator)) return;
 
-    const handleServiceWorkerUpdate = () => {
-      console.log('[Update Check] Service worker updated');
-      setUpdateReady(true);
-      setUpdateInfo(prev => ({
-        ...prev,
-        available: true,
-        message: 'App update ready! Please refresh to apply changes.'
-      }));
-    };
+    // Register the service worker
+    navigator.serviceWorker.register('/sw.js').then(reg => {
+      console.log('[Update Check] Service Worker registered');
 
-    // Also listen for controller change
+      // Check for updates every 30 seconds (more aggressive)
+      const interval = setInterval(() => {
+        reg.update();
+      }, 30000);
+
+      // Listen for updatefound event
+      reg.addEventListener('updatefound', () => {
+        const newWorker = reg.installing;
+        if (newWorker) {
+          newWorker.addEventListener('statechange', () => {
+            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+              console.log('[Update Check] New service worker installed and waiting');
+              setUpdateReady(true);
+              setUpdateInfo(prev => ({
+                ...prev,
+                available: true,
+                message: 'A new update is ready!'
+              }));
+              
+              // AUTOMATIC UPDATE: If a new worker is waiting, trigger it immediately
+              newWorker.postMessage({ type: 'SKIP_WAITING' });
+            }
+          });
+        }
+      });
+
+      return () => clearInterval(interval);
+    }).catch(err => {
+      console.error('[Update Check] SW registration failed:', err);
+    });
+
+    // Handle controller change (reloading when new SW takes control)
     const handleControllerChange = () => {
-      console.log('[Update Check] Controller changed');
-      setUpdateReady(true);
+      console.log('[Update Check] Controller changed - reloading for new version');
+      // For "automatic update", we reload immediately
+      window.location.reload();
     };
 
     navigator.serviceWorker.addEventListener('controllerchange', handleControllerChange);
-    
-    // Check if there's already a waiting service worker
-    if (navigator.serviceWorker.controller) {
-      navigator.serviceWorker.ready.then(reg => {
-        if (reg.waiting) {
-          console.log('[Update Check] Waiting service worker found');
-          setUpdateReady(true);
-        }
-      });
-    }
 
     return () => {
       navigator.serviceWorker.removeEventListener('controllerchange', handleControllerChange);
     };
   }, []);
 
+  // Version check logic (using version.json)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const checkForVersionUpdate = async () => {
+      try {
+        const response = await fetch('/version.json?t=' + Date.now(), {
+          cache: 'no-store'
+        });
+        
+        if (!response.ok) return;
+
+        const data = await response.json();
+        const currentVersion = localStorage.getItem('appVersion') || '0.0.0';
+
+        if (data.version !== currentVersion) {
+          console.log('[Update Check] New version detected:', data.version);
+          
+          // Store the latest version to be set after reload
+          localStorage.setItem('pendingVersion', data.version);
+          
+          setUpdateInfo({
+            available: true,
+            version: data.version,
+            message: data.message || 'Updating to new version...',
+            critical: data.critical
+          });
+
+          // Trigger Service Worker update check
+          if ('serviceWorker' in navigator) {
+            const reg = await navigator.serviceWorker.getRegistration();
+            if (reg) reg.update();
+          }
+        } else {
+          // Sync current version if match
+          localStorage.setItem('appVersion', data.version);
+        }
+      } catch (error) {
+        console.log('[Update Check] Version check failed:', error);
+      }
+    };
+
+    checkForVersionUpdate();
+    const interval = setInterval(checkForVersionUpdate, 60000); // Check version.json every minute
+
+    return () => clearInterval(interval);
+  }, []);
+
+  // Cleanup pending version after reload
+  useEffect(() => {
+    const pending = localStorage.getItem('pendingVersion');
+    if (pending) {
+      localStorage.setItem('appVersion', pending);
+      localStorage.removeItem('pendingVersion');
+    }
+  }, []);
+
   const applyUpdate = useCallback(() => {
-    console.log('[Update Check] Applying update...');
-    
-    if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-      const sw = navigator.serviceWorker.controller;
-      console.log('[Update Check] Sending SKIP_WAITING to service worker');
-      sw.postMessage({ type: 'SKIP_WAITING' });
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.ready.then(reg => {
+        if (reg.waiting) {
+          reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+        } else {
+          // If no waiting worker, but we know there's an update, just reload
+          window.location.reload();
+        }
+      });
     }
-
-    // Store new version
-    if (updateInfo.version) {
-      localStorage.setItem('appVersion', updateInfo.version);
-    }
-
-    // Force reload after a short delay to ensure SW is updated
-    setTimeout(() => {
-      console.log('[Update Check] Reloading page...');
-      window.location.reload();
-    }, 500);
-  }, [updateInfo.version]);
+  }, []);
 
   const dismissUpdate = useCallback(() => {
-    setUpdateInfo({
-      available: false,
-      version: '',
-      message: ''
-    });
+    setUpdateInfo(prev => ({ ...prev, available: false }));
   }, []);
 
   return {

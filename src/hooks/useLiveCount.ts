@@ -34,14 +34,9 @@ export function useLiveCount() {
     if (!token) return;
 
     try {
-      // Use the same WebSocket endpoint as AdminNotifications
-      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      const host = window.location.hostname;
-      const port = process.env.NEXT_PUBLIC_API_URL ? 
-        new URL(process.env.NEXT_PUBLIC_API_URL).port || (protocol === 'wss:' ? 443 : 80) : 
-        5001;
-      
-      wsRef.current = new WebSocket(`${protocol}//${host}:${port}/admin-notifications`);
+      // Use the Render backend URL for WebSockets since Vercel does not support them
+      const wsHost = API_URL.replace('http', 'ws').replace('/api', '');
+      wsRef.current = new WebSocket(`${wsHost}/admin-notifications`);
 
       wsRef.current.onopen = () => {
         console.log('✅ Live count WebSocket connected');

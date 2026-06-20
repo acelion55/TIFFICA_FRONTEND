@@ -5,7 +5,7 @@ import { MapPin, Navigation, Loader2, X, Search, Home, Briefcase, Hotel, MoreHor
 import { useLocation } from '@/context/LocationContext';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
-import { Geolocation } from '@capacitor/geolocation';
+import { getCurrentLocation } from '@/lib/geolocation';
 
 const NOMINATIM_REVERSE = 'https://nominatim.openstreetmap.org/reverse?format=json';
 const NOMINATIM_SEARCH  = 'https://nominatim.openstreetmap.org/search?format=json&limit=5';
@@ -64,37 +64,18 @@ export default function LocationModal() {
     }
   };
 
-  // Detect GPS location — uses Capacitor Geolocation (requests permission on Android/iOS)
-  // and falls back to browser API on web/PWA
+  // Detect GPS location — uses Browser/PWA Geolocation
   const handleDetect = async () => {
     setError('');
     setDetecting(true);
-    console.log('🚀 Starting geolocation detection...');
+    console.log('🚀 Starting PWA geolocation detection...');
 
     try {
-      // Request permission first (Capacitor handles Android runtime permission dialog)
-      let permStatus = await Geolocation.checkPermissions();
-      console.log('📋 Permission status:', permStatus);
+      // Get coordinates using the updated PWA-friendly helper
+      const pos = await getCurrentLocation();
 
-      if (permStatus.location === 'prompt' || permStatus.location === 'prompt-with-rationale') {
-        permStatus = await Geolocation.requestPermissions();
-        console.log('📋 Permission after request:', permStatus);
-      }
-
-      if (permStatus.location === 'denied') {
-        setDetecting(false);
-        setError('Location permission denied. Please enable it in your device Settings → Apps → Tiffica → Permissions.');
-        return;
-      }
-
-      // Get coordinates
-      const pos = await Geolocation.getCurrentPosition({
-        enableHighAccuracy: true,
-        timeout: 15000,
-      });
-
-      console.log('✅ Geolocation success:', pos.coords);
-      const { latitude, longitude } = pos.coords;
+      console.log('✅ Geolocation success:', pos);
+      const { latitude, longitude } = pos;
       let name = `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
 
       try {
@@ -113,15 +94,14 @@ export default function LocationModal() {
       console.error('❌ Geolocation error:', err);
 
       let errorMsg = 'Could not detect location.';
-      const code = err?.code ?? err?.message ?? '';
-      if (String(code).includes('1') || String(err?.message).toLowerCase().includes('denied')) {
-        errorMsg = 'Permission denied. Please enable location access in Settings.';
-      } else if (String(code).includes('2') || String(err?.message).toLowerCase().includes('unavailable')) {
-        errorMsg = 'Position unavailable. Check your GPS signal.';
-      } else if (String(code).includes('3') || String(err?.message).toLowerCase().includes('timeout')) {
+      if (err.code === 1 || String(err?.message).toLowerCase().includes('denied')) {
+        errorMsg = 'Location permission denied. Please allow location access in your browser settings.';
+      } else if (err.code === 2) {
+        errorMsg = 'Position unavailable. Please check your GPS signal.';
+      } else if (err.code === 3) {
         errorMsg = 'Location detection timed out. Please try again.';
       } else if (err?.message) {
-        errorMsg = `Error: ${err.message}`;
+        errorMsg = err.message;
       }
 
       setError(errorMsg);
