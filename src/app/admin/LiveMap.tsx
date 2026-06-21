@@ -125,7 +125,7 @@ const LiveMap: React.FC<LiveMapProps> = ({
 
         {clickedPos && (
           <Marker position={clickedPos} icon={icons.click}>
-            <Popup onClose={() => setClickedPos(null)}>
+            <Popup eventHandlers={{ remove: () => setClickedPos(null) }}>
               <div className="p-2 min-w-[140px]">
                 <div className="flex items-center gap-2 mb-2 border-b border-slate-100 pb-2">
                   <MapPin className="w-3.5 h-3.5 text-indigo-500" />

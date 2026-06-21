@@ -13,9 +13,9 @@ import { useToast } from '@/context/ToastContext';
 const API_URL = 'https://tifficaapp-1.onrender.com/api';
 
 const PLANS = [
-  { amount: 199,  bonus: 0,   popular: false },
-  { amount: 499,  bonus: 25,  popular: true  },
-  { amount: 999,  bonus: 75,  popular: false },
+  { amount: 199, bonus: 0, popular: false },
+  { amount: 499, bonus: 25, popular: true },
+  { amount: 999, bonus: 75, popular: false },
   { amount: 1999, bonus: 200, popular: false },
 ];
 const QUICK = [100, 200, 500, 1000];
@@ -23,11 +23,11 @@ const QUICK = [100, 200, 500, 1000];
 export default function WalletPage() {
   const { token, user, updateUser } = useAuth();
   const router = useRouter();
-  const [balance, setBalance]       = useState(user?.walletBalance ?? 0);
+  const [balance, setBalance] = useState(user?.walletBalance ?? 0);
   const [recharging, setRecharging] = useState<number | null>(null);
-  const [customAmt, setCustomAmt]   = useState('');
-  const [success, setSuccess]       = useState<number | null>(null);
-  const [error, setError]           = useState('');
+  const [customAmt, setCustomAmt] = useState('');
+  const [success, setSuccess] = useState<number | null>(null);
+  const [error, setError] = useState('');
   const { addToast } = useToast();
 
   const balanceRef = useRef<HTMLDivElement>(null);
@@ -38,7 +38,7 @@ export default function WalletPage() {
     fetch(`${API_URL}/auth/profile`, { headers: { Authorization: `Bearer ${token}` } })
       .then(r => r.json())
       .then(d => setBalance(d.walletBalance ?? 0))
-      .catch(() => {});
+      .catch(() => { });
   }, [token, router]);
 
   useEffect(() => {
@@ -77,7 +77,7 @@ export default function WalletPage() {
         amount: payAmount,
         description,
         token,
-        userName:  user?.name,
+        userName: user?.name,
         userEmail: user?.email,
         userPhone: user?.phone,
         onSuccess: async (paymentId) => {
@@ -122,7 +122,7 @@ export default function WalletPage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#FAF7F5] to-orange-50/30 pb-24">
       <div className="px-6 pt-20 space-y-6">
-        
+
         {/* Balance Card */}
         <div ref={balanceRef} className="bg-gray-900 rounded-[2.5rem] p-8 text-white relative overflow-hidden shadow-2xl">
           <div className="absolute top-[-10%] right-[-10%] w-40 h-40 bg-orange-500 rounded-full blur-[80px] opacity-20" />
@@ -138,7 +138,7 @@ export default function WalletPage() {
 
         <AnimatePresence>
           {error && (
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
@@ -150,7 +150,7 @@ export default function WalletPage() {
         </AnimatePresence>
 
         {/* Quick recharge */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="bg-white rounded-[2rem] p-6 shadow-lg border border-orange-100"
@@ -161,8 +161,8 @@ export default function WalletPage() {
           </h3>
           <div className="grid grid-cols-4 gap-3 mb-5">
             {QUICK.map((amt) => (
-              <motion.button 
-                key={amt} 
+              <motion.button
+                key={amt}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => handleRecharge(amt)}
@@ -182,10 +182,10 @@ export default function WalletPage() {
                 className="flex-1 bg-transparent text-sm font-bold text-gray-800 focus:outline-none placeholder:text-gray-400"
                 min={10} />
             </div>
-            <motion.button 
+            <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              onClick={handleCustom} 
+              onClick={handleCustom}
               disabled={!customAmt || recharging !== null}
               className="px-6 py-3.5 bg-gradient-to-r from-orange-500 to-orange-600 text-white font-extrabold rounded-2xl disabled:opacity-50 shadow-lg shadow-orange-200"
             >
@@ -204,11 +204,10 @@ export default function WalletPage() {
             const walletTotal = plan.amount + plan.bonus;
             const isLoading = recharging === plan.amount;
             return (
-              <motion.div 
+              <motion.div
                 key={plan.amount}
-                className={`plan-card bg-white rounded-[2rem] p-5 shadow-lg border-2 relative overflow-hidden ${
-                  plan.popular ? 'border-orange-500' : 'border-gray-100'
-                }`}
+                className={`plan-card bg-white rounded-[2rem] p-5 shadow-lg border-2 relative overflow-hidden ${plan.popular ? 'border-orange-500' : 'border-gray-100'
+                  }`}
               >
                 {plan.popular && (
                   <div className="absolute top-0 right-0 bg-orange-500 text-white text-[10px] font-black uppercase px-3 py-1 rounded-bl-xl">
@@ -237,9 +236,8 @@ export default function WalletPage() {
                   whileTap={{ scale: 0.98 }}
                   onClick={() => handleRecharge(plan.amount, walletTotal)}
                   disabled={recharging !== null}
-                  className={`w-full py-4 rounded-2xl font-black text-sm transition-all flex items-center justify-center gap-2 ${
-                    plan.popular ? 'bg-orange-500 text-white' : 'bg-gray-900 text-white'
-                  } disabled:opacity-50`}
+                  className={`w-full py-4 rounded-2xl font-black text-sm transition-all flex items-center justify-center gap-2 ${plan.popular ? 'bg-orange-500 text-white' : 'bg-gray-900 text-white'
+                    } disabled:opacity-50`}
                 >
                   {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Recharge Now'}
                 </motion.button>

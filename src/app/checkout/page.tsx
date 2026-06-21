@@ -246,6 +246,9 @@ export default function CheckoutPage() {
         setPaying(false);
       } else {
         console.log('✅ Wallet order successful!');
+        // INSTANT DEDUCTION: Update local state immediately
+        setWalletBalance(prev => Math.max(0, prev - finalTotal));
+        
         setIsOrderSuccess(true);
         setPaying(false);
         addToast('Order placed successfully!', 'success');

@@ -664,7 +664,7 @@ export default function AdminDashboard() {
 
       <div className="flex-1 flex flex-col overflow-hidden relative bg-slate-50">
 
-        <header className="bg-white border-b border-slate-200 px-4 md:px-6 py-3 mt-14 md:mt-0 flex items-center justify-between shrink-0 z-20">
+        <header className="bg-white border-b border-slate-200 px-4 md:px-6 py-3 mt-0 md:mt-0 flex items-center justify-between shrink-0 z-20">
           <div className="flex items-center gap-3">
             <div className="md:hidden w-8 h-8 rounded-md flex items-center justify-center bg-slate-800 text-white font-bold text-sm">T</div>
             <div>

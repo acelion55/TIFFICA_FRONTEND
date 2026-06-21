@@ -82,7 +82,7 @@ export default function ScheduleClient() {
     if (!homestyle?.scheduleBannerImages?.length) return;
     const interval = setInterval(() => {
       setCurrentBanner(prev => (prev + 1) % homestyle.scheduleBannerImages.length);
-    }, 5000);
+    }, 3000);
     return () => clearInterval(interval);
   }, [homestyle]);
 
@@ -136,7 +136,7 @@ export default function ScheduleClient() {
   return (
     <div className="min-h-screen bg-[#FAF7F5] pb-32 pt-16">
       {/* 20vh sliding banner */}
-      <div className="relative h-[20vh] w-full overflow-hidden shadow-lg">
+      <div className="relative h-[25vh] w-full overflow-hidden shadow-lg">
         <AnimatePresence mode="wait">
           <motion.img
             key={currentBanner}
@@ -179,10 +179,10 @@ export default function ScheduleClient() {
         </div>
       </div>
 
-      <div className="px-5 pt-8 space-y-8">
+      <div className="px-5 py-3  ">
         {!selectedSection ? (
           <>
-            <div className="space-y-1">
+            <div className="pb-2">
               <h2 className="text-3xl font-black text-slate-900">Explore Schedules</h2>
               <p className="text-slate-500 font-medium italic">Hand-crafted meals for every routine</p>
             </div>
@@ -213,29 +213,27 @@ export default function ScheduleClient() {
           </>
         ) : (
           <div className="space-y-6">
-           
+
 
             {/* Meal Type Tabs */}
             <div className="flex gap-3">
               <button
                 onClick={() => setMealTypeFilter('lunch')}
-                className={`flex-1 py-3 px-4 rounded-xl font-bold text-sm transition-all ${
-                  mealTypeFilter === 'lunch'
-                    ? 'bg-orange-500 text-white shadow-lg'
-                    : 'bg-white border-2 border-slate-200 text-slate-900'
-                }`}
+                className={`flex-1 py-3 px-4 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 ${mealTypeFilter === 'lunch'
+                  ? 'bg-orange-500 text-white shadow-lg'
+                  : 'bg-white border-2 border-slate-200 text-slate-900'
+                  }`}
               >
-                🍽️ Lunch (12-2 PM)
+                <Clock className="w-4 h-4" /> Lunch (12-2 PM)
               </button>
               <button
                 onClick={() => setMealTypeFilter('dinner')}
-                className={`flex-1 py-3 px-4 rounded-xl font-bold text-sm transition-all ${
-                  mealTypeFilter === 'dinner'
-                    ? 'bg-orange-500 text-white shadow-lg'
-                    : 'bg-white border-2 border-slate-200 text-slate-900'
-                }`}
+                className={`flex-1 py-3 px-4 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 ${mealTypeFilter === 'dinner'
+                  ? 'bg-orange-500 text-white shadow-lg'
+                  : 'bg-white border-2 border-slate-200 text-slate-900'
+                  }`}
               >
-                🌙 Dinner (7-9 PM)
+                <Clock className="w-4 h-4" /> Dinner (7-9 PM)
               </button>
             </div>
 
