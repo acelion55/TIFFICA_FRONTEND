@@ -349,6 +349,10 @@ export default function CheckoutPage() {
                       {item.cloudKitchen.name}
                     </p>
                   )}
+                  {/* Show description when available */}
+                  {item.description && (
+                    <p className="text-sm text-white/90 mb-2 line-clamp-2">{item.description}</p>
+                  )}
                   <div className="flex items-center justify-between">
                     <p className="text-xl font-black">
                       ₹{(item.price * item.quantity).toFixed(0)}

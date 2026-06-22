@@ -12,7 +12,8 @@ export default function CartBar() {
   const pathname = usePathname();
 
   // Hide on checkout page or if cart is empty
-  const hideOn = ['/checkout', '/login', '/signup', '/admin', '/menu', '/schedule'];
+  // Note: show cart bar on the schedule page so users see added items like main page
+  const hideOn = ['/checkout', '/login', '/signup', '/admin', '/menu'];
   const shouldHide = hideOn.some(path => pathname?.startsWith(path)) || cart.length === 0;
 
   if (shouldHide) return null;

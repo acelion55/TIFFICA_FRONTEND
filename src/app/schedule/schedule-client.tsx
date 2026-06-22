@@ -1,24 +1,48 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
-  ChevronLeft, ChevronRight, X,
-  Loader2, Calendar, ShoppingCart,
-  Clock
-} from 'lucide-react';
-import { useAuth } from '@/context/AuthContext';
-import { useToast } from '@/context/ToastContext';
-import { useRouter } from 'next/navigation';
-import { useCart } from '@/context/CartContext';
-
-const API_URL = 'https://tifficaapp-1.onrender.com/api';
+  ChevronLeft,
+  ChevronRight,
+  X,
+  Loader2,
+  Calendar,
+  Info,
+  ShoppingCart,
+  Clock,
+} from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
+import { useToast } from "@/context/ToastContext";
+import { useRouter } from "next/navigation";
+import { useCart } from "@/context/CartContext";
+import { API_URL } from "@/lib/config";
 
 const SECTIONS = [
-  { id: 'regular', label: 'Regular', tag: 'Regular', desc: 'Everyday wholesome home-style meals' },
-  { id: 'shahiThali', label: 'Shahi Thali', tag: 'Shahi Thali', desc: 'Premium celebration thalis with extra love' },
-  { id: 'corporateOrder', label: 'Corporate Order', tag: 'Corporate Order', desc: 'Bulk meals for offices and events' },
-  { id: 'schoolTiffins', label: 'School Tiffins', tag: 'School Tiffins', desc: 'Nutritious & fun meals for kids' }
+  {
+    id: "regular",
+    label: "Regular",
+    tag: "Regular",
+    desc: "Everyday wholesome home-style meals",
+  },
+  {
+    id: "shahiThali",
+    label: "Shahi Thali",
+    tag: "Shahi Thali",
+    desc: "Premium celebration thalis with extra love",
+  },
+  {
+    id: "corporateOrder",
+    label: "Corporate Order",
+    tag: "Corporate Order",
+    desc: "Bulk meals for offices and events",
+  },
+  {
+    id: "schoolTiffins",
+    label: "School Tiffins",
+    tag: "School Tiffins",
+    desc: "Nutritious & fun meals for kids",
+  },
 ];
 
 export default function ScheduleClient() {
@@ -33,21 +57,27 @@ export default function ScheduleClient() {
   const [selectedSection, setSelectedSection] = useState<string | null>(null);
   const [menuItems, setMenuItems] = useState<any[]>([]);
   const [menuLoading, setMenuLoading] = useState(false);
-  const [mealTypeFilter, setMealTypeFilter] = useState<'lunch' | 'dinner'>('lunch');
+  const [mealTypeFilter, setMealTypeFilter] = useState<"lunch" | "dinner">(
+    "lunch",
+  );
 
   // Dialog state
   const [selectedItem, setSelectedItem] = useState<any>(null);
-  const [selectedMealType, setSelectedMealType] = useState<'lunch' | 'dinner'>('lunch');
-  const [selectedDate, setSelectedDate] = useState('');
+  const [selectedMealType, setSelectedMealType] = useState<"lunch" | "dinner">(
+    "lunch",
+  );
+  const [selectedDate, setSelectedDate] = useState("");
+  const [infoItem, setInfoItem] = useState<any>(null);
+  const [infoAnchorRect, setInfoAnchorRect] = useState<{ top: number; left: number; width: number; height: number } | null>(null);
 
   // Fetch Homestyle data for banners and section images
   useEffect(() => {
     fetch(`${API_URL}/homestyles`)
-      .then(r => r.json())
-      .then(d => {
+      .then((r) => r.json())
+      .then((d) => {
         if (d.success) setHomestyle(d.data);
       })
-      .catch(() => { })
+      .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
 
@@ -55,23 +85,30 @@ export default function ScheduleClient() {
   useEffect(() => {
     if (!selectedSection) return;
 
-    const section = SECTIONS.find(s => s.id === selectedSection);
+    const section = SECTIONS.find((s) => s.id === selectedSection);
     if (!section) return;
 
     setMenuLoading(true);
-    fetch(`${API_URL}/menu/search/${section.tag}`)
-      .then(r => r.json())
-      .then(d => {
-        console.log('📦 Menu items received:', d);
-        // Filter items by selected meal type
-        const filtered = (d.menuItems || []).filter((item: any) => {
-          const mealTypes = item.mealTypes || [item.mealType] || [];
-          return mealTypes.some((mt: string) => mt.toLowerCase() === mealTypeFilter.toLowerCase());
+    // Fetch items explicitly assigned to this schedule section
+    fetch(`${API_URL}/menu/section/${section.tag}`)
+      .then((r) => r.json())
+      .then((d) => {
+        console.log("📦 Menu items received:", d);
+        const allItems = d.menuItems || [];
+        // Filter by meal type, but show all if no mealType fields are set
+        const filtered = allItems.filter((item: any) => {
+          const types: string[] = [
+            ...(Array.isArray(item.mealTypes) ? item.mealTypes : []),
+            ...(item.mealType ? [item.mealType] : []),
+          ].map((s: string) => s.toLowerCase());
+          // If item has no meal type info, show it in both tabs
+          if (types.length === 0) return true;
+          return types.includes(mealTypeFilter.toLowerCase());
         });
         setMenuItems(filtered);
       })
-      .catch(err => {
-        console.error('❌ Error fetching menu:', err);
+      .catch((err) => {
+        console.error("❌ Error fetching menu:", err);
         setMenuItems([]);
       })
       .finally(() => setMenuLoading(false));
@@ -81,26 +118,28 @@ export default function ScheduleClient() {
   useEffect(() => {
     if (!homestyle?.scheduleBannerImages?.length) return;
     const interval = setInterval(() => {
-      setCurrentBanner(prev => (prev + 1) % homestyle.scheduleBannerImages.length);
+      setCurrentBanner(
+        (prev) => (prev + 1) % homestyle.scheduleBannerImages.length,
+      );
     }, 3000);
     return () => clearInterval(interval);
   }, [homestyle]);
 
   // Initialize date to today
   useEffect(() => {
-    const today = new Date().toISOString().split('T')[0];
+    const today = new Date().toISOString().split("T")[0];
     setSelectedDate(today);
   }, []);
 
   const banners = homestyle?.scheduleBannerImages || [
-    'https://images.unsplash.com/photo-1543353071-10c8ba85a904?w=1200&h=400&fit=crop',
-    'https://images.unsplash.com/photo-1547523916-7c73a6de352d?w=1200&h=400&fit=crop'
+    "https://images.unsplash.com/photo-1543353071-10c8ba85a904?w=1200&h=400&fit=crop",
+    "https://images.unsplash.com/photo-1547523916-7c73a6de352d?w=1200&h=400&fit=crop",
   ];
 
   const handleDirectCheckout = (item: any) => {
     if (!token) {
-      addToast('Please login to schedule meals', 'error');
-      router.push('/login');
+      addToast("Please login to schedule meals", "error");
+      router.push("/login");
       return;
     }
 
@@ -109,20 +148,36 @@ export default function ScheduleClient() {
       addToCart({
         _id: item._id,
         name: item.name,
+        description: item.description,
         price: item.price,
         image: item.image,
-        cloudKitchen: item.cloudKitchen
+        cloudKitchen: item.cloudKitchen,
       });
-      addToast(`${item.name} added to cart!`, 'success');
+      addToast(`${item.name} added to cart!`, "success");
     }
-
-    // Navigate to checkout
-    router.push('/checkout');
   };
 
   const handleCheckout = () => {
     if (!selectedItem) return;
-    handleDirectCheckout(selectedItem);
+    // Ensure item is in cart, then navigate to checkout
+    if (!token) {
+      addToast("Please login to schedule meals", "error");
+      router.push("/login");
+      return;
+    }
+
+    if (addToCart) {
+      addToCart({
+        _id: selectedItem._id,
+        name: selectedItem.name,
+        description: selectedItem.description,
+        price: selectedItem.price,
+        image: selectedItem.image,
+        cloudKitchen: selectedItem.cloudKitchen,
+      });
+    }
+
+    router.push("/checkout");
   };
 
   if (loading) {
@@ -136,7 +191,7 @@ export default function ScheduleClient() {
   return (
     <div className="min-h-screen bg-[#FAF7F5] pb-32 pt-16">
       {/* 20vh sliding banner */}
-      <div className="relative h-[25vh] w-full overflow-hidden shadow-lg">
+      <div className="relative h-[23vh] w-full overflow-hidden shadow-lg">
         <AnimatePresence mode="wait">
           <motion.img
             key={currentBanner}
@@ -156,8 +211,9 @@ export default function ScheduleClient() {
               <button
                 key={i}
                 onClick={() => setCurrentBanner(i)}
-                className={`w-1.5 h-1.5 rounded-full transition-all ${currentBanner === i ? 'w-6 bg-white' : 'bg-white/40'
-                  }`}
+                className={`w-1.5 h-1.5 rounded-full transition-all ${
+                  currentBanner === i ? "w-6 bg-white" : "bg-white/40"
+                }`}
               />
             ))}
           </div>
@@ -165,13 +221,15 @@ export default function ScheduleClient() {
 
         <div className="absolute top-1/2 -translate-y-1/2 left-6 right-6 flex items-center justify-between pointer-events-none">
           <button
-            onClick={() => setCurrentBanner(p => (p - 1 + banners.length) % banners.length)}
+            onClick={() =>
+              setCurrentBanner((p) => (p - 1 + banners.length) % banners.length)
+            }
             className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center pointer-events-auto hover:bg-white/20 transition"
           >
             <ChevronLeft className="w-6 h-6 text-white" />
           </button>
           <button
-            onClick={() => setCurrentBanner(p => (p + 1) % banners.length)}
+            onClick={() => setCurrentBanner((p) => (p + 1) % banners.length)}
             className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center pointer-events-auto hover:bg-white/20 transition"
           >
             <ChevronRight className="w-6 h-6 text-white" />
@@ -180,16 +238,30 @@ export default function ScheduleClient() {
       </div>
 
       <div className="px-5 py-3  ">
+        <div className="pb-4 flex justify-between">
+          <span>
+            <h2 className="text-2xl font-black text-slate-900 leading-tight">
+              Explore Schedules
+            </h2>
+            <p className="text-slate-500 font-medium italic">
+              Hand-crafted meals for every routine
+            </p>
+          </span>
+          <button
+            onClick={() => setSelectedSection(null)}
+            className="text-xs font-bold text-orange-500 bg-orange-50 px-3 py-1.5 rounded-full"
+          >
+            ← Back
+          </button>
+        </div>
+
         {!selectedSection ? (
           <>
-            <div className="pb-2">
-              <h2 className="text-3xl font-black text-slate-900">Explore Schedules</h2>
-              <p className="text-slate-500 font-medium italic">Hand-crafted meals for every routine</p>
-            </div>
-
             <div className="grid grid-cols-2 gap-4">
               {SECTIONS.map((section, idx) => {
-                const imageUrl = homestyle?.scheduleSectionImages?.[section.id] || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&h=400&fit=crop';
+                const imageUrl =
+                  homestyle?.scheduleSectionImages?.[section.id] ||
+                  "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&h=400&fit=crop";
                 return (
                   <motion.div
                     key={section.id}
@@ -199,12 +271,19 @@ export default function ScheduleClient() {
                     onClick={() => setSelectedSection(section.id)}
                     className="group relative h-52 rounded-[1.5rem] overflow-hidden shadow-lg cursor-pointer active:scale-[0.98] transition-transform"
                   >
-                    <img src={imageUrl} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                    <img
+                      src={imageUrl}
+                      className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                    />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                     <div className="absolute inset-0 p-5 flex flex-col justify-end">
                       <div className="w-8 h-1 bg-orange-500 mb-2 group-hover:w-12 transition-all duration-500" />
-                      <h3 className="text-sm font-black text-white uppercase tracking-wider leading-tight">{section.label}</h3>
-                      <p className="text-white/60 text-[9px] font-medium mt-1 leading-relaxed line-clamp-2">{section.desc}</p>
+                      <h3 className="text-sm font-black text-white uppercase tracking-wider leading-tight">
+                        {section.label}
+                      </h3>
+                      <p className="text-white/60 text-[9px] font-medium mt-1 leading-relaxed line-clamp-2">
+                        {section.desc}
+                      </p>
                     </div>
                   </motion.div>
                 );
@@ -213,27 +292,33 @@ export default function ScheduleClient() {
           </>
         ) : (
           <div className="space-y-6">
-
-
-            {/* Meal Type Tabs */}
+            {/* Meal Type Tabs — shown after selecting a section */}
             <div className="flex gap-3">
               <button
-                onClick={() => setMealTypeFilter('lunch')}
-                className={`flex-1 py-3 px-4 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 ${mealTypeFilter === 'lunch'
-                  ? 'bg-orange-500 text-white shadow-lg'
-                  : 'bg-white border-2 border-slate-200 text-slate-900'
-                  }`}
+                onClick={() => setMealTypeFilter("lunch")}
+                className={`flex-1 py-1 px-4 rounded-2xl font-bold text-sm transition-all flex flex-col items-center justify-center gap-1 shadow-sm border-2 ${
+                  mealTypeFilter === "lunch"
+                    ? "bg-orange-500 border-orange-500 text-white shadow-lg shadow-orange-200"
+                    : "bg-white border-slate-100 text-slate-600"
+                }`}
               >
-                <Clock className="w-4 h-4" /> Lunch (12-2 PM)
+                <Clock
+                  className={`w-5 h-5 ${mealTypeFilter === "lunch" ? "text-white" : "text-orange-500"}`}
+                />
+                <span>Lunch (12–2 PM)</span>
               </button>
               <button
-                onClick={() => setMealTypeFilter('dinner')}
-                className={`flex-1 py-3 px-4 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 ${mealTypeFilter === 'dinner'
-                  ? 'bg-orange-500 text-white shadow-lg'
-                  : 'bg-white border-2 border-slate-200 text-slate-900'
-                  }`}
+                onClick={() => setMealTypeFilter("dinner")}
+                className={`flex-1 py-3 px-4 rounded-2xl font-bold text-sm transition-all flex flex-col items-center justify-center gap-1 shadow-sm border-2 ${
+                  mealTypeFilter === "dinner"
+                    ? "bg-orange-500 border-orange-500 text-white shadow-lg shadow-orange-200"
+                    : "bg-white border-slate-100 text-slate-600"
+                }`}
               >
-                <Clock className="w-4 h-4" /> Dinner (7-9 PM)
+                <Clock
+                  className={`w-5 h-5 ${mealTypeFilter === "dinner" ? "text-white" : "text-orange-500"}`}
+                />
+                <span>Dinner (7–9 PM)</span>
               </button>
             </div>
 
@@ -241,7 +326,10 @@ export default function ScheduleClient() {
             <div className="space-y-4">
               {menuLoading ? (
                 Array.from({ length: 4 }).map((_, i) => (
-                  <div key={i} className="bg-white rounded-2xl h-24 animate-pulse" />
+                  <div
+                    key={i}
+                    className="bg-white rounded-2xl h-24 animate-pulse"
+                  />
                 ))
               ) : menuItems.length === 0 ? (
                 <div className="py-20 text-center space-y-4">
@@ -250,7 +338,9 @@ export default function ScheduleClient() {
                   </div>
                   <div>
                     <p className="font-black text-slate-900">No items found</p>
-                    <p className="text-slate-400 text-sm">We are cooking up something new!</p>
+                    <p className="text-slate-400 text-sm">
+                      We are cooking up something new!
+                    </p>
                   </div>
                 </div>
               ) : (
@@ -260,25 +350,88 @@ export default function ScheduleClient() {
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: idx * 0.05 }}
-                    onClick={() => handleDirectCheckout(item)}
-                    className="bg-white rounded-2xl overflow-hidden shadow-md border border-slate-50 flex items-center gap-4 p-4 cursor-pointer active:scale-[0.98] transition-transform"
+                    onClick={() => setSelectedItem(item)}
+                    className="bg-white rounded-2xl overflow-hidden justify-between shadow-md border border-slate-50 flex items-center gap-4  cursor-pointer active:scale-[0.98] transition-transform"
                   >
-                    {/* Description Left */}
-                    <div className="flex-1 min-w-0">
-                      {/* Kitchen Name */}
-                      {item.cloudKitchen && (
-                        <p className="text-orange-500 font-bold text-xs uppercase tracking-wider mb-1">
-                          {item.cloudKitchen.name}
-                        </p>
-                      )}
-                      <h3 className="text-lg font-bold text-slate-900 truncate">{item.description}</h3>
+                    <span className="p-4 flex-1">
+                      <div className="flex-1 min-w-0">
+                        {selectedSection === "corporateOrder" ? (
+                          <> <span className="flex">
+                            <p className="text-orange-500 font-bold text-[10px] uppercase tracking-widest mb-1 flex items-center gap-1">
+                              <span className="w-1.5 h-1.5 bg-orange-500 rounded-full animate-pulse" />
+                              {item.cloudKitchen?.name || "Tiffica Kitchen"}
+                            </p>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+                                setInfoAnchorRect({ top: rect.top, left: rect.left, width: rect.width, height: rect.height });
+                                setInfoItem(item);
+                              }}
+                              title="Info"
+                              className="ml-4 w-5 h-5  rounded-full border border-slate-200 bg-orange-200 flex items-center justify-center text-slate-600 hover:bg-slate-50 transition"
+                            >
+                            <Info />
+                            </button>
+                            </span>
+                          </>
+                        ) : (
+                          <>
+                            <p className="text-orange-500 font-bold text-[10px] uppercase tracking-widest mb-1 flex items-center gap-1">
+                              <span className="w-1.5 h-1.5 bg-orange-500 rounded-full animate-pulse" />
+                              {item.cloudKitchen?.name || "Tiffica Kitchen"}
+                            </p>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+                                setInfoAnchorRect({ top: rect.top, left: rect.left, width: rect.width, height: rect.height });
+                                setInfoItem(item);
+                              }}
+                              title="Info"
+                              className="ml-4 w-8 h-8 rounded-full border border-slate-200 bg-white flex items-center justify-center text-slate-600 hover:bg-slate-50 transition"
+                            >
+                              i
+                            </button>
+                          </>
+                        )}
+                        <>
+                          <h3 className="text-[1rem] font-bold text-slate-900">
+                            {["corporateOrder", "schoolTiffins"].includes(
+                              selectedSection || "",
+                            )
+                              ? item.name || item.description
+                              : item.description}
+                          </h3>
+                          <p className="text-[0.8rem] font-bold text-slate-900">
+                            {item.description}
+                          </p>
 
-                      <p className="text-orange-500 font-black text-lg mt-2">₹{item.price}</p>
-                    </div>
+                          <p className="text-orange-500 font-black text-lg mt-2">
+                            ₹{item.price}
+                          </p>
 
+                          <div className="mt-3">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDirectCheckout(item);
+                              }}
+                              className="bg-gradient-to-r from-orange-500 to-amber-500 text-white font-bold px-3 py-2 rounded-xl shadow-sm active:scale-95 transition-transform"
+                            >
+                              Buy Now
+                            </button>
+                          </div>
+                        </>
+                      </div>
+                    </span>
                     {/* Image Right */}
-                    <div className="w-24 h-24 rounded-xl overflow-hidden flex-shrink-0">
-                      <img src={item.image} className="w-full h-full object-cover" alt={item.name} />
+                    <div className="w-27 h-27 rounded-xl overflow-hidden flex-shrink-0">
+                      <img
+                        src={item.image}
+                        className="w-full h-full object-cover"
+                        alt={item.name}
+                      />
                     </div>
                   </motion.div>
                 ))
@@ -303,10 +456,10 @@ export default function ScheduleClient() {
 
             {/* Dialog */}
             <motion.div
-              initial={{ y: '100%' }}
+              initial={{ y: "100%" }}
               animate={{ y: 0 }}
-              exit={{ y: '100%' }}
-              transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+              exit={{ y: "100%" }}
+              transition={{ type: "spring", damping: 30, stiffness: 300 }}
               className="fixed inset-x-0 bottom-0 bg-white rounded-t-[2rem] z-50 max-h-[85vh] overflow-y-auto"
             >
               {/* Close Button */}
@@ -319,7 +472,11 @@ export default function ScheduleClient() {
 
               {/* Image */}
               <div className="relative h-64 w-full">
-                <img src={selectedItem.image} className="w-full h-full object-cover" alt={selectedItem.name} />
+                <img
+                  src={selectedItem.image}
+                  className="w-full h-full object-cover"
+                  alt={selectedItem.name}
+                />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
               </div>
 
@@ -327,21 +484,29 @@ export default function ScheduleClient() {
               <div className="p-6 space-y-6">
                 {/* Title & Description */}
                 <div>
-                  <h2 className="text-2xl font-black text-slate-900">{selectedItem.name}</h2>
-                  <p className="text-slate-600 text-sm mt-2 leading-relaxed">{selectedItem.description}</p>
-                  <p className="text-orange-500 font-black text-2xl mt-3">₹{selectedItem.price}</p>
+                  <h2 className="text-2xl font-black text-slate-900">
+                    {selectedItem.name}
+                  </h2>
+                  <p className="text-slate-600 text-sm mt-2 leading-relaxed">
+                    {selectedItem.description}
+                  </p>
+                  <p className="text-orange-500 font-black text-2xl mt-3">
+                    ₹{selectedItem.price}
+                  </p>
                 </div>
 
                 {/* Date Selector */}
                 <div>
-                  <label className="block text-sm font-bold text-slate-900 mb-2">Starting Date</label>
+                  <label className="block text-sm font-bold text-slate-900 mb-2">
+                    Starting Date
+                  </label>
                   <div className="relative">
                     <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
                     <input
                       type="date"
                       value={selectedDate}
                       onChange={(e) => setSelectedDate(e.target.value)}
-                      min={new Date().toISOString().split('T')[0]}
+                      min={new Date().toISOString().split("T")[0]}
                       className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl py-3 pl-12 pr-4 text-sm font-medium focus:border-orange-500 outline-none transition-all"
                     />
                   </div>
@@ -349,40 +514,56 @@ export default function ScheduleClient() {
 
                 {/* Meal Type Selection */}
                 <div>
-                  <label className="block text-sm font-bold text-slate-900 mb-3">Select Meal Time</label>
+                  <label className="block text-sm font-bold text-slate-900 mb-3">
+                    Select Meal Time
+                  </label>
                   <div className="grid grid-cols-2 gap-3">
                     {/* Lunch */}
                     <button
-                      onClick={() => setSelectedMealType('lunch')}
-                      className={`p-4 rounded-xl border-2 transition-all ${selectedMealType === 'lunch'
-                        ? 'border-orange-500 bg-orange-50'
-                        : 'border-slate-200 bg-white'
-                        }`}
+                      onClick={() => setSelectedMealType("lunch")}
+                      className={`p-4 rounded-xl border-2 transition-all ${
+                        selectedMealType === "lunch"
+                          ? "border-orange-500 bg-orange-50"
+                          : "border-slate-200 bg-white"
+                      }`}
                     >
                       <div className="flex items-center gap-2 mb-2">
-                        <Clock className={`w-4 h-4 ${selectedMealType === 'lunch' ? 'text-orange-500' : 'text-slate-400'}`} />
-                        <span className={`font-bold text-sm ${selectedMealType === 'lunch' ? 'text-orange-500' : 'text-slate-900'}`}>
+                        <Clock
+                          className={`w-4 h-4 ${selectedMealType === "lunch" ? "text-orange-500" : "text-slate-400"}`}
+                        />
+                        <span
+                          className={`font-bold text-sm ${selectedMealType === "lunch" ? "text-orange-500" : "text-slate-900"}`}
+                        >
                           Lunch
                         </span>
                       </div>
-                      <p className="text-xs text-slate-500 font-medium">12:00 PM - 2:00 PM</p>
+                      <p className="text-xs text-slate-500 font-medium">
+                        12:00 PM - 2:00 PM
+                      </p>
                     </button>
 
                     {/* Dinner */}
                     <button
-                      onClick={() => setSelectedMealType('dinner')}
-                      className={`p-4 rounded-xl border-2 transition-all ${selectedMealType === 'dinner'
-                        ? 'border-orange-500 bg-orange-50'
-                        : 'border-slate-200 bg-white'
-                        }`}
+                      onClick={() => setSelectedMealType("dinner")}
+                      className={`p-4 rounded-xl border-2 transition-all ${
+                        selectedMealType === "dinner"
+                          ? "border-orange-500 bg-orange-50"
+                          : "border-slate-200 bg-white"
+                      }`}
                     >
                       <div className="flex items-center gap-2 mb-2">
-                        <Clock className={`w-4 h-4 ${selectedMealType === 'dinner' ? 'text-orange-500' : 'text-slate-400'}`} />
-                        <span className={`font-bold text-sm ${selectedMealType === 'dinner' ? 'text-orange-500' : 'text-slate-900'}`}>
+                        <Clock
+                          className={`w-4 h-4 ${selectedMealType === "dinner" ? "text-orange-500" : "text-slate-400"}`}
+                        />
+                        <span
+                          className={`font-bold text-sm ${selectedMealType === "dinner" ? "text-orange-500" : "text-slate-900"}`}
+                        >
                           Dinner
                         </span>
                       </div>
-                      <p className="text-xs text-slate-500 font-medium">7:00 PM - 9:00 PM</p>
+                      <p className="text-xs text-slate-500 font-medium">
+                        7:00 PM - 9:00 PM
+                      </p>
                     </button>
                   </div>
                 </div>
@@ -395,6 +576,52 @@ export default function ScheduleClient() {
                   <ShoppingCart className="w-5 h-5" />
                   Proceed to Checkout
                 </button>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* Info Modal for Corporate Item (preformatted) */}
+      <AnimatePresence>
+        {infoItem && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => { setInfoItem(null); setInfoAnchorRect(null); }}
+              className="fixed inset-0 -sm z-50"
+            />
+
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              transition={{ duration: 0.16 }}
+              style={infoAnchorRect ? {
+                position: 'fixed',
+                top: infoAnchorRect.top,
+                left: infoAnchorRect.left,
+                transformOrigin: 'top left',
+                zIndex: 9999
+              } : {
+                position: 'fixed',
+                top: '50%',
+                left: '50%',
+                transform: 'translate(-50%, -50%)',
+                transformOrigin: 'center',
+                zIndex: 9999
+              }}
+            >
+              <div className="bg-white rounded-lg w-[30vw] h-[30vh] shadow-lg p-3">
+                <div className="flex items-start justify-between gap-4">
+                 
+                  <button onClick={() => { setInfoItem(null); setInfoAnchorRect(null); }} className="ml-auto w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center">×</button>
+                </div>
+                <div className="mt-3">
+                  <pre className="whitespace-pre-wrap font-mono text-sm bg-slate-50 p-3 rounded">{infoItem.info || 'No additional information provided.'}</pre>
+                </div>
               </div>
             </motion.div>
           </>

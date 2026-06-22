@@ -175,8 +175,13 @@ function getOrderKitchenIds(order: any): string[] {
 }
 
 function getOrderKitchenName(order: any): string {
-  const ck = order.items?.[0]?.menuItem?.cloudKitchen;
-  return typeof ck === 'object' ? ck?.name || '—' : '—';
+  if (!order.items || order.items.length === 0) return '—';
+  const names = new Set<string>();
+  order.items.forEach((it: any) => {
+    const name = it.kitchenName || it.menuItem?.cloudKitchen?.name;
+    if (name) names.add(name);
+  });
+  return names.size > 0 ? Array.from(names).join(', ') : '—';
 }
 
 function getDeliveryPartnerName(order: any, deliveryPartners: any[]): string {
@@ -396,8 +401,29 @@ export function OrdersTab({ orders, fetchAll, headers, API_URL, search, setSearc
                   <tr key={o._id} className={`border-b border-slate-100 ${i % 2 ? 'bg-slate-50/50' : 'bg-white'}`}>
                     <td className="px-4 py-3 font-mono text-xs font-semibold">{formatOrderId(o._id)}</td>
                     <td className="px-4 py-3">{o.user?.name || 'Guest'}<br /><span className="text-xs text-slate-400">{o.user?.phone}</span></td>
-                    <td className="px-4 py-3 text-xs text-slate-600 max-w-[200px] truncate">{o.items?.map((it: any) => `${it.menuItem?.name || it.name}×${it.quantity || 1}`).join(', ')}</td>
-                    <td className="px-4 py-3 font-semibold">₹{Number(o.totalAmount || 0).toLocaleString('en-IN')}</td>
+                    <td className="px-4 py-3">
+                      <div className="flex flex-col">
+                        <div className="flex flex-col gap-1.5">
+                          {o.items?.map((it: any, idx: number) => (
+                            <div key={idx} className="flex flex-col">
+                              <span className="bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full text-xs font-medium w-fit">
+                                {it.menuItem?.name || it.name} ×{it.quantity}
+                                {isAdmin && it.kitchenName && (
+                                  <span className="ml-1 text-[10px] opacity-75">({it.kitchenName})</span>
+                                )}
+                              </span>
+                              {(it.menuItem?.description || it.description) && (
+                                <span className="text-[13px]  pl-2 mt-0.5 ">{it.menuItem?.description || it.description}</span>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 font-semibold text-orange-600">
+                      ₹{Number(o.totalAmount || 0).toLocaleString('en-IN')}
+                      {!isAdmin && <span className="block text-[10px] text-gray-500 font-normal">Your Earning</span>}
+                    </td>
                     <td className="px-4 py-3 text-xs">{new Date(o.createdAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}</td>
                     <td className="px-4 py-3">
                       <select value={o.status} onChange={e => patchStatus(o._id, e.target.value)} className="text-xs font-semibold border border-slate-200 rounded-lg px-2 py-1.5 bg-white">
@@ -578,10 +604,22 @@ export function OrdersTab({ orders, fetchAll, headers, API_URL, search, setSearc
                 <h4 className="text-[10px] font-bold uppercase text-slate-400 mb-2">Items</h4>
                 <ul className="space-y-2">
                   {drawerOrder.items?.map((it: any, idx: number) => (
-                    <li key={idx} className="flex justify-between text-xs border-b border-slate-100 pb-2">
-                      <span>{it.menuItem?.name || it.name} ×{it.quantity || 1}</span>
-                      <span className="font-semibold">₹{it.price || 0}</span>
-                    </li>
+                    <div key={idx} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg group hover:bg-orange-50 transition-colors">
+                      <div className="flex flex-col">
+                        <span className="font-medium text-gray-800">{it.menuItem?.name || it.name} ×{it.quantity || 1}</span>
+                        {(it.menuItem?.description || it.description) && (
+                          <span className="text-[10px] text-gray-400 mt-0.5 leading-tight line-clamp-2">{it.menuItem?.description || it.description}</span>
+                        )}
+                        {isAdmin && it.kitchenName && (
+                          <span className="text-xs text-orange-600 font-medium">Kitchen: {it.kitchenName}</span>
+                        )}
+                        {!isAdmin && <span className="text-[10px] text-gray-500 italic">Purchasing Price Applied</span>}
+                      </div>
+                      <div className="text-right">
+                        <span className="font-bold text-gray-900 block">₹{(it.displayPrice || it.price || 0) * (it.quantity || 1)}</span>
+                        <span className="text-xs text-gray-500">₹{it.displayPrice || it.price || 0} / unit</span>
+                      </div>
+                    </div>
                   ))}
                 </ul>
                 <p className="font-bold text-right mt-2">Total ₹{Number(drawerOrder.totalAmount || 0).toLocaleString('en-IN')}</p>
@@ -626,13 +664,13 @@ export function MenuTab({ menuItems, search, setSearch, setMenuModal, setImgPrev
     // Exclude draft items from the listing
     if (isActuallyDraft) return false;
 
-    const matchesSearch = !search || m.name?.toLowerCase().includes(search.toLowerCase());
+    const matchesSearch = !search || m.description?.toLowerCase().includes(search.toLowerCase()) || m.name?.toLowerCase().includes(search.toLowerCase());
 
     // Kitchen-owner only sees their own menu items
     if (user?.role === 'kitchen-owner') {
       const kitchenId = (user as any).kitchenId || (user as any).assignedKitchen;
-      const isOwnMenu = typeof m.cloudKitchen === 'object' 
-        ? m.cloudKitchen?._id === kitchenId 
+      const isOwnMenu = typeof m.cloudKitchen === 'object'
+        ? m.cloudKitchen?._id === kitchenId
         : m.cloudKitchen === kitchenId;
       return matchesSearch && isOwnMenu;
     }
@@ -643,7 +681,7 @@ export function MenuTab({ menuItems, search, setSearch, setMenuModal, setImgPrev
         (kitchenFilter === 'no-kitchen' ? !m.cloudKitchen :
           (typeof m.cloudKitchen === 'object' ? m.cloudKitchen?._id === kitchenFilter : m.cloudKitchen === kitchenFilter)
         );
-      const matchesName = !nameFilter || m.name?.toLowerCase().includes(nameFilter.toLowerCase());
+      const matchesName = !nameFilter || m.description?.toLowerCase().includes(nameFilter.toLowerCase()) || m.name?.toLowerCase().includes(nameFilter.toLowerCase());
       return matchesSearch && matchesKitchen && matchesName;
     }
 
@@ -737,58 +775,40 @@ export function MenuTab({ menuItems, search, setSearch, setMenuModal, setImgPrev
             </div>
           ) : (
             filteredItems.map((m: any) => (
-              <div key={m._id} className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden hover:shadow-md transition-all duration-300">
-                {/* Image with overlay */}
-                <div className="relative h-48 bg-gradient-to-br from-orange-100 to-amber-100">
-                  <img
-                    src={m.image?.startsWith('http') ? m.image : 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&auto=format&fit=crop'}
-                    alt={m.name}
-                    className="w-full h-full object-cover"
-                    onError={e => { (e.target as HTMLImageElement).src = ''; }}
-                  />
-                  {/* Overlay with name and category */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent flex flex-col justify-end p-4">
-                    <div className="flex items-end justify-between">
-                      <div>
-                        <h3 className="font-black text-white text-lg leading-tight mb-1">{m.name}</h3>
-                        <div className="flex items-center gap-2">
-                          <span className={`text-[10px] font-bold px-2 py-1 rounded-full ${m.category === 'gold' ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700'
-                            }`}>
-                            {m.category || 'Regular'}
-                          </span>
-                          {/* Draft badge removed */}
-                        </div>
-                      </div>
+              <div key={m._id} className="flex bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden hover:shadow-md transition-all duration-300 min-h-[160px]">
+                {/* Details section on left */}
+                <div className="flex-1 p-4 flex flex-col justify-between">
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-start">
+                      <span className={`text-[10px] font-bold px-2 py-1 rounded-full ${m.category === 'gold' ? 'bg-amber-100 text-amber-700' : 'bg-orange-100 text-orange-700'
+                        }`}>
+                        {m.category || 'Regular'}
+                      </span>
                       {user?.role === 'admin' && (
-                        <div className="text-right">
-                          <p className="font-black text-white text-xl leading-none">₹{m.price}</p>
-                        </div>
+                        <p className="font-black text-slate-800 text-sm">₹{m.price}</p>
                       )}
                     </div>
+                    
+                    <h3 className="font-bold text-slate-800 text-base leading-tight line-clamp-3">
+                      {m.description || m.name || 'Menu Item'}
+                    </h3>
+
+                    {m.tags && m.tags.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mt-1 text-[9px] text-slate-500">
+                        {m.tags.map((t: string, i: number) => (
+                          <span key={i} className="px-1.5 py-0.5 bg-slate-50 rounded">#{t}</span>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                </div>
-
-                {/* Details section */}
-                <div className="p-4 space-y-3">
-                  <div className="flex items-center justify-between text-xs text-slate-500">
-                    <span className="flex items-center gap-1">
-                      <Home className="w-3 h-3" />
-                      {m.cloudKitchen?.name || 'No Kitchen'}
-                    </span>
-                    <span className="px-2 py-1 bg-slate-50 rounded-full text-[10px] font-medium">Live</span>
-                  </div>
-
-                  {m.description && (
-                    <p className="text-xs text-slate-600 line-clamp-2">{m.description}</p>
-                  )}
-
+                  
                   {/* Action buttons */}
-                  <div className="flex gap-2 pt-2">
+                  <div className="flex gap-2 pt-3 mt-auto">
                     <button
-                      onClick={() => { 
-                        setImgPreview(''); 
+                      onClick={() => {
+                        setImgPreview('');
                         setSelectedCategory(m?.category || 'regular');
-                        setMenuModal({ open: true, data: m }); 
+                        setMenuModal({ open: true, data: m });
                       }}
                       className="flex-1 px-3 py-2 text-xs font-bold bg-orange-50 text-orange-600 rounded-lg hover:bg-orange-100 transition"
                     >
@@ -796,7 +816,7 @@ export function MenuTab({ menuItems, search, setSearch, setMenuModal, setImgPrev
                     </button>
                     <button
                       onClick={async () => {
-                        if (!confirm(`Delete "${m.name}"?\n\nThis will permanently remove this menu item.`)) return;
+                        if (!confirm(`Delete this menu item?\n\nThis will permanently remove this menu item.`)) return;
                         try {
                           const res = await fetch(`${API_URL}/admin/menu/${m._id}`, {
                             method: 'DELETE',
@@ -820,6 +840,21 @@ export function MenuTab({ menuItems, search, setSearch, setMenuModal, setImgPrev
                       <Trash2 className="w-4 h-4" />
                     </button>
                   </div>
+                </div>
+
+                {/* Image on right */}
+                <div className="w-2/5 relative bg-gradient-to-br from-orange-100 to-amber-100 shrink-0 border-l border-slate-100">
+                  <img
+                    src={m.image?.startsWith('http') ? m.image : 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&auto=format&fit=crop'}
+                    alt={m.name || 'Menu Graphic'}
+                    className="absolute inset-0 w-full h-full object-cover"
+                    onError={e => { (e.target as HTMLImageElement).src = ''; }}
+                  />
+                  {(m.cloudKitchen?.name && user?.role === 'admin') && (
+                    <span className="absolute bottom-2 right-2 bg-black/60 shadow-lg text-white px-2 py-1 rounded text-[9px] truncate max-w-[80%] backdrop-blur-sm">
+                      {m.cloudKitchen.name}
+                    </span>
+                  )}
                 </div>
               </div>
             ))
@@ -1110,13 +1145,13 @@ export function SettingsTab({ categories = [], fetchAll, headers, API_URL, user 
   const [saving, setSaving] = React.useState(false);
   const [locationSaving, setLocationSaving] = React.useState(false);
   const [locating, setLocating] = React.useState(false);
-  
-  const [form, setForm] = React.useState({ 
-    name: '', 
-    purchasePrice: '', 
+
+  const [form, setForm] = React.useState({
+    name: '',
+    purchasePrice: '',
     sellPrice: ''
   });
-  
+
   const [locationForm, setLocationForm] = React.useState({
     latitude: '',
     longitude: '',
@@ -1125,9 +1160,9 @@ export function SettingsTab({ categories = [], fetchAll, headers, API_URL, user 
 
   React.useEffect(() => {
     if (catModal.open && catModal.data) {
-      setForm({ 
-        name: catModal.data.name || '', 
-        purchasePrice: String(catModal.data.purchasePrice || ''), 
+      setForm({
+        name: catModal.data.name || '',
+        purchasePrice: String(catModal.data.purchasePrice || ''),
         sellPrice: String(catModal.data.sellPrice || '')
       });
     } else if (!catModal.open) {
@@ -1146,10 +1181,10 @@ export function SettingsTab({ categories = [], fetchAll, headers, API_URL, user 
     setLocating(true);
     navigator.geolocation.getCurrentPosition(
       (pos) => {
-        setLocationForm(f => ({ 
-          ...f, 
-          latitude: String(pos.coords.latitude.toFixed(6)), 
-          longitude: String(pos.coords.longitude.toFixed(6)) 
+        setLocationForm(f => ({
+          ...f,
+          latitude: String(pos.coords.latitude.toFixed(6)),
+          longitude: String(pos.coords.longitude.toFixed(6))
         }));
         console.log('✅ Location captured:', pos.coords.latitude, pos.coords.longitude);
         setLocating(false);
@@ -1168,23 +1203,23 @@ export function SettingsTab({ categories = [], fetchAll, headers, API_URL, user 
     if (!form.name || String(form.name).trim() === '') return alert('Name required');
     setSaving(true);
     try {
-      const payload = { 
-        name: form.name.trim(), 
-        purchasePrice: Number(form.purchasePrice || 0), 
+      const payload = {
+        name: form.name.trim(),
+        purchasePrice: Number(form.purchasePrice || 0),
         sellPrice: Number(form.sellPrice || 0)
       };
       let res;
       if (catModal.data && catModal.data._id) {
-        res = await fetch(`${API_URL}/admin/categories/${catModal.data._id}`, { 
-          method: 'PUT', 
-          headers: { ...headers, 'Content-Type': 'application/json' }, 
-          body: JSON.stringify(payload) 
+        res = await fetch(`${API_URL}/admin/categories/${catModal.data._id}`, {
+          method: 'PUT',
+          headers: { ...headers, 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
         });
       } else {
-        res = await fetch(`${API_URL}/admin/categories`, { 
-          method: 'POST', 
-          headers: { ...headers, 'Content-Type': 'application/json' }, 
-          body: JSON.stringify(payload) 
+        res = await fetch(`${API_URL}/admin/categories`, {
+          method: 'POST',
+          headers: { ...headers, 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
         });
       }
       const data = await res.json();
@@ -1204,7 +1239,7 @@ export function SettingsTab({ categories = [], fetchAll, headers, API_URL, user 
     if (!locationForm.latitude || !locationForm.longitude) {
       return alert('Please set latitude and longitude');
     }
-    
+
     if (categories.length === 0) {
       return alert('No categories to update');
     }
@@ -1242,39 +1277,39 @@ export function SettingsTab({ categories = [], fetchAll, headers, API_URL, user 
   const remove = async (id: string) => {
     if (!confirm('Delete this category?')) return;
     try {
-      const res = await fetch(`${API_URL}/admin/categories/${id}`, { 
-        method: 'DELETE', 
-        headers 
+      const res = await fetch(`${API_URL}/admin/categories/${id}`, {
+        method: 'DELETE',
+        headers
       });
       const data = await res.json();
-      if (data.success) fetchAll(); 
+      if (data.success) fetchAll();
       else alert(data.error || 'Failed');
-    } catch (err) { 
-      alert('Failed to delete'); 
+    } catch (err) {
+      alert('Failed to delete');
     }
   };
 
   return (
     <div className={ERP.page}>
-      <AdminPageHeader 
-        title="Settings & Categories" 
-        subtitle={`${categories.length} categories`} 
+      <AdminPageHeader
+        title="Settings & Categories"
+        subtitle={`${categories.length} categories`}
         actions={
           <div className="flex gap-2">
-            <button 
-              onClick={() => setLocationModal(true)} 
+            <button
+              onClick={() => setLocationModal(true)}
               className={`${ERP.btn} ${ERP.btnPrimary}`}
             >
               <MapPin className="w-4 h-4" /> Set Location
             </button>
-            <button 
-              onClick={openNew} 
+            <button
+              onClick={openNew}
               className={`${ERP.btn} ${ERP.btnPrimary}`}
             >
               <Plus className="w-4 h-4" /> Add category
             </button>
           </div>
-        } 
+        }
       />
 
       <div className={ERP.panel}>
@@ -1286,22 +1321,24 @@ export function SettingsTab({ categories = [], fetchAll, headers, API_URL, user 
             { key: 'sellPrice', header: 'Selling Price', render: (c: any) => `₹${(c.sellPrice || 0).toLocaleString('en-IN')}` },
             { key: 'location', header: 'Location', render: (c: any) => c.latitude && c.longitude ? `📍 ${c.latitude.toFixed(4)}, ${c.longitude.toFixed(4)}` : '—' },
             { key: 'geoLimit', header: 'Geo Limit', render: (c: any) => c.geoLimit ? `${(c.geoLimit / 1000).toFixed(1)}km` : '—' },
-            { key: 'actions', header: '', render: (c: any) => (
-              <div className="flex items-center gap-2">
-                <button 
-                  onClick={() => openEdit(c)} 
-                  className={`${ERP.btn} ${ERP.btnSecondary} py-1 px-2`}
-                >
-                  Edit
-                </button>
-                <button 
-                  onClick={() => remove(c._id)} 
-                  className={`${ERP.btn} ${ERP.btnDanger} py-1 px-2`}
-                >
-                  Delete
-                </button>
-              </div>
-            ) }
+            {
+              key: 'actions', header: '', render: (c: any) => (
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => openEdit(c)}
+                    className={`${ERP.btn} ${ERP.btnSecondary} py-1 px-2`}
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => remove(c._id)}
+                    className={`${ERP.btn} ${ERP.btnDanger} py-1 px-2`}
+                  >
+                    Delete
+                  </button>
+                </div>
+              )
+            }
           ]}
           rows={categories}
           emptyMessage="No categories"
@@ -1315,33 +1352,33 @@ export function SettingsTab({ categories = [], fetchAll, headers, API_URL, user 
             <div className="space-y-3 max-h-[60vh] overflow-y-auto">
               <div>
                 <label className="block text-xs font-bold mb-1 text-slate-700">Category Name</label>
-                <input 
-                  value={form.name} 
-                  onChange={e => setForm(f => ({ ...f, name: e.target.value }))} 
+                <input
+                  value={form.name}
+                  onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
                   placeholder="e.g., Lunch Tiffin"
-                  className="w-full px-3 py-2 border-2 border-slate-200 rounded-lg text-sm" 
+                  className="w-full px-3 py-2 border-2 border-slate-200 rounded-lg text-sm"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-2">
                 <div>
                   <label className="block text-xs font-bold mb-1 text-slate-700">Purchase Price (₹)</label>
-                  <input 
-                    type="number" 
-                    value={form.purchasePrice} 
-                    onChange={e => setForm(f => ({ ...f, purchasePrice: e.target.value }))} 
+                  <input
+                    type="number"
+                    value={form.purchasePrice}
+                    onChange={e => setForm(f => ({ ...f, purchasePrice: e.target.value }))}
                     placeholder="Kitchen earning"
-                    className="w-full px-3 py-2 border-2 border-slate-200 rounded-lg text-sm" 
+                    className="w-full px-3 py-2 border-2 border-slate-200 rounded-lg text-sm"
                   />
                 </div>
                 <div>
                   <label className="block text-xs font-bold mb-1 text-slate-700">Selling Price (₹)</label>
-                  <input 
-                    type="number" 
-                    value={form.sellPrice} 
-                    onChange={e => setForm(f => ({ ...f, sellPrice: e.target.value }))} 
+                  <input
+                    type="number"
+                    value={form.sellPrice}
+                    onChange={e => setForm(f => ({ ...f, sellPrice: e.target.value }))}
                     placeholder="Customer price"
-                    className="w-full px-3 py-2 border-2 border-slate-200 rounded-lg text-sm" 
+                    className="w-full px-3 py-2 border-2 border-slate-200 rounded-lg text-sm"
                   />
                 </div>
               </div>
@@ -1350,16 +1387,16 @@ export function SettingsTab({ categories = [], fetchAll, headers, API_URL, user 
             </div>
 
             <div className="flex items-center justify-end gap-3 mt-5">
-              <button 
-                type="button" 
-                onClick={() => setCatModal({ open: false, data: null })} 
+              <button
+                type="button"
+                onClick={() => setCatModal({ open: false, data: null })}
                 className={`${ERP.btn} ${ERP.btnSecondary}`}
               >
                 Cancel
               </button>
-              <button 
-                type="submit" 
-                disabled={saving} 
+              <button
+                type="submit"
+                disabled={saving}
                 className={`${ERP.btn} ${ERP.btnPrimary}`}
               >
                 {saving ? 'Saving…' : 'Save'}
@@ -1376,15 +1413,15 @@ export function SettingsTab({ categories = [], fetchAll, headers, API_URL, user 
               <span>📍</span> Set Location for All Categories
             </h3>
             <div className="space-y-3 max-h-[60vh] overflow-y-auto">
-              
+
               <div className="bg-blue-50 border border-blue-200 p-3 rounded-lg">
                 <p className="text-xs text-blue-700 font-bold">ℹ️ This location will apply to all {categories.length} categories and their menu items</p>
               </div>
 
               <div>
                 <label className="block text-xs font-bold mb-2 text-slate-700">Capture Location</label>
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   onClick={handleCaptureLocation}
                   disabled={locating}
                   className="w-full px-4 py-2.5 bg-blue-500 text-white rounded-lg font-bold text-sm hover:bg-blue-600 disabled:opacity-70"
@@ -1395,28 +1432,28 @@ export function SettingsTab({ categories = [], fetchAll, headers, API_URL, user 
 
               <div className="bg-slate-50 p-3 rounded-lg space-y-2">
                 <p className="text-xs text-slate-600 font-bold">Or manually enter:</p>
-                
+
                 <div className="grid grid-cols-2 gap-2">
                   <div>
                     <label className="block text-xs font-bold mb-1">Latitude</label>
-                    <input 
-                      type="number" 
+                    <input
+                      type="number"
                       step="0.000001"
-                      value={locationForm.latitude} 
-                      onChange={e => setLocationForm(f => ({ ...f, latitude: e.target.value }))} 
+                      value={locationForm.latitude}
+                      onChange={e => setLocationForm(f => ({ ...f, latitude: e.target.value }))}
                       placeholder="28.6139"
-                      className="w-full px-3 py-2 border-2 border-slate-200 rounded-lg text-xs" 
+                      className="w-full px-3 py-2 border-2 border-slate-200 rounded-lg text-xs"
                     />
                   </div>
                   <div>
                     <label className="block text-xs font-bold mb-1">Longitude</label>
-                    <input 
-                      type="number" 
+                    <input
+                      type="number"
                       step="0.000001"
-                      value={locationForm.longitude} 
-                      onChange={e => setLocationForm(f => ({ ...f, longitude: e.target.value }))} 
+                      value={locationForm.longitude}
+                      onChange={e => setLocationForm(f => ({ ...f, longitude: e.target.value }))}
                       placeholder="77.2090"
-                      className="w-full px-3 py-2 border-2 border-slate-200 rounded-lg text-xs" 
+                      className="w-full px-3 py-2 border-2 border-slate-200 rounded-lg text-xs"
                     />
                   </div>
                 </div>
@@ -1432,12 +1469,12 @@ export function SettingsTab({ categories = [], fetchAll, headers, API_URL, user 
               <div className="bg-slate-50 p-3 rounded-lg">
                 <label className="block text-xs font-bold mb-1 text-slate-700">Geo-Limit (Delivery Radius in meters)</label>
                 <div className="flex gap-2">
-                  <input 
-                    type="number" 
-                    value={locationForm.geoLimit} 
-                    onChange={e => setLocationForm(f => ({ ...f, geoLimit: e.target.value }))} 
+                  <input
+                    type="number"
+                    value={locationForm.geoLimit}
+                    onChange={e => setLocationForm(f => ({ ...f, geoLimit: e.target.value }))}
                     placeholder="5000"
-                    className="flex-1 px-3 py-2 border-2 border-slate-200 rounded-lg text-sm" 
+                    className="flex-1 px-3 py-2 border-2 border-slate-200 rounded-lg text-sm"
                   />
                   <div className="px-3 py-2 bg-blue-100 border border-blue-200 rounded-lg text-xs font-bold text-blue-700 whitespace-nowrap flex items-center">
                     {locationForm.geoLimit ? `${(Number(locationForm.geoLimit) / 1000).toFixed(1)}km` : '—'}
@@ -1448,16 +1485,16 @@ export function SettingsTab({ categories = [], fetchAll, headers, API_URL, user 
             </div>
 
             <div className="flex items-center justify-end gap-3 mt-6">
-              <button 
-                type="button" 
-                onClick={() => setLocationModal(false)} 
+              <button
+                type="button"
+                onClick={() => setLocationModal(false)}
                 className={`${ERP.btn} ${ERP.btnSecondary}`}
               >
                 Cancel
               </button>
-              <button 
-                type="submit" 
-                disabled={locationSaving || locating || !locationForm.latitude || !locationForm.longitude} 
+              <button
+                type="submit"
+                disabled={locationSaving || locating || !locationForm.latitude || !locationForm.longitude}
                 className={`${ERP.btn} ${ERP.btnPrimary}`}
               >
                 {locationSaving ? 'Saving…' : `Apply to ${categories.length} Categories`}
@@ -1731,7 +1768,7 @@ export function LegalTab({ legal, setLegal, legalSaving, setLegalSaving, headers
   );
 }
 
-export function HomestyleTab({ 
+export function HomestyleTab({
   hsVideos, setHsVideos, hsVideoUploading, hsSaving, saveHomestyle, uploadVideo,
   hsScheduleBannerImages, setHsScheduleBannerImages, hsScheduleBannerUploading, setHsScheduleBannerUploading,
   hsSubscriptionBanners, setHsSubscriptionBanners, hsSubscriptionBannerUploading, setHsSubscriptionBannerUploading,
@@ -1795,15 +1832,15 @@ export function HomestyleTab({
           </div>
           <label className="cursor-pointer px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white text-[10px] font-black uppercase tracking-widest rounded-full shadow-lg shadow-blue-100 transition active:scale-95">
             {hsScheduleBannerUploading ? 'Uploading…' : '+ Add Banner'}
-            <input type="file" accept="image/*" className="hidden" disabled={hsScheduleBannerUploading} onChange={async e => { 
-              const file = e.target.files?.[0]; 
-              if (!file) return; 
-              try { 
+            <input type="file" accept="image/*" className="hidden" disabled={hsScheduleBannerUploading} onChange={async e => {
+              const file = e.target.files?.[0];
+              if (!file) return;
+              try {
                 setHsScheduleBannerUploading(true);
-                const url = await uploadImage(file); 
-                setHsScheduleBannerImages((v: string[]) => [...v, url]); 
-              } catch { 
-                alert('Upload failed'); 
+                const url = await uploadImage(file);
+                setHsScheduleBannerImages((v: string[]) => [...v, url]);
+              } catch {
+                alert('Upload failed');
               } finally {
                 setHsScheduleBannerUploading(false);
               }
@@ -1847,15 +1884,15 @@ export function HomestyleTab({
           </div>
           <label className="cursor-pointer px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white text-[10px] font-black uppercase tracking-widest rounded-full shadow-lg shadow-blue-100 transition active:scale-95">
             {hsSubscriptionBannerUploading ? 'Uploading…' : '+ Add Banner'}
-            <input type="file" accept="image/*" className="hidden" disabled={hsSubscriptionBannerUploading} onChange={async e => { 
-              const file = e.target.files?.[0]; 
-              if (!file) return; 
-              try { 
+            <input type="file" accept="image/*" className="hidden" disabled={hsSubscriptionBannerUploading} onChange={async e => {
+              const file = e.target.files?.[0];
+              if (!file) return;
+              try {
                 setHsSubscriptionBannerUploading(true);
-                const url = await uploadImage(file); 
-                setHsSubscriptionBanners((v: string[]) => [...v, url]); 
-              } catch { 
-                alert('Upload failed'); 
+                const url = await uploadImage(file);
+                setHsSubscriptionBanners((v: string[]) => [...v, url]);
+              } catch {
+                alert('Upload failed');
               } finally {
                 setHsSubscriptionBannerUploading(false);
               }
@@ -1911,21 +1948,21 @@ export function HomestyleTab({
                   <span className="text-[9px] font-black text-green-500 uppercase tracking-widest bg-green-50 px-2 py-1 rounded-full">Active</span>
                 )}
               </div>
-              
+
               <div className="group relative bg-slate-50 rounded-[2rem] overflow-hidden aspect-[4/3] border-4 border-double border-slate-200 flex items-center justify-center transition-all hover:border-orange-200">
                 {hsScheduleSectionImages[section.id] ? (
                   <div className="w-full h-full relative">
                     <img src={hsScheduleSectionImages[section.id]} className="w-full h-full object-cover" />
                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all backdrop-blur-[2px]">
-                      <label 
+                      <label
                         className="px-6 py-3 bg-white text-slate-900 rounded-full text-[10px] font-black uppercase tracking-widest cursor-pointer hover:bg-slate-50 transition active:scale-95"
                         onClick={(e) => e.stopPropagation()}
                       >
                         Change Image
-                        <input 
-                          type="file" 
-                          accept="image/*" 
-                          className="hidden" 
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
                           onChange={async e => {
                             const file = e.target.files?.[0];
                             if (!file) return;
@@ -1938,17 +1975,17 @@ export function HomestyleTab({
                             } finally {
                               setHsSectionUploading(null);
                             }
-                          }} 
+                          }}
                         />
                       </label>
                     </div>
                   </div>
                 ) : (
                   <label className="w-full h-full flex flex-col items-center justify-center cursor-pointer hover:bg-slate-100/50 transition">
-                    <input 
-                      type="file" 
-                      accept="image/*" 
-                      className="hidden" 
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
                       onChange={async e => {
                         const file = e.target.files?.[0];
                         if (!file) return;
@@ -1961,7 +1998,7 @@ export function HomestyleTab({
                         } finally {
                           setHsSectionUploading(null);
                         }
-                      }} 
+                      }}
                     />
                     {hsSectionUploading === section.id ? (
                       <div className="animate-spin rounded-full h-10 w-10 border-4 border-orange-500 border-t-transparent"></div>

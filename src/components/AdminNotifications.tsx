@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef } from 'react';
 import { useAuth } from '@/context/AuthContext';
+import { usePushNotifications } from '@/hooks/usePushNotifications';
 import { Bell, X, Volume2, VolumeX, UtensilsCrossed, CreditCard, Calendar, Circle } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -20,6 +21,7 @@ interface AdminNotification {
 
 export default function AdminNotifications() {
   const { user, token } = useAuth();
+  usePushNotifications(token);
   const [notifications, setNotifications] = useState<AdminNotification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [showPanel, setShowPanel] = useState(false);

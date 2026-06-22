@@ -104,6 +104,10 @@ export default function AdminDashboard() {
   const [currentAddOns, setCurrentAddOns] = useState<any[]>([]);
   const [currentTags, setCurrentTags] = useState<string>('');
   const [currentDeliveryTime, setCurrentDeliveryTime] = useState<string>('');
+  const [menuItemInputs, setMenuItemInputs] = useState<string[]>(['', '', '', '']);
+  const [descriptionText, setDescriptionText] = useState<string>('');
+  const [infoText, setInfoText] = useState<string>('');
+  const [corporateChecked, setCorporateChecked] = useState<boolean>(false);
 
   const headers = { Authorization: `Bearer ${token}` };
 
@@ -289,13 +293,49 @@ export default function AdminDashboard() {
       window.history.pushState(null, '', window.location.href);
 
       if (menuModal.data) {
+        const activeCategory = menuModal.data.category || 'Regular';
+        setSelectedCategory(activeCategory);
         setCurrentAddOns(menuModal.data.addOns || []);
         setCurrentTags((menuModal.data.tags || []).join(', '));
         setCurrentDeliveryTime(menuModal.data.deliveryTime || '');
+        // Set selling & purchase prices from existing item or from categories list
+        try {
+          const selCat = categories?.find((c: any) => (c.name || '').toLowerCase() === (activeCategory || '').toLowerCase());
+          const menuPrice = (menuModal.data.price !== undefined && menuModal.data.price !== null) ? menuModal.data.price : (selCat?.sellPrice || 0);
+          const menuPurchase = (menuModal.data.kitchenEarning !== undefined && menuModal.data.kitchenEarning !== null) ? menuModal.data.kitchenEarning : (selCat?.purchasePrice || 0);
+          setSellingPrice(menuPrice || 0);
+          setPurchasePrice(menuPurchase || 0);
+        } catch (e) { /* ignore */ }
+        // For admin show full description textarea, for kitchen-owner keep legacy item inputs
+        if (isAdmin) {
+          setDescriptionText(menuModal.data.description || '');
+          setInfoText(menuModal.data.info || '');
+          setCorporateChecked((menuModal.data.scheduleSections || []).includes?.('Corporate Order') || false);
+        } else {
+          let inputs = menuModal.data.description ? menuModal.data.description.split(', ') : [];
+          if (activeCategory.toLowerCase() === 'shahi thali') {
+             while (inputs.length < 5) inputs.push('');
+             setMenuItemInputs(inputs.slice(0, 5));
+          } else {
+             while (inputs.length < 4) inputs.push('');
+             setMenuItemInputs(inputs.slice(0, 4));
+          }
+        }
       } else {
+        setSelectedCategory('Regular');
         setCurrentAddOns([]);
         setCurrentTags('');
         setCurrentDeliveryTime('');
+        setMenuItemInputs(['', '', '', '']);
+        setDescriptionText('');
+        setInfoText('');
+        setCorporateChecked(false);
+        // initialize default prices from categories (if available)
+        try {
+          const defaultCat = (categories || []).find((c: any) => (c.name || '').toLowerCase() === 'regular') || (categories && categories[0]);
+          setSellingPrice(defaultCat?.sellPrice || 0);
+          setPurchasePrice(defaultCat?.purchasePrice || 0);
+        } catch (e) { /* ignore */ }
       }
 
       document.addEventListener('keydown', handleKeyDown);
@@ -466,12 +506,48 @@ export default function AdminDashboard() {
     const mealTypes = fd.getAll ? fd.getAll('mealTypes') : [];
     const mealType = (fd.get('mealType') as any) || (mealTypes && mealTypes.length > 0 ? mealTypes[0] : null);
     const homeCategories = fd.getAll ? fd.getAll('homeCategories') : [];
-    const scheduleSections = fd.getAll ? fd.getAll('scheduleSections') : [];
+    let scheduleSections = fd.getAll ? fd.getAll('scheduleSections') : [];
+
+    // If a kitchen-owner is adding the menu and did not provide explicit scheduleSections,
+    // map their simple category selection to scheduleSections so the item appears on schedule pages.
+    const isKitchenOwnerLocal = user?.role === 'kitchen-owner';
+    if ((!scheduleSections || scheduleSections.length === 0) && isKitchenOwnerLocal && selectedCategory) {
+      scheduleSections = [selectedCategory];
+    }
+
+    // Normalize form values to strings. `FormData.get()` can return a File,
+    // so guard against that before calling string methods like `split`.
+    let descriptionValue: string;
+    if (isAdmin) {
+      const fdDesc = fd.get('description');
+      descriptionValue = (typeof fdDesc === 'string' && fdDesc) ? fdDesc : (descriptionText || '');
+    } else {
+      descriptionValue = menuItemInputs.filter(Boolean).join(', ');
+    }
+
+    let categoryValue: string;
+    if (isAdmin) {
+      const fdCat = fd.get('category');
+      categoryValue = (typeof fdCat === 'string' && fdCat) ? fdCat : (selectedCategory || 'regular');
+    } else {
+      const fdCat = fd.get('category');
+      categoryValue = selectedCategory || ((typeof fdCat === 'string' && fdCat) ? fdCat : 'regular');
+    }
+
+    // Ensure a `name` is always sent. If the admin didn't provide one,
+    // derive it from the first line of the description so older servers
+    // that require `name` continue to work.
+    const fdName = fd.get('name');
+    let nameValue = (typeof fdName === 'string' && String(fdName).trim()) ? String(fdName).trim() : '';
+    if (!nameValue) {
+      const derived = (descriptionValue || '').split('\n')[0].trim();
+      nameValue = derived ? derived.slice(0, 60) : 'Menu Item';
+    }
 
     const body: any = {
-      name: fd.get('title') || `Menu Item ${new Date().getTime()}`,
-      description: fd.get('description') || '',
-      category: selectedCategory || fd.get('category') || 'regular',
+      name: nameValue,
+      description: descriptionValue,
+      category: categoryValue || 'regular',
       price: sellingPrice || menuModal.data?.price || 0,
       kitchenEarning: purchasePrice || menuModal.data?.kitchenEarning || 0,
       image: imgPreview || fd.get('imageUrl'),
@@ -487,6 +563,7 @@ export default function AdminDashboard() {
       addOns: currentAddOns,
       deliveryTime: currentDeliveryTime,
       tags: currentTags.split(',').map(t => t.trim()).filter(t => t),
+      info: infoText || null,
     };
 
     console.log('Saving menu with data:', body);
@@ -504,6 +581,9 @@ export default function AdminDashboard() {
       setImgPreview('');
       setMenuFormDirty(false);
       setSelectedCategory('regular');
+      setDescriptionText('');
+      setInfoText('');
+      setCorporateChecked(false);
       setSellingPrice(0);
       setPurchasePrice(0);
       setIsGenerateDisabled(false);
@@ -538,6 +618,7 @@ export default function AdminDashboard() {
       const descTextarea = form.querySelector('textarea[name="description"]') as HTMLTextAreaElement;
       if (descTextarea) {
         descTextarea.value = data.description;
+        setDescriptionText(data.description);
         setIsGenerateDisabled(true);
         setMenuFormDirty(true);
 
@@ -1011,6 +1092,21 @@ export default function AdminDashboard() {
                 </div>
               </div>
 
+              {/* Name field — admin only */}
+              {isAdmin && (
+                <div className="space-y-1">
+                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-4">Menu Name</p>
+                  <input
+                    type="text"
+                    name="name"
+                    defaultValue={menuModal.data?.name || ''}
+                    placeholder="e.g. Dal Tadka Thali"
+                    className={inputCls}
+                    onChange={() => setMenuFormDirty(true)}
+                  />
+                </div>
+              )}
+
                 {isAdmin && (
                   <>
                     <div className="pt-2">
@@ -1051,7 +1147,7 @@ export default function AdminDashboard() {
                           <span>Shahi Thali</span>
                         </label>
                         <label className="inline-flex items-center gap-2 text-sm">
-                          <input type="checkbox" name="scheduleSections" value="Corporate Order" defaultChecked={menuModal.data?.scheduleSections?.includes?.('Corporate Order')} />
+                          <input type="checkbox" name="scheduleSections" value="Corporate Order" defaultChecked={menuModal.data?.scheduleSections?.includes?.('Corporate Order')} onChange={(e) => { setCorporateChecked(!!(e.target as HTMLInputElement).checked); setMenuFormDirty(true); }} />
                           <span>Corporate Order</span>
                         </label>
                         <label className="inline-flex items-center gap-2 text-sm">
@@ -1063,9 +1159,178 @@ export default function AdminDashboard() {
                   </>
                 )}
 
+              {isAdmin ? (
                 <div className="space-y-2">
-                <textarea name="description" defaultValue={menuModal.data?.description || ''} placeholder="Menu Description (Optional)" rows={3} className={`${inputCls} resize-none`} />
-              </div>
+                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-4">Category Selection</p>
+                  <select
+                    name="category"
+                    value={selectedCategory}
+                    onChange={(e) => {
+                      const categoryName = e.target.value;
+                      setSelectedCategory(categoryName);
+                      setMenuFormDirty(true);
+
+                      if (categoryName.toLowerCase() === 'shahi thali') {
+                        setMenuItemInputs(prev => {
+                          let next = [...prev];
+                          while (next.length < 5) next.push('');
+                          return next.slice(0, 5);
+                        });
+                      } else {
+                        setMenuItemInputs(prev => {
+                          let next = [...prev];
+                          while (next.length < 4) next.push('');
+                          return next.slice(0, 4);
+                        });
+                      }
+
+                      // Find category and update price
+                      const selectedCat = categories?.find((c: any) => (c.name || '') === categoryName || (c.name || '').toLowerCase() === categoryName.toLowerCase());
+                      if (selectedCat) {
+                        setSellingPrice(selectedCat.sellPrice || 0);
+                        setPurchasePrice(selectedCat.purchasePrice || 0);
+                      }
+                    }}
+                    className={inputCls}
+                  >
+                    <option value="">Select category</option>
+                    {categories?.map((c: any) => (
+                      <option key={c._id} value={c.name}>{c.name}</option>
+                    ))}
+                  </select>
+                </div>
+              ) : (
+                isKitchenOwner ? (
+                  <div className="space-y-2">
+                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-4">Category Selection</p>
+                    <select
+                      name="category"
+                      value={selectedCategory}
+                      onChange={(e) => {
+                        const categoryName = e.target.value;
+                        setSelectedCategory(categoryName);
+                        setMenuFormDirty(true);
+
+                        if (categoryName.toLowerCase() === 'shahi thali') {
+                          setMenuItemInputs(prev => {
+                            let next = [...prev];
+                            while (next.length < 5) next.push('');
+                            return next.slice(0, 5);
+                          });
+                        } else {
+                          setMenuItemInputs(prev => {
+                            let next = [...prev];
+                            while (next.length < 4) next.push('');
+                            return next.slice(0, 4);
+                          });
+                        }
+
+                        // Try to set prices from categories list if available
+                        const selectedCat = categories?.find((c: any) => (c.name || '').toLowerCase() === categoryName.toLowerCase());
+                        if (selectedCat) {
+                          setSellingPrice(selectedCat.sellPrice || 0);
+                          setPurchasePrice(selectedCat.purchasePrice || 0);
+                        }
+                      }}
+                      className={inputCls}
+                    >
+                      {(() => {
+                        // Source kitchen-owner options from settings but only expose
+                        // Regular and Shahi Thali if present in settings.
+                        const kitchenCats = (categories || []).filter((c: any) => {
+                          const n = (c.name || '').toLowerCase();
+                          return n === 'regular' || n === 'shahi thali';
+                        });
+                        if (kitchenCats.length > 0) {
+                          return kitchenCats.map((c: any) => (
+                            <option key={c._id} value={c.name}>{c.name}</option>
+                          ));
+                        }
+                        // Fallback hard-coded options
+                        return (
+                          <>
+                            <option value="Regular">Regular</option>
+                            <option value="Shahi Thali">Shahi Thali</option>
+                          </>
+                        );
+                      })()}
+                    </select>
+                    {/* Show kitchen-owner their purchasing price only */}
+                    <div className="px-4 pt-2">
+                      <p className="text-xs text-slate-600">Purchase price (your earning): <span className="font-bold">₹{purchasePrice}</span></p>
+                    </div>
+                  </div>
+                ) : (
+                  // Other roles: include hidden input so backend still receives category
+                  <input type="hidden" name="category" value={selectedCategory} />
+                )
+              )}
+
+              {/* Corporate Info field — admin only, shown when Corporate Order is selected */}
+              {isAdmin && (corporateChecked || selectedCategory?.toLowerCase() === 'corporate order') && (
+                <div className="space-y-1">
+                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-4">Corporate Info / Details</p>
+                  <p className="text-[10px] text-blue-500 px-4">This will be shown as formatted info in the Corporate section.</p>
+                  <textarea
+                    name="info"
+                    value={infoText}
+                    onChange={e => { setInfoText(e.target.value); setMenuFormDirty(true); }}
+                    placeholder={`e.g. Min order: 10 boxes\nEach box includes:\n- 4 roti\n- dal\n- sabji\n- salad`}
+                    className={inputCls + ' h-36 resize-y font-mono text-sm'}
+                  />
+                </div>
+              )}
+
+              {selectedCategory?.toLowerCase() === 'regular' && (
+                <div className="px-4 py-2 bg-orange-50 border border-orange-100 rounded-xl">
+                  <p className="text-xs text-orange-600 font-medium">
+                    Note: You have to add 4 roti, do sabji or salad
+                  </p>
+                </div>
+              )}
+              {selectedCategory?.toLowerCase() === 'shahi thali' && (
+                <div className="px-4 py-2 bg-teal-50 border border-teal-100 rounded-xl">
+                  <p className="text-xs text-teal-600 font-medium">
+                    Note: You have to add 5 items (e.g. 5 roti, dal, paneer sabji, salad, sweet)
+                  </p>
+                </div>
+              )}
+
+              {isAdmin ? (
+                <div className="space-y-2">
+                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-4">Description</p>
+                  <textarea
+                    name="description"
+                    value={descriptionText}
+                    onChange={e => { setDescriptionText(e.target.value); setMenuFormDirty(true); setIsGenerateDisabled(!!e.target.value.trim()); }}
+                    placeholder="Full description for schedule and listing"
+                    className={inputCls + ' h-32 resize-y'}
+                  />
+                  <div className="flex gap-2">
+                    <button type="button" onClick={generateDescriptionWithAI} disabled={isGeneratingDesc || isGenerateDisabled} className="px-3 py-2 text-sm bg-orange-50 text-orange-700 rounded-lg">{isGeneratingDesc ? 'Generating…' : 'Generate description'}</button>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-4">Menu Items</p>
+                  {menuItemInputs.map((val, idx) => (
+                    <input
+                      key={idx}
+                      type="text"
+                      value={val}
+                      onChange={e => {
+                        const newVals = [...menuItemInputs];
+                        newVals[idx] = e.target.value;
+                        setMenuItemInputs(newVals);
+                        setMenuFormDirty(true);
+                        setIsGenerateDisabled(false);
+                      }}
+                      placeholder={`Item ${idx + 1} (e.g. ${['4 Roti', 'Dal', 'Sabji', 'Salad/Papad'][idx] || 'Item'})`}
+                      className={inputCls}
+                    />
+                  ))}
+                </div>
+              )}
 
               {/* Instant & Today's Special Checkboxes - Only for Admin */}
               {isAdmin && (
@@ -1103,61 +1368,33 @@ export default function AdminDashboard() {
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-4">Category Selection</p>
-                <select
-                  value={selectedCategory}
-                  onChange={(e) => {
-                    const categoryName = e.target.value;
-                    setSelectedCategory(categoryName);
-                    setMenuFormDirty(true);
+              {isAdmin && (
+                <>
+                  <div className="space-y-1">
+                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-4">Delivery Time</p>
+                    <input
+                      type="text"
+                      name="deliveryTime"
+                      value={currentDeliveryTime}
+                      onChange={e => { setCurrentDeliveryTime(e.target.value); setMenuFormDirty(true); }}
+                      placeholder="e.g. 30-40 mins"
+                      className={inputCls}
+                    />
+                  </div>
 
-                    // Find category and update price
-                    const selectedCat = categories?.find((c: any) => c.name === categoryName);
-                    if (selectedCat) {
-                      setSellingPrice(selectedCat.sellPrice || 0);
-                      setPurchasePrice(selectedCat.purchasePrice || 0);
-                      console.log('Category changed to:', categoryName, 'Price:', selectedCat.sellPrice);
-                    }
-                  }}
-                  className={inputCls}
-                >
-                  {(categories && categories.length > 0) ? (
-                    (categories || []).map((c: any) => (
-                      <option key={c._id} value={c.name}>{c.name}</option>
-                    ))
-                  ) : (
-                    <>
-                      <option value="regular">Regular</option>
-                      <option value="gold">Gold</option>
-                    </>
-                  )}
-                </select>
-              </div>
-
-              <div className="space-y-1">
-                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-4">Delivery Time</p>
-                <input
-                  type="text"
-                  name="deliveryTime"
-                  value={currentDeliveryTime}
-                  onChange={e => { setCurrentDeliveryTime(e.target.value); setMenuFormDirty(true); }}
-                  placeholder="e.g. 30-40 mins"
-                  className={inputCls}
-                />
-              </div>
-
-              <div className="space-y-1">
-                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-4">Tags (comma separated)</p>
-                <input
-                  type="text"
-                  name="tags"
-                  value={currentTags}
-                  onChange={e => { setCurrentTags(e.target.value); setMenuFormDirty(true); }}
-                  placeholder="Street Food, Spicy"
-                  className={inputCls}
-                />
-              </div>
+                  <div className="space-y-1">
+                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-4">Tags (comma separated)</p>
+                    <input
+                      type="text"
+                      name="tags"
+                      value={currentTags}
+                      onChange={e => { setCurrentTags(e.target.value); setMenuFormDirty(true); }}
+                      placeholder="Street Food, Spicy"
+                      className={inputCls}
+                    />
+                  </div>
+                </>
+              )}
 
               <div className="space-y-3 pt-2">
                 <div className="flex items-center justify-between px-4">
