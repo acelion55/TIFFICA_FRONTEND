@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { User, Mail, Phone, MapPin, Edit, Loader2, LogOut, ChevronRight, Home, Briefcase, Hotel, MoreHorizontal, Plus, Bell, Wallet } from 'lucide-react';
+import { User, Mail, Phone, MapPin, Edit, Loader2, LogOut, ChevronRight, Home, Briefcase, Hotel, MoreHorizontal, Plus, Bell, Wallet, Camera } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { useNotifications } from '@/context/NotificationContext';
@@ -209,6 +209,3 @@ export default function ProfileClient() {
     </div>
   );
 }
-
-
-

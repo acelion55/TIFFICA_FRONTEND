@@ -1,10 +1,12 @@
 'use client';
 import React from 'react';
-import { ChevronDown, ChevronUp, Search, Trash2, Plus, Activity, Tag, TrendingUp, Award, Users, User, ShoppingBag, UtensilsCrossed, CreditCard, ChevronRight, Calendar, ArrowUpDown, Mail, Phone, MapPin, Truck, Copy, Zap, CheckCircle, Hourglass, Home, Wallet, Gem, CalendarDays, Rocket, Flag, Megaphone, Info, Gift, Package, AlertTriangle, Bell, Send, Save, Smartphone, GraduationCap, Building2, Shirt, Lock, FileText, Film, Video, Sparkles, X, RefreshCw, Download, ChevronLeft, Printer, Eye, MoreHorizontal, ArrowUp, ArrowDown, Edit, Loader2, BarChart2, Store, Camera, Layout } from 'lucide-react';
+import { ChevronDown, ChevronUp, Search, Trash2, Plus, Activity, Tag, TrendingUp, Award, Users, User, ShoppingBag, UtensilsCrossed, CreditCard, ChevronRight, Calendar, ArrowUpDown, Mail, Phone, MapPin, Truck, Copy, Zap, CheckCircle, Hourglass, Home, Wallet, Gem, CalendarDays, Rocket, Flag, Megaphone, Info, Gift, Package, AlertTriangle, Bell, Send, Save, Smartphone, GraduationCap, Building2, Shirt, Lock, FileText, Film, Video, Sparkles, X, RefreshCw, Download, ChevronLeft, Printer, Eye, MoreHorizontal, ArrowUp, ArrowDown, Edit, Loader2, BarChart2, Store, Camera, Layout, Briefcase, ExternalLink } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import AdminNotifications from '@/components/AdminNotifications';
 import { ERP, AdminPageHeader, AdminToolbar, AdminPanel, AdminDataTable, AdminKpiGrid, AdminStatusBadge, MiniBarChart } from './admin-ui';
+import { GalleryTab } from './GalleryTab';
 export { OverviewTab } from './admin-analytics';
+export { GalleryTab };
 
 const SC: Record<string, string> = {
   pending: 'bg-amber-100 text-amber-700',
@@ -24,6 +26,7 @@ const fmtTime = (d: string) => new Date(d).toLocaleString('en-IN', { day: '2-dig
 
 export function UsersTab({ users, search, setSearch, setUserModal, openEditUserModal, deleteUser, fetchAll, headers, API_URL }: any) {
   const [selectedIds, setSelectedIds] = React.useState<Set<string>>(new Set());
+  const [selectedUserDetails, setSelectedUserDetails] = React.useState<{ open: boolean; userId: string | null }>({ open: false, userId: null });
 
   const filtered = users.filter((u: any) => {
     return !search ||
@@ -119,6 +122,7 @@ export function UsersTab({ users, search, setSearch, setUserModal, openEditUserM
         selectedIds={selectedIds}
         onToggleSelect={toggleSelect}
         onToggleSelectAll={toggleSelectAll}
+        onRowClick={(u: any) => setSelectedUserDetails({ open: true, userId: u._id })}
         columns={[
           { key: 'name', header: 'Name', sortable: true },
           { key: 'phone', header: 'Phone' },
@@ -129,9 +133,9 @@ export function UsersTab({ users, search, setSearch, setUserModal, openEditUserM
           {
             key: 'actions', header: '', render: (u: any) => (
               <div className="flex items-center gap-2">
-                <button type="button" onClick={() => openEditUserModal ? openEditUserModal(u) : setUserModal({ open: true, data: u })} className={`${ERP.btn} ${ERP.btnSecondary} py-1`}>Edit</button>
+                <button type="button" onClick={(e) => { e.stopPropagation(); openEditUserModal ? openEditUserModal(u) : setUserModal({ open: true, data: u }) }} className={`${ERP.btn} ${ERP.btnSecondary} py-1`}>Edit</button>
                 {deleteUser && (
-                  <button type="button" onClick={() => deleteUser(u._id)} className={`${ERP.btn} ${ERP.btnDanger} py-1`}><Trash2 className="w-4 h-4" /></button>
+                  <button type="button" onClick={(e) => { e.stopPropagation(); deleteUser(u._id) }} className={`${ERP.btn} ${ERP.btnDanger} py-1`}><Trash2 className="w-4 h-4" /></button>
                 )}
               </div>
             )
@@ -143,6 +147,181 @@ export function UsersTab({ users, search, setSearch, setUserModal, openEditUserM
         exportHeaders={['Name', 'Phone', 'Email', 'Role', 'Wallet']}
         exportRows={filtered.map((u: any) => [u.name, u.phone, u.email, u.role, u.walletBalance])}
       />
+
+      {selectedUserDetails.open && (
+        <UserDetailsModal 
+          userId={selectedUserDetails.userId} 
+          onClose={() => setSelectedUserDetails({ open: false, userId: null })}
+          API_URL={API_URL}
+          headers={headers}
+        />
+      )}
+    </div>
+  );
+}
+
+function UserDetailsModal({ userId, onClose, API_URL, headers }: any) {
+  const [loading, setLoading] = React.useState(true);
+  const [data, setData] = React.useState<any>(null);
+
+  React.useEffect(() => {
+    const fetchDetails = async () => {
+      try {
+        const res = await fetch(`${API_URL}/admin/users/${userId}/details`, { headers });
+        const json = await res.json();
+        if (json.success) setData(json);
+      } catch (err) {
+        console.error('Fetch user details failed:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchDetails();
+  }, [userId, API_URL, headers]);
+
+  if (!userId) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="bg-white w-full max-w-4xl max-h-[90vh] rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col animate-in zoom-in-95 duration-200">
+        <div className="px-8 py-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+          <div>
+            <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight">User Dossier</h3>
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-0.5">Comprehensive profile & history</p>
+          </div>
+          <button onClick={onClose} className="p-2 hover:bg-slate-200 rounded-full transition-colors">
+            <X className="w-6 h-6 text-slate-400" />
+          </button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto p-8 space-y-8">
+          {loading ? (
+            <div className="flex flex-col items-center justify-center py-20">
+              <Loader2 className="w-10 h-10 text-orange-500 animate-spin mb-4" />
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Retransmitting data packets…</p>
+            </div>
+          ) : data ? (
+            <>
+              {/* Profile Overview */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="md:col-span-1 space-y-4">
+                  <div className="bg-slate-900 rounded-[2rem] p-6 text-white relative overflow-hidden group">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-orange-500/10 rounded-full blur-3xl -mr-16 -mt-16" />
+                    <div className="relative z-10 text-center">
+                      <div className="w-20 h-20 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-white/20">
+                        <User className="w-10 h-10 text-orange-400" />
+                      </div>
+                      <h4 className="font-black text-lg truncate">{data.user.name}</h4>
+                      <p className="text-[10px] font-bold text-white/50 uppercase tracking-widest">{data.user.role || 'Consumer'}</p>
+                      
+                      <div className="mt-6 pt-6 border-t border-white/10 flex justify-center gap-6">
+                         <div>
+                            <p className="text-[9px] font-black text-white/30 uppercase tracking-widest mb-1">Wallet</p>
+                            <p className="font-black text-orange-400">₹{data.user.walletBalance || 0}</p>
+                         </div>
+                         <div>
+                            <p className="text-[9px] font-black text-white/30 uppercase tracking-widest mb-1">Orders</p>
+                            <p className="font-black text-white">{data.orders.length}</p>
+                         </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-slate-50 rounded-[2rem] p-6 space-y-4 border border-slate-100">
+                    <div className="flex items-center gap-3">
+                      <Mail className="w-4 h-4 text-slate-400" />
+                      <div className="min-w-0">
+                        <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Email Address</p>
+                        <p className="text-xs font-bold text-slate-700 truncate">{data.user.email || '—'}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <Phone className="w-4 h-4 text-slate-400" />
+                      <div>
+                        <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Mobile Contact</p>
+                        <p className="text-xs font-bold text-slate-700">{data.user.phone || '—'}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <Calendar className="w-4 h-4 text-slate-400" />
+                      <div>
+                        <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Join Date</p>
+                        <p className="text-xs font-bold text-slate-700">{data.user.createdAt ? new Date(data.user.createdAt).toLocaleDateString() : '—'}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="md:col-span-2 space-y-6">
+                  {/* Addresses */}
+                  <div>
+                    <h5 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                       <MapPin className="w-3.5 h-3.5" /> Registered Addresses
+                    </h5>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {data.user.addresses && data.user.addresses.length > 0 ? data.user.addresses.map((addr: any, i: number) => (
+                        <div key={i} className={`p-4 rounded-2xl border transition-all ${addr.isDefault ? 'bg-orange-50/50 border-orange-100' : 'bg-white border-slate-100'}`}>
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{addr.addressType || 'Location'}</span>
+                            {addr.isDefault && <span className="text-[8px] font-black text-orange-600 bg-orange-100 px-2 py-0.5 rounded-full">Default</span>}
+                          </div>
+                          <p className="text-xs font-bold text-slate-700 leading-snug">{addr.fullAddress}</p>
+                          <p className="text-[10px] font-medium text-slate-400 mt-1">{addr.area}, {addr.landmark}</p>
+                        </div>
+                      )) : (
+                        <div className="col-span-full py-8 bg-slate-50 rounded-2xl border border-dashed border-slate-200 text-center">
+                          <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">No address found</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Order History */}
+                  <div>
+                    <h5 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                       <ShoppingBag className="w-3.5 h-3.5" /> Recent Transactions
+                    </h5>
+                    <div className="space-y-2">
+                      {data.orders.length > 0 ? data.orders.map((o: any) => (
+                        <div key={o._id} className="flex items-center justify-between p-4 bg-white border border-slate-100 rounded-2xl hover:border-orange-100 transition-all group">
+                          <div className="flex items-center gap-4">
+                            <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center group-hover:bg-orange-50 transition-colors">
+                               <Package className="w-5 h-5 text-slate-400 group-hover:text-orange-500" />
+                            </div>
+                            <div>
+                               <p className="text-xs font-black text-slate-900 leading-none">#{o._id.slice(-6).toUpperCase()}</p>
+                               <p className="text-[9px] font-bold text-slate-400 mt-1 uppercase tracking-wider">{new Date(o.createdAt).toLocaleDateString()} · {o.items?.length || 0} Items</p>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                             <p className="text-sm font-black text-slate-900 leading-none">₹{o.finalAmount || o.totalAmount}</p>
+                             <span className={`text-[8px] font-black uppercase rounded-full px-2 py-0.5 mt-1 inline-block ${
+                               o.status === 'delivered' ? 'bg-green-100 text-green-700' : 
+                               o.status === 'cancelled' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'
+                             }`}>
+                               {o.status}
+                             </span>
+                          </div>
+                        </div>
+                      )) : (
+                        <div className="py-12 bg-slate-50 rounded-2xl border border-dashed border-slate-200 text-center">
+                          <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Zero transaction history</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className="text-center py-20 text-red-500 font-bold">Failed to load user intelligence</div>
+          )}
+        </div>
+
+        <div className="px-8 py-5 border-t border-slate-100 bg-slate-50/50 flex justify-end">
+           <button onClick={onClose} className="px-8 py-2.5 bg-slate-900 text-white rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-slate-800 transition active:scale-95">Dismiss</button>
+        </div>
+      </div>
     </div>
   );
 }
@@ -359,6 +538,49 @@ export function OrdersTab({ orders, fetchAll, headers, API_URL, search, setSearc
     if ((await res.json()).success) fetchAll();
   };
 
+  const assignKitchen = async (orderId: string, kitchenId: string) => {
+    // kitchenId can be empty to unassign
+    try {
+      const res = await fetch(`${API_URL}/admin/orders/${orderId}/assign-kitchen`, {
+        method: 'PATCH',
+        headers: { ...headers, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ kitchenId: kitchenId || null }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        fetchAll();
+      } else {
+        alert('Failed to assign kitchen: ' + (data.error || 'Unknown error'));
+      }
+    } catch (err) {
+      console.error('Assign kitchen error:', err);
+      alert('Error connecting to server');
+    }
+  };
+
+  const bulkDeleteSelected = async () => {
+    if (selectedIds.size === 0) return;
+    if (!confirm(`Delete ${selectedIds.size} selected orders? This action cannot be undone.`)) return;
+    try {
+      const res = await fetch(`${API_URL}/admin/orders/bulk`, {
+        method: 'DELETE',
+        headers: { ...headers, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderIds: Array.from(selectedIds) }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert(`✅ Deleted ${data.deleted?.length ?? Array.from(selectedIds).length} orders`);
+        setSelectedIds(new Set());
+        fetchAll();
+      } else {
+        alert('❌ ' + (data.error || 'Bulk delete failed'));
+      }
+    } catch (err) {
+      console.error('Bulk delete error:', err);
+      alert('❌ Error connecting to server');
+    }
+  };
+
   const inputCls = 'w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-orange-100';
 
   const statusBadge = (status: string) => (
@@ -467,7 +689,7 @@ export function OrdersTab({ orders, fetchAll, headers, API_URL, search, setSearc
           <input type="date" value={headerDateTo} onChange={e => setHeaderDateTo(e.target.value)} className={inputCls + ' w-[130px]'} title="To" />
           <button type="button" onClick={() => exportOrdersCsv(sortedOrders, deliveryPartners)} className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold bg-white border border-slate-200 rounded-lg hover:bg-slate-50"><Download className="w-3.5 h-3.5" /> Export CSV</button>
           <button type="button" onClick={() => fetchAll()} className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold bg-white border border-slate-200 rounded-lg hover:bg-slate-50"><RefreshCw className="w-3.5 h-3.5" /> Refresh</button>
-          <button type="button" disabled={selectedIds.size === 0} className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold bg-slate-900 text-white rounded-lg disabled:opacity-40"><MoreHorizontal className="w-3.5 h-3.5" /> Bulk ({selectedIds.size})</button>
+          <button type="button" disabled={selectedIds.size === 0} onClick={bulkDeleteSelected} className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold bg-red-600 text-white rounded-lg disabled:opacity-40"><Trash2 className="w-3.5 h-3.5" /> Delete Selected ({selectedIds.size})</button>
         </div>
       </div>
 
@@ -635,6 +857,13 @@ export function OrdersTab({ orders, fetchAll, headers, API_URL, search, setSearc
                 </select>
               </section>
               <section>
+                <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">Assign kitchen</label>
+                <select value={drawerOrder.assignedKitchen?._id || drawerOrder.assignedKitchen || ''} onChange={e => assignKitchen(drawerOrder._id, e.target.value)} className={inputCls}>
+                  <option value="">Unassigned</option>
+                  {kitchens?.map((k: any) => <option key={k._id} value={k._id}>{k.name}</option>)}
+                </select>
+              </section>
+              <section>
                 <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">Update status</label>
                 <select value={drawerOrder.status} onChange={e => patchStatus(drawerOrder._id, e.target.value)} className={inputCls}>
                   {['pending', 'confirmed', 'preparing', 'ready', 'picked_up', 'out_for_delivery', 'delivered', 'cancelled'].map(s => <option key={s} value={s}>{s.replace(/_/g, ' ')}</option>)}
@@ -688,15 +917,34 @@ export function MenuTab({ menuItems, search, setSearch, setMenuModal, setImgPrev
     return matchesSearch;
   });
 
+  const myKitchen = user?.role === 'kitchen-owner' 
+    ? kitchens.find((k: any) => k._id === (user.kitchenId || user.assignedKitchen))
+    : null;
+  const isKycRestricted = user?.role === 'kitchen-owner' && myKitchen && !myKitchen.isKycDone;
+
   return (
     <div className={ERP.page}>
-      <span className='flex justify-between -mt-3'>
+      {isKycRestricted && (
+        <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-2xl flex items-center gap-3 animate-in fade-in slide-in-from-top-2">
+          <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center shrink-0">
+            <AlertTriangle className="w-5 h-5 text-amber-600" />
+          </div>
+          <div>
+            <p className="text-sm font-bold text-amber-900">KYC Verification Pending</p>
+            <p className="text-xs text-amber-700 mt-0.5">Please upload your documents in the <span className="font-bold">Profile</span> page to enable menu management.</p>
+          </div>
+        </div>
+      )}
 
-        <button type="button" onClick={() => { setSelectedCategory('regular'); setMenuModal({ open: true, data: null }); }} className={`${ERP.btn} ${ERP.btnPrimary}`}>
+      <span className='flex justify-between -mt-3'>
+        <button 
+          type="button" 
+          disabled={isKycRestricted}
+          onClick={() => { setSelectedCategory('regular'); setMenuModal({ open: true, data: null }); }} 
+          className={`${ERP.btn} ${ERP.btnPrimary} ${isKycRestricted ? 'opacity-50 cursor-not-allowed grayscale' : ''}`}
+        >
           <Plus className="w-4 h-4" /> Add item
         </button>
-
-        {/* Drafts removed: only show live items */}
       </span>
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center">
         <div className="flex-1 flex items-center  bg-white rounded-md border border-slate-200 px-3 py-2">
@@ -882,6 +1130,8 @@ export function KitchensTab({ kitchens, menuItems, setKitchenModal, fetchAll, he
     return k.ownerName || k.ownerEmail || '—';
   };
 
+  const [kycViewModal, setKycViewModal] = React.useState<{ open: boolean; data: any }>({ open: false, data: null });
+
   const getOwnerDetails = (k: any) => {
     const ownerId = k.owner?._id || k.owner;
     if (k.owner?.name) return { name: k.owner.name, email: k.owner.email, phone: k.owner.phone, id: k.owner._id };
@@ -964,6 +1214,38 @@ export function KitchensTab({ kitchens, menuItems, setKitchenModal, fetchAll, he
       alert('❌ Error connecting to server');
     }
   };
+  const updateKycStatus = async (id: string, status: string, docCount: number) => {
+    if (status === 'approved' && docCount < 2) {
+      alert('⚠️ Cannot approve: At least 2 documents are required for KYC approval.');
+      return;
+    }
+    
+    if (!confirm(`Are you sure you want to change KYC status to ${status.toUpperCase()}?`)) return;
+
+    try {
+      const res = await fetch(`${API_URL}/admin/cloudkitchens/${id}/kyc-status`, {
+        method: 'PATCH',
+        headers: { ...headers, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ kycStatus: status })
+      });
+      const result = await res.json();
+      if (result.success) {
+        fetchAll();
+      } else {
+        alert('❌ Failed: ' + (result.error || 'Unknown error'));
+      }
+    } catch (err) {
+      alert('❌ Error connecting to server');
+    }
+  };
+
+  const getKycDocs = (k: any) => {
+    const docs = [];
+    if (k.panImage) docs.push('PAN');
+    if (k.aadharImage) docs.push('Aadhar');
+    if (k.fssaiImage) docs.push('FSSAI');
+    return docs;
+  };
 
   return (
     <div className={ERP.page}>
@@ -1010,7 +1292,75 @@ export function KitchensTab({ kitchens, menuItems, setKitchenModal, fetchAll, he
             { key: 'ownerName', header: 'Owner Name', sortable: true, render: (k: any) => getOwnerDetails(k).name },
             { key: 'ownerPhone', header: 'Phone', render: (k: any) => getOwnerDetails(k).phone },
             { key: 'ownerEmail', header: 'Email', render: (k: any) => getOwnerDetails(k).email },
-            { key: 'menuCount', header: 'Menu items', sortable: true },
+            { 
+              key: 'kyc', 
+              header: 'KYC Status', 
+              render: (k: any) => {
+                const docs = getKycDocs(k);
+                return (
+                  <div className="flex flex-col gap-1">
+                    <div className="flex items-center gap-1.5">
+                      <span className={`px-1.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-tighter ${
+                        k.kycStatus === 'approved' ? 'bg-emerald-100 text-emerald-700' :
+                        k.kycStatus === 'rejected' ? 'bg-red-100 text-red-700' :
+                        'bg-amber-100 text-amber-700'
+                      }`}>
+                        {k.kycStatus || 'pending'}
+                      </span>
+                      <span className="text-[10px] font-bold text-slate-400">
+                        ({docs.length}/3 docs)
+                      </span>
+                    </div>
+                    {docs.length > 0 && (
+                      <div className="flex gap-1">
+                        {docs.map(d => (
+                          <span key={d} className="w-1.5 h-1.5 rounded-full bg-blue-400" title={d} />
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              }
+            },
+            {
+              key: 'kycActions',
+              header: 'KYC Control',
+              render: (k: any) => {
+                const docs = getKycDocs(k);
+                return (
+                  <div className="flex items-center gap-1" onClick={e => e.stopPropagation()}>
+                    <button 
+                      onClick={() => updateKycStatus(k._id, 'approved', docs.length)}
+                      disabled={k.kycStatus === 'approved'}
+                      className={`px-2 py-1 rounded text-[9px] font-black uppercase ${
+                        k.kycStatus === 'approved' 
+                          ? 'opacity-30 cursor-not-allowed bg-slate-100 text-slate-400' 
+                          : 'bg-emerald-500 text-white hover:bg-emerald-600'
+                      }`}
+                    >
+                      Approve
+                    </button>
+                    <button 
+                      onClick={() => setKycViewModal({ open: true, data: k })}
+                      className="px-2 py-1 rounded text-[9px] font-black uppercase bg-blue-500 text-white hover:bg-blue-600"
+                    >
+                      View Docs
+                    </button>
+                    <button 
+                      onClick={() => updateKycStatus(k._id, 'rejected', docs.length)}
+                      disabled={k.kycStatus === 'rejected'}
+                      className={`px-2 py-1 rounded text-[9px] font-black uppercase ${
+                        k.kycStatus === 'rejected' 
+                          ? 'opacity-30 cursor-not-allowed bg-slate-100 text-slate-400' 
+                          : 'bg-red-500 text-white hover:bg-red-600'
+                      }`}
+                    >
+                      Reject
+                    </button>
+                  </div>
+                );
+              }
+            },
             { key: 'createdAt', header: 'Created', sortable: true, render: (k: any) => k.createdAt ? fmt(k.createdAt) : '—' },
             {
               key: 'actions', header: 'Actions', render: (k: any) => (
@@ -1079,6 +1429,45 @@ export function KitchensTab({ kitchens, menuItems, setKitchenModal, fetchAll, he
                         <p className="text-[10px] font-black text-amber-600 uppercase tracking-widest">No Owner Assigned</p>
                       </div>
                     )}
+                    
+                    <div className="mt-4 p-3 rounded-2xl bg-slate-50 border border-slate-100">
+                      <div className="flex justify-between items-center mb-2">
+                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">KYC Status</p>
+                        <p className="text-[10px] font-bold text-slate-600">{getKycDocs(k).length}/3 Documents</p>
+                      </div>
+                      <div className="flex items-center justify-between gap-2">
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase ${
+                          k.kycStatus === 'approved' ? 'bg-emerald-100 text-emerald-700' :
+                          k.kycStatus === 'rejected' ? 'bg-red-100 text-red-700' :
+                          'bg-amber-100 text-amber-700'
+                        }`}>
+                          {k.kycStatus || 'pending'}
+                        </span>
+                        <div className="flex gap-1" onClick={e => e.stopPropagation()}>
+                          <button 
+                            onClick={() => updateKycStatus(k._id, 'approved', getKycDocs(k).length)}
+                            className={`p-1.5 rounded bg-emerald-500 text-white hover:bg-emerald-600 transition-colors shadow-sm ${k.kycStatus === 'approved' ? 'opacity-30 cursor-not-allowed' : ''}`}
+                            title="Approve KYC"
+                          >
+                            <CheckCircle className="w-3.5 h-3.5" />
+                          </button>
+                          <button 
+                            onClick={() => setKycViewModal({ open: true, data: k })}
+                            className="p-1.5 rounded bg-blue-500 text-white hover:bg-blue-600 transition-colors shadow-sm"
+                            title="View Documents"
+                          >
+                            <Eye className="w-3.5 h-3.5" />
+                          </button>
+                          <button 
+                            onClick={() => updateKycStatus(k._id, 'rejected', getKycDocs(k).length)}
+                            className={`p-1.5 rounded bg-red-500 text-white hover:bg-red-600 transition-colors shadow-sm ${k.kycStatus === 'rejected' ? 'opacity-30 cursor-not-allowed' : ''}`}
+                            title="Reject KYC"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-3">
@@ -1152,6 +1541,10 @@ export function SettingsTab({ categories = [], fetchAll, headers, API_URL, user 
     sellPrice: ''
   });
 
+  // App delivery settings (editable by admin)
+  const [appSettings, setAppSettings] = React.useState({ defaultDeliveryFee: '25', corporateDeliveryFee: '100', subscriptionDeliveryPerTiffin: '20' });
+  const [settingsSaving, setSettingsSaving] = React.useState(false);
+
   const [locationForm, setLocationForm] = React.useState({
     latitude: '',
     longitude: '',
@@ -1169,6 +1562,23 @@ export function SettingsTab({ categories = [], fetchAll, headers, API_URL, user 
       setForm({ name: '', purchasePrice: '', sellPrice: '' });
     }
   }, [catModal]);
+
+  // Load admin settings when tab mounts
+  React.useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch(`${API_URL}/admin/settings`, { headers });
+        const d = await res.json();
+        if (d.success && d.settings) {
+          setAppSettings({
+            defaultDeliveryFee: String(d.settings.defaultDeliveryFee || 25),
+            corporateDeliveryFee: String(d.settings.corporateDeliveryFee || 100),
+            subscriptionDeliveryPerTiffin: String(d.settings.subscriptionDeliveryPerTiffin || 20)
+          });
+        }
+      } catch (err) { console.error('Failed to load admin settings', err); }
+    })();
+  }, []);
 
   const openNew = () => setCatModal({ open: true, data: null });
   const openEdit = (c: any) => setCatModal({ open: true, data: c });
@@ -1311,6 +1721,86 @@ export function SettingsTab({ categories = [], fetchAll, headers, API_URL, user 
           </div>
         }
       />
+
+      {/* Delivery Fee Settings Panel */}
+      <div className={ERP.panel}>
+        <div className={ERP.panelHead}>
+          <div>
+            <h3 className="text-sm font-bold text-slate-900">🚚 Delivery Fee Settings</h3>
+            <p className="text-[10px] text-slate-500 mt-0.5">Set delivery charges for different order types</p>
+          </div>
+        </div>
+        <div className="p-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+            <div>
+              <label className="block text-xs font-bold mb-2 text-slate-700">Regular Orders (₹)</label>
+              <input
+                type="number"
+                value={appSettings.defaultDeliveryFee}
+                onChange={e => setAppSettings(s => ({ ...s, defaultDeliveryFee: e.target.value }))}
+                placeholder="25"
+                className={`${ERP.input}`}
+              />
+              <p className="text-[10px] text-slate-500 mt-1">All regular menu orders</p>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold mb-2 text-slate-700">Corporate Orders (₹)</label>
+              <input
+                type="number"
+                value={appSettings.corporateDeliveryFee}
+                onChange={e => setAppSettings(s => ({ ...s, corporateDeliveryFee: e.target.value }))}
+                placeholder="100"
+                className={`${ERP.input}`}
+              />
+              <p className="text-[10px] text-slate-500 mt-1">Bulk corporate orders</p>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold mb-2 text-slate-700">Subscription Per Tiffin (₹)</label>
+              <input
+                type="number"
+                value={appSettings.subscriptionDeliveryPerTiffin}
+                onChange={e => setAppSettings(s => ({ ...s, subscriptionDeliveryPerTiffin: e.target.value }))}
+                placeholder="20"
+                className={`${ERP.input}`}
+              />
+              <p className="text-[10px] text-slate-500 mt-1">Per tiffin subscription delivery</p>
+            </div>
+          </div>
+
+          <button
+            onClick={async () => {
+              setSettingsSaving(true);
+              try {
+                const res = await fetch(`${API_URL}/admin/settings`, {
+                  method: 'PUT',
+                  headers: { ...headers, 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    defaultDeliveryFee: Number(appSettings.defaultDeliveryFee),
+                    corporateDeliveryFee: Number(appSettings.corporateDeliveryFee),
+                    subscriptionDeliveryPerTiffin: Number(appSettings.subscriptionDeliveryPerTiffin)
+                  })
+                });
+                const data = await res.json();
+                if (data.success) {
+                  alert('✅ Delivery fees updated successfully!');
+                } else {
+                  alert(data.error || 'Failed to save settings');
+                }
+              } catch (err) {
+                console.error('Error saving delivery fees', err);
+                alert('Failed to save delivery fees');
+              }
+              setSettingsSaving(false);
+            }}
+            disabled={settingsSaving}
+            className={`${ERP.btn} ${ERP.btnPrimary} w-full md:w-auto`}
+          >
+            {settingsSaving ? 'Saving…' : '💾 Save Delivery Fees'}
+          </button>
+        </div>
+      </div>
 
       <div className={ERP.panel}>
         <AdminDataTable
@@ -1503,13 +1993,75 @@ export function SettingsTab({ categories = [], fetchAll, headers, API_URL, user 
           </form>
         </div>
       )}
+
+      {/* Image Gallery Management */}
+      <div className={ERP.panel}>
+        <div className={ERP.panelHead}>
+          <div>
+            <h3 className="text-sm font-bold text-slate-900">🖼️ Image Gallery Management</h3>
+            <p className="text-[10px] text-slate-500 mt-0.5">Upload and manage images with descriptions and metadata for kitchen owners to use</p>
+          </div>
+        </div>
+        <div className="p-4 space-y-4">
+          <div className="bg-blue-50 border border-blue-200 p-3 rounded-lg">
+            <p className="text-xs text-blue-700 font-bold">ℹ️ Kitchen owners can search and select from the gallery when creating menu items</p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
+              <p className="text-xs font-bold text-slate-700 mb-2">📊 Gallery Statistics</p>
+              <div className="space-y-1">
+                <p className="text-sm font-bold text-slate-900">{(user as any)?.galleryStats?.totalImages || 0}</p>
+                <p className="text-[10px] text-slate-500">Total images uploaded</p>
+              </div>
+            </div>
+            
+            <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
+              <p className="text-xs font-bold text-slate-700 mb-2">🏷️ Image Categories</p>
+              <p className="text-[10px] text-slate-500">General, Regular, Thali, Breakfast, Lunch, Dinner</p>
+            </div>
+          </div>
+
+          <div className="border-t border-slate-200 pt-4">
+            <p className="text-xs font-bold text-slate-700 mb-3">📝 About Image Text Guide</p>
+            <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 space-y-2">
+              <p className="text-xs text-slate-700">Add descriptive text for each image so the search system can recommend the right images:</p>
+              <ul className="text-[10px] text-slate-600 space-y-1 ml-2">
+                <li>• <strong>Description:</strong> Main dish name and key ingredients (e.g., "Butter Chicken with rice")</li>
+                <li>• <strong>Tags:</strong> Comma-separated attributes (e.g., "spicy, homemade, vegan, vegetarian")</li>
+                <li>• <strong>Category:</strong> Select from predefined categories for better organization</li>
+              </ul>
+            </div>
+          </div>
+
+          <div className="border-t border-slate-200 pt-4">
+            <p className="text-xs font-bold text-slate-700 mb-3">🔍 Search Feature</p>
+            <div className="bg-green-50 border border-green-200 rounded-lg p-3 space-y-2">
+              <p className="text-xs text-slate-700">When kitchen owners create menu items:</p>
+              <ul className="text-[10px] text-slate-600 space-y-1 ml-2">
+                <li>• They can search by image description or tags</li>
+                <li>• Filter by category (Regular, Thali, etc.)</li>
+                <li>• Upload new images directly from the gallery modal</li>
+                <li>• Selected images appear as previews in the menu form</li>
+              </ul>
+            </div>
+          </div>
+
+          <button
+            onClick={() => window.open(`${API_URL}/images/search`, '_blank')}
+            className={`${ERP.btn} ${ERP.btnPrimary} w-full`}
+          >
+            <Camera className="w-4 h-4" /> View Full Gallery
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
 
-export function SubscriptionsTab({ subscriptions, expandedRow, setExpandedRow, fetchAll, headers, API_URL }: any) {
+export function SubscriptionsTab({ subscriptions, fetchAll, headers, API_URL, setExpandedRow, expandedRow }: any) {
   return (
-    <div className={ERP.page}>
+    <div className="space-y-4 pt-2">
       <AdminPageHeader title="Subscriptions" subtitle={`${subscriptions.length} active memberships`} />
       <div className={ERP.panel}>
         <div className={ERP.panelHead}>
@@ -1672,7 +2224,34 @@ export function NotificationsTab({ notifications, setNotifications, notifForm, s
 
       <div className="flex items-center justify-between px-2">
         <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Broadcast History</p>
-        <span className="text-[10px] font-black text-orange-500 bg-orange-50 px-3 py-1 rounded-full">{notifications.length} Sent</span>
+        <div className="flex items-center gap-3">
+          <span className="text-[10px] font-black text-orange-500 bg-orange-50 px-3 py-1 rounded-full">{notifications.length} Sent</span>
+          {notifications.length > 0 && (
+            <button
+              onClick={async () => {
+                if (!confirm('Delete all notifications? This action cannot be undone.')) return;
+                try {
+                  const res = await fetch(`${API_URL}/notifications/admin/delete-all`, {
+                    method: 'DELETE',
+                    headers
+                  });
+                  const data = await res.json();
+                  if (data.success) {
+                    setNotifications([]);
+                    alert('All notifications deleted successfully');
+                  } else {
+                    alert(data.error || 'Failed to delete notifications');
+                  }
+                } catch (error) {
+                  alert('Error deleting notifications');
+                }
+              }}
+              className="text-[10px] font-black text-red-500 hover:text-red-700 hover:bg-red-50 px-3 py-1 rounded-full border border-red-200 transition"
+            >
+              Delete All
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -2413,10 +2992,25 @@ export function ScheduleOrdersTab({ scheduleOrders, expandedRow, setExpandedRow,
 
                 <div className="px-7 pb-7 pt-2 flex items-center gap-3">
                   <button
-                    onClick={async () => { if (confirm('Abort absolute subscription?')) { const res = await fetch(`${API_URL}/admin/schedules/${s._id}`, { method: 'DELETE', headers }); if ((await res.json()).success) fetchAll(); } }}
-                    className="flex-1 py-3.5 rounded-full border border-slate-100 text-slate-400 text-[10px] font-black uppercase tracking-widest hover:bg-slate-50 hover:text-slate-600 transition"
+                    onClick={async () => { 
+                      if (confirm('Abort absolute subscription?')) { 
+                        try {
+                          const res = await fetch(`${API_URL}/admin/schedules/${s._id}`, { method: 'DELETE', headers }); 
+                          const data = await res.json();
+                          if (data.success) {
+                            alert('✅ Schedule deleted successfully');
+                            fetchAll();
+                          } else {
+                            alert(`❌ Failed to delete: ${data.error || 'Unknown error'}`);
+                          }
+                        } catch (err) {
+                          alert(`❌ Error: ${err instanceof Error ? err.message : 'Unknown error'}`);
+                        }
+                      } 
+                    }}
+                    className="flex-1 py-3.5 rounded-full border border-red-200 text-red-600 text-[10px] font-black uppercase tracking-widest hover:bg-red-50 hover:border-red-300 transition"
                   >
-                    Hold Schedule
+                    Delete Schedule
                   </button>
                   <button
                     onClick={() => setExpandedRow(expandedRow === s._id ? null : s._id)}
@@ -2778,6 +3372,505 @@ export function EarningsTab({ orders }: any) {
         exportHeaders={['Order', 'Date', 'Amount']}
         exportRows={deliveredOrders.map((o: any) => [o._id, o.createdAt, amt(o)])}
       />
+    </div>
+  );
+}
+
+export function KYCTab({ kitchens, fetchAll, headers, API_URL }: any) {
+  const [loading, setLoading] = React.useState<string | null>(null);
+
+  const handleApprove = async (id: string) => {
+    if (!confirm('Approve KYC for this kitchen?')) return;
+    setLoading(id);
+    try {
+      const res = await fetch(`${API_URL}/admin/kyc/${id}/approve`, {
+        method: 'POST',
+        headers
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert('KYC Approved successfully!');
+        fetchAll();
+      } else {
+        alert(data.error || 'Failed to approve KYC');
+      }
+    } catch (err) {
+      alert('Error connecting to server');
+    } finally {
+      setLoading(null);
+    }
+  };
+
+  const handleReject = async (id: string) => {
+    const reason = prompt('Reason for rejection:');
+    if (reason === null) return;
+    setLoading(id);
+    try {
+      const res = await fetch(`${API_URL}/admin/cloudkitchens/${id}`, {
+        method: 'PUT',
+        headers: { ...headers, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ kycStatus: 'rejected', kycRejectionReason: reason })
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert('KYC Rejected');
+        fetchAll();
+      } else {
+        alert(data.error || 'Failed to reject KYC');
+      }
+    } catch (err) {
+      alert('Error connecting to server');
+    } finally {
+      setLoading(null);
+    }
+  };
+
+  return (
+    <div className={ERP.page}>
+      <AdminPageHeader 
+        title="KYC Document Review" 
+        subtitle="Review and verify kitchen owner identities and licenses" 
+      />
+      
+      <div className="grid grid-cols-1 gap-8">
+        {kitchens.length === 0 ? (
+          <div className="text-center py-32 bg-white rounded-[3rem] border border-slate-100 shadow-sm">
+            <div className="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6 text-5xl">✅</div>
+            <p className="text-2xl font-black text-slate-900">All Clear!</p>
+            <p className="text-slate-400 text-sm mt-2">No pending KYC submissions found.</p>
+          </div>
+        ) : (
+          kitchens.map((k: any) => (
+            <div key={k._id} className="bg-white rounded-[2.5rem] border border-slate-100 shadow-xl overflow-hidden flex flex-col md:flex-row">
+              {/* Kitchen Info Sidebar */}
+              <div className="md:w-1/3 bg-slate-50 p-8 border-r border-slate-100">
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="w-16 h-16 rounded-2xl bg-orange-500 flex items-center justify-center text-white text-2xl font-black shadow-lg">
+                    {k.name[0]}
+                  </div>
+                  <div>
+                    <h3 className="font-black text-slate-900 text-lg leading-tight">{k.name}</h3>
+                    <p className="text-xs font-bold text-slate-400">ID: #{k._id.slice(-6).toUpperCase()}</p>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="p-4 rounded-2xl bg-white border border-slate-100">
+                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Owner Details</p>
+                    <p className="font-bold text-slate-800 text-sm">{k.ownerName || 'N/A'}</p>
+                    <div className="flex items-center gap-2 mt-2">
+                       <Phone className="w-3 h-3 text-slate-400" />
+                       <span className="text-xs font-bold text-slate-600">{k.ownerPhone}</span>
+                    </div>
+                  </div>
+
+                  <div className="p-4 rounded-2xl bg-white border border-slate-100">
+                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">PAN Number</p>
+                    <p className="font-black text-orange-600 tracking-wider text-sm">{k.panNumber || 'NOT PROVIDED'}</p>
+                  </div>
+
+                  <div className="p-4 rounded-2xl bg-white border border-slate-100">
+                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Aadhar Number</p>
+                    <p className="font-black text-indigo-600 tracking-wider text-sm">{k.aadharNumber || 'NOT PROVIDED'}</p>
+                  </div>
+
+                  {k.fssaiLicense && (
+                    <div className="p-4 rounded-2xl bg-white border border-slate-100">
+                      <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">FSSAI License</p>
+                      <p className="font-black text-emerald-600 tracking-wider text-sm">{k.fssaiLicense}</p>
+                    </div>
+                  )}
+                </div>
+
+                <div className="mt-8 flex flex-col gap-3">
+                  <button
+                    disabled={loading === k._id}
+                    onClick={() => handleApprove(k._id)}
+                    className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-emerald-600 transition active:scale-95 shadow-xl shadow-slate-200 disabled:opacity-50"
+                  >
+                    {loading === k._id ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : 'Approve Application'}
+                  </button>
+                  <button
+                    disabled={loading === k._id}
+                    onClick={() => handleReject(k._id)}
+                    className="w-full py-4 bg-white text-red-500 border border-red-100 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-red-50 transition active:scale-95 disabled:opacity-50"
+                  >
+                    Reject Submission
+                  </button>
+                </div>
+              </div>
+
+              {/* Documents Display */}
+              <div className="flex-1 p-8 bg-white grid grid-cols-1 md:grid-cols-2 gap-6 overflow-y-auto max-h-[700px]">
+                <div className="space-y-3">
+                  <h4 className="flex items-center gap-2 font-black text-slate-900 text-sm uppercase tracking-wider">
+                    <FileText className="w-4 h-4 text-orange-500" />
+                    PAN Document
+                  </h4>
+                  <div className="aspect-[3/4] rounded-3xl bg-slate-50 border-2 border-dashed border-slate-200 flex items-center justify-center overflow-hidden group relative">
+                    {k.panImage ? (
+                      <>
+                        <img src={k.panImage} className="w-full h-full object-contain" alt="PAN Card" />
+                        <a href={k.panImage} target="_blank" className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                          <ExternalLink className="text-white w-8 h-8" />
+                        </a>
+                      </>
+                    ) : (
+                      <p className="text-slate-400 font-bold text-xs">No image provided</p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <h4 className="flex items-center gap-2 font-black text-slate-900 text-sm uppercase tracking-wider">
+                    <FileText className="w-4 h-4 text-indigo-500" />
+                    Aadhar Document
+                  </h4>
+                  <div className="aspect-[3/4] rounded-3xl bg-slate-50 border-2 border-dashed border-slate-200 flex items-center justify-center overflow-hidden group relative">
+                    {k.aadharImage ? (
+                      <>
+                        <img src={k.aadharImage} className="w-full h-full object-contain" alt="Aadhar Card" />
+                        <a href={k.aadharImage} target="_blank" className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                          <ExternalLink className="text-white w-8 h-8" />
+                        </a>
+                      </>
+                    ) : (
+                      <p className="text-slate-400 font-bold text-xs">No image provided</p>
+                    )}
+                  </div>
+                </div>
+
+                {k.fssaiImage && (
+                  <div className="space-y-3 md:col-span-2">
+                    <h4 className="flex items-center gap-2 font-black text-slate-900 text-sm uppercase tracking-wider">
+                      <FileText className="w-4 h-4 text-emerald-500" />
+                      FSSAI License Document
+                    </h4>
+                    <div className="aspect-video rounded-3xl bg-slate-50 border-2 border-dashed border-slate-200 flex items-center justify-center overflow-hidden group relative">
+                      <img src={k.fssaiImage} className="w-full h-full object-contain" alt="FSSAI License" />
+                      <a href={k.fssaiImage} target="_blank" className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <ExternalLink className="text-white w-8 h-8" />
+                      </a>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+  );
+}
+
+export function KitchenSettingsTab({ user, kitchen: initialKitchen, headers, API_URL, fetchAll }: any) {
+  const [kitchen, setKitchen] = React.useState<any>(initialKitchen);
+  const [loading, setLoading] = React.useState(true);
+  const [saving, setSaving] = React.useState(false);
+  const [kycData, setKycData] = React.useState({
+    panNumber: '',
+    aadharNumber: '',
+    fssaiLicense: '',
+    panImage: '',
+    aadharImage: '',
+    fssaiImage: ''
+  });
+  const [profileData, setProfileData] = React.useState({
+    name: user?.name || '',
+    phone: user?.phone || ''
+  });
+  const [uploading, setUploading] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    if (initialKitchen) {
+      setKitchen(initialKitchen);
+      setKycData({
+        panNumber: initialKitchen.panNumber || '',
+        aadharNumber: initialKitchen.aadharNumber || '',
+        fssaiLicense: initialKitchen.fssaiLicense || '',
+        panImage: initialKitchen.panImage || '',
+        aadharImage: initialKitchen.aadharImage || '',
+        fssaiImage: initialKitchen.fssaiImage || ''
+      });
+      setLoading(false);
+      return;
+    }
+
+    const loadKitchen = async () => {
+      try {
+        const id = user?.assignedKitchen || user?.kitchenId;
+        if (!id) { setLoading(false); return; }
+        const res = await fetch(`${API_URL}/admin/cloudkitchens/${id}`, { headers });
+        const data = await res.json();
+        if (data.success) {
+          setKitchen(data.kitchen);
+          setKycData({
+            panNumber: data.kitchen.panNumber || '',
+            aadharNumber: data.kitchen.aadharNumber || '',
+            fssaiLicense: data.kitchen.fssaiLicense || '',
+            panImage: data.kitchen.panImage || '',
+            aadharImage: data.kitchen.aadharImage || '',
+            fssaiImage: data.kitchen.fssaiImage || ''
+          });
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadKitchen();
+  }, [user, API_URL, headers, initialKitchen]);
+
+  const handleUpload = async (file: File, type: string) => {
+    setUploading(type);
+    const fd = new FormData();
+    fd.append('image', file);
+    try {
+      const res = await fetch(`${API_URL}/upload/upload-image`, {
+        method: 'POST',
+        headers: { Authorization: headers.Authorization },
+        body: fd
+      });
+      const data = await res.json();
+      if (data.success) {
+        setKycData(prev => ({ ...prev, [type]: data.url }));
+      }
+    } catch (err) {
+      alert('Upload failed');
+    } finally {
+      setUploading(null);
+    }
+  };
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      // Use /my-kitchen which supports both kitchen-owner and admin roles
+      const res = await fetch(`${API_URL}/admin/my-kitchen`, {
+        method: 'PUT',
+        headers: { ...headers, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: kitchen?.name,
+          ownerName: profileData.name,
+          ownerPhone: profileData.phone,
+          panNumber: kycData.panNumber,
+          aadharNumber: kycData.aadharNumber,
+          fssaiLicense: kycData.fssaiLicense,
+          panImage: kycData.panImage,
+          aadharImage: kycData.aadharImage,
+          fssaiImage: kycData.fssaiImage,
+        })
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        alert('✅ Profile & documents saved! Submitted for admin verification.');
+        fetchAll();
+      } else {
+        alert('❌ Failed to save: ' + (data.error || 'Unknown error'));
+      }
+    } catch (err) {
+      alert('❌ Failed to save changes. Please try again.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) return <div className="p-12 text-center text-slate-400 font-bold">Loading kitchen profile…</div>;
+
+  return (
+    <div className={ERP.page}>
+      <AdminPageHeader 
+        title="Kitchen Profile & KYC" 
+        subtitle="Manage your business details and verification documents" 
+      />
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Left Column: Profile & Kitchen Info */}
+        <div className="lg:col-span-1 space-y-6">
+          <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-xl p-8">
+            <h3 className="text-lg font-black text-slate-900 mb-6 flex items-center gap-2">
+              <User className="w-5 h-5 text-orange-500" />
+              Owner Information
+            </h3>
+            <div className="space-y-4">
+              <div>
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Your Name</p>
+                <input 
+                  type="text" 
+                  value={profileData.name} 
+                  onChange={e => setProfileData(p => ({...p, name: e.target.value}))}
+                  className="w-full bg-slate-50 border-none rounded-2xl px-5 py-4 font-bold text-slate-700 focus:ring-2 focus:ring-orange-500/20"
+                />
+              </div>
+              <div>
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Phone Number</p>
+                <input 
+                  type="tel" 
+                  value={profileData.phone} 
+                  onChange={e => setProfileData(p => ({...p, phone: e.target.value}))}
+                  className="w-full bg-slate-50 border-none rounded-2xl px-5 py-4 font-bold text-slate-700 focus:ring-2 focus:ring-orange-500/20"
+                />
+              </div>
+            </div>
+          </div>
+
+          {kitchen && (
+            <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-xl p-8">
+              <h3 className="text-lg font-black text-slate-900 mb-6 flex items-center gap-2">
+                <Store className="w-5 h-5 text-indigo-500" />
+                Kitchen Business Details
+              </h3>
+              <div className="space-y-4">
+                <div>
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Kitchen Name</p>
+                  <input 
+                    type="text" 
+                    value={kitchen.name} 
+                    onChange={e => setKitchen((p: any) => ({...p, name: e.target.value}))}
+                    className="w-full bg-slate-50 border-none rounded-2xl px-5 py-4 font-bold text-slate-700 focus:ring-2 focus:ring-indigo-500/20"
+                  />
+                </div>
+                <div>
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Business Address</p>
+                  <textarea 
+                    rows={3}
+                    value={kitchen.address} 
+                    onChange={e => setKitchen((p: any) => ({...p, address: e.target.value}))}
+                    className="w-full bg-slate-50 border-none rounded-2xl px-5 py-4 font-bold text-slate-700 focus:ring-2 focus:ring-indigo-500/20 resize-none"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Latitude</p>
+                    <input type="text" readOnly value={kitchen.location?.coordinates?.[1] || ''} className="w-full bg-slate-100 border-none rounded-2xl px-5 py-4 font-bold text-slate-500 cursor-not-allowed" />
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Longitude</p>
+                    <input type="text" readOnly value={kitchen.location?.coordinates?.[0] || ''} className="w-full bg-slate-100 border-none rounded-2xl px-5 py-4 font-bold text-slate-500 cursor-not-allowed" />
+                  </div>
+                </div>
+                <button 
+                  onClick={() => {
+                    navigator.geolocation.getCurrentPosition((pos) => {
+                      setKitchen((p: any) => ({
+                        ...p,
+                        location: { type: 'Point', coordinates: [pos.coords.longitude, pos.coords.latitude] }
+                      }));
+                    });
+                  }}
+                  className="w-full py-3 bg-indigo-50 text-indigo-600 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-indigo-100 transition"
+                >
+                  Update Current Location
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Right Column: KYC Documents */}
+        <div className="lg:col-span-2 space-y-6">
+          <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-xl p-8">
+            <div className="flex items-center justify-between mb-8">
+              <h3 className="text-lg font-black text-slate-900 flex items-center gap-2">
+                <FileText className="w-5 h-5 text-emerald-500" />
+                KYC Verification Documents
+              </h3>
+              <div className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${
+                kitchen?.kycStatus === 'approved' ? 'bg-emerald-100 text-emerald-600' :
+                kitchen?.kycStatus === 'pending' ? 'bg-amber-100 text-amber-600' : 'bg-red-100 text-red-600'
+              }`}>
+                Status: {kitchen?.kycStatus || 'Not Submitted'}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              {/* PAN Card */}
+              <div className="space-y-4">
+                <div className="space-y-3">
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">PAN Card Photo</p>
+                  <div className="aspect-[3/2] rounded-3xl bg-slate-50 border-2 border-dashed border-slate-200 overflow-hidden relative group">
+                    {kycData.panImage ? (
+                      <img src={kycData.panImage} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-400">
+                        <Camera className="w-8 h-8 mb-2" />
+                        <span className="text-[10px] font-bold">Upload Horizontal Photo</span>
+                      </div>
+                    )}
+                    <label className="absolute inset-0 cursor-pointer bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <input type="file" className="hidden" onChange={e => e.target.files?.[0] && handleUpload(e.target.files[0], 'panImage')} />
+                      {uploading === 'panImage' ? <Loader2 className="w-6 h-6 text-white animate-spin" /> : <Plus className="w-8 h-8 text-white" />}
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              {/* Aadhar Card */}
+              <div className="space-y-4">
+                <div className="space-y-3">
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Aadhar Card Photo</p>
+                  <div className="aspect-[3/2] rounded-3xl bg-slate-50 border-2 border-dashed border-slate-200 overflow-hidden relative group">
+                    {kycData.aadharImage ? (
+                      <img src={kycData.aadharImage} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-400">
+                        <Camera className="w-8 h-8 mb-2" />
+                        <span className="text-[10px] font-bold">Upload Horizontal Photo</span>
+                      </div>
+                    )}
+                    <label className="absolute inset-0 cursor-pointer bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <input type="file" className="hidden" onChange={e => e.target.files?.[0] && handleUpload(e.target.files[0], 'aadharImage')} />
+                      {uploading === 'aadharImage' ? <Loader2 className="w-6 h-6 text-white animate-spin" /> : <Plus className="w-8 h-8 text-white" />}
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              {/* FSSAI License */}
+              <div className="md:col-span-2 space-y-4 pt-4 border-t border-slate-100">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="font-black text-slate-900 text-sm">FSSAI License (Optional)</h4>
+                    <p className="text-xs text-slate-400 font-bold mt-0.5">Upload your food safety license if available</p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div className="space-y-3 md:col-span-2">
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">License Certificate Photo</p>
+                    <div className="aspect-[3/1] rounded-3xl bg-slate-50 border-2 border-dashed border-slate-200 overflow-hidden relative group">
+                      {kycData.fssaiImage ? (
+                        <img src={kycData.fssaiImage} className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="absolute inset-0 flex items-center justify-center gap-3 text-slate-400">
+                          <Plus className="w-5 h-5" />
+                          <span className="text-[10px] font-bold">Upload Certificate</span>
+                        </div>
+                      )}
+                      <label className="absolute inset-0 cursor-pointer bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <input type="file" className="hidden" onChange={e => e.target.files?.[0] && handleUpload(e.target.files[0], 'fssaiImage')} />
+                        {uploading === 'fssaiImage' ? <Loader2 className="w-6 h-6 text-white animate-spin" /> : <Plus className="w-8 h-8 text-white" />}
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-12">
+              <button 
+                onClick={handleSave}
+                disabled={saving || uploading !== null}
+                className="w-full py-5 bg-slate-900 text-white rounded-[2rem] font-black text-sm uppercase tracking-widest hover:bg-orange-600 transition active:scale-95 shadow-2xl shadow-slate-200 flex items-center justify-center gap-3 disabled:opacity-50"
+              >
+                {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
+                {saving ? 'Saving Changes…' : 'Save Profile & KYC Details'}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

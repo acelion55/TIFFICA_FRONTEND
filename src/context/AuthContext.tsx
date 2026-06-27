@@ -25,6 +25,8 @@ interface User {
   role?: string;
   walletBalance?: number;
   addresses?: any[];
+  kitchenId?: string;
+  assignedKitchen?: string;
 }
 
 interface AuthContextType {

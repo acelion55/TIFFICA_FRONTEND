@@ -131,8 +131,8 @@ export default function SubscriptionsPage() {
                     <div className="mt-2 flex items-center justify-between">
                       <span className="font-black text-base text-gray-900">₹{item.price}</span>
                       <button
-                        onClick={() => {
-                          addToCart({ _id: item._id, name: item.name, price: item.price, image: item.image });
+                          onClick={() => {
+                          addToCart({ _id: item._id, name: item.name, price: item.price, image: item.image, isSubscription: true });
                           addToast(`Added ${item.name}`, 'success');
                         }}
                         className="bg-orange-500 hover:bg-orange-600 text-white rounded-full p-2.5 transition shadow-sm hover:shadow active:scale-95"

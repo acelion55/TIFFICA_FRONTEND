@@ -158,16 +158,34 @@ self.addEventListener('push', event => {
   const typeIcons = { offer: '🎁', order: '📦', alert: '⚠️', info: 'ℹ️' };
   const icon = typeIcons[data.type] || 'ℹ️';
 
-  event.waitUntil(
-    self.registration.showNotification(data.title, {
+  event.waitUntil((async () => {
+    try {
+      // If clients are open and payload requests sound, notify clients to play sound
+      if (data.playSound) {
+        const clientList = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+        if (clientList && clientList.length > 0) {
+          clientList.forEach(client => {
+            try {
+              client.postMessage({ type: 'PLAY_NOTIFICATION_SOUND', soundUrl: '/sounds/notification.mp3', payload: data });
+            } catch (err) {
+              // ignore
+            }
+          });
+        }
+      }
+    } catch (err) {
+      console.error('[SW] Error notifying clients to play sound:', err);
+    }
+
+    return self.registration.showNotification(data.title, {
       body: data.body,
       icon: '/logo.jpeg',
       badge: '/logo.jpeg',
       tag: data.notifId || 'tiffica-notif',
       data: { url: '/home' },
       vibrate: [200, 100, 200],
-    })
-  );
+    });
+  })());
 });
 
 self.addEventListener('notificationclick', event => {

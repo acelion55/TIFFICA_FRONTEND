@@ -356,7 +356,7 @@ function MenuCard({ item, token, user, onOpenDetail }: { item: MenuItem; token: 
             </div>
           )}
         </div>
-        <h3 className="text-base font-bold text-slate-900 truncate">{item.description}</h3>
+        <h3 className="text-[1.2vh] font-bold text-slate-900 ">{item.description}</h3>
 
         <div className="flex items-center justify-between mt-3">
           <div className="flex flex-col">
@@ -370,7 +370,7 @@ function MenuCard({ item, token, user, onOpenDetail }: { item: MenuItem; token: 
             onClick={handleAdd}
             className="bg-orange-500 text-white px-4 py-2 rounded-xl shadow-md shadow-orange-200 font-black text-xs hover:bg-orange-600 transition"
           >
-            Add
+            Buy Now
           </motion.button>
         </div>
       </div>

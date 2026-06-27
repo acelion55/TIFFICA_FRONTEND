@@ -4,21 +4,22 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { useLiveCount } from '@/hooks/useLiveCount';
-import { Users, ShoppingBag, UtensilsCrossed, CreditCard, Store, BarChart2, LogOut, RefreshCw, Home, Bell, FileText, Tag, Activity, Volume2, VolumeX, TrendingUp, FileEdit, User, Lock, Camera, Sparkles, Save, Loader2, Search, MapPin, ChevronRight, X, Phone, Mail, Globe, Menu, Plus, Trash2 } from 'lucide-react';
+import { Users, ShoppingBag, UtensilsCrossed, CreditCard, Store, BarChart2, LogOut, RefreshCw, Home, Bell, FileText, Tag, Activity, Volume2, VolumeX, TrendingUp, FileEdit, User, Lock, Camera, Sparkles, Save, Loader2, Search, MapPin, ChevronRight, X, Phone, Mail, Globe, Menu, Plus, Trash2, Image as ImageIcon, Briefcase, ExternalLink, AlertTriangle } from 'lucide-react';
 import {
   OverviewTab, UsersTab, OrdersTab, MenuTab, KitchensTab, SettingsTab,
   SubscriptionsTab, NotificationsTab, LegalTab, HomestyleTab, CouponsTab, ScheduleOrdersTab, LeadsTab,
-  EarningsTab
+  EarningsTab, GalleryTab, KYCTab, KitchenSettingsTab
 } from './AdminContent';
 import { MapLocationTab } from './MapLocationTab';
 import { PayoutsTab } from './PayoutsTab';
 import { CouponModal } from './CouponModal';
 import { KitchenModal } from './KitchenModal';
+import ImageGallery from '@/components/ImageGallery';
 import AdminNotifications from '@/components/AdminNotifications';
 import { notificationSound, showAdminNotification } from '@/lib/notificationSound';
 
 const API_URL = 'https://tifficaapp-1.onrender.com/api';
-type Tab = 'stats' | 'users' | 'orders' | 'menu' | 'kitchens' | 'settings' | 'subscriptions' | 'schedules' | 'homestyles' | 'notifications' | 'legal' | 'coupons' | 'leads' | 'earnings' | 'payouts' | 'map';
+type Tab = 'stats' | 'users' | 'orders' | 'menu' | 'kitchens' | 'settings' | 'subscriptions' | 'schedules' | 'homestyles' | 'notifications' | 'legal' | 'coupons' | 'leads' | 'earnings' | 'payouts' | 'map' | 'gallery' | 'kyc' | 'profile';
 interface Stats { users: number; orders: number; menuItems: number; subscriptions: number; totalWalletBalance?: number; }
 
 export default function AdminDashboard() {
@@ -41,6 +42,7 @@ export default function AdminDashboard() {
   const [categories, setCategories] = useState<any[]>([]);
   const [scheduleOrders, setScheduleOrders] = useState<any[]>([]);
   const [leads, setLeads] = useState<any[]>([]);
+  const [pendingKyc, setPendingKyc] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState('');
   const [leadsSearch, setLeadsSearch] = useState('');
@@ -74,8 +76,6 @@ export default function AdminDashboard() {
   const [saving, setSaving] = useState(false);
   const [imgUploading, setImgUploading] = useState(false);
   const [imgPreview, setImgPreview] = useState<string>('');
-  const [isGeneratingDesc, setIsGeneratingDesc] = useState(false);
-  const [isGenerateDisabled, setIsGenerateDisabled] = useState(false);
   // draft feature removed: no draftLoaded state
   const [orderSearch, setOrderSearch] = useState('');
   const [dateFilter, setDateFilter] = useState(() => {
@@ -98,18 +98,53 @@ export default function AdminDashboard() {
   const [recentNotifications, setRecentNotifications] = useState<Array<{ id: string, type: string, message: string, time: Date }>>([]);
   const [ownerProfileModal, setOwnerProfileModal] = useState({ open: false });
   const [selectedCategory, setSelectedCategory] = useState<string>('regular');
+  const [dishName, setDishName] = useState<string>('');
   const [categoryPrice, setCategoryPrice] = useState<number>(0);
   const [sellingPrice, setSellingPrice] = useState<number>(0);
-  const [purchasePrice, setPurchasePrice] = useState<number>(0);
-  const [currentAddOns, setCurrentAddOns] = useState<any[]>([]);
+  const [deliveryPrice, setDeliveryPrice] = useState<number | string>('');
+  const [freeDelivery, setFreeDelivery] = useState<boolean>(false);
+  const [isInstantLocal, setIsInstantLocal] = useState<boolean>(false);
   const [currentTags, setCurrentTags] = useState<string>('');
   const [currentDeliveryTime, setCurrentDeliveryTime] = useState<string>('');
   const [menuItemInputs, setMenuItemInputs] = useState<string[]>(['', '', '', '']);
   const [descriptionText, setDescriptionText] = useState<string>('');
   const [infoText, setInfoText] = useState<string>('');
   const [corporateChecked, setCorporateChecked] = useState<boolean>(false);
+  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
+  const [isGenerateDisabled, setIsGenerateDisabled] = useState(false);
+  const [showImageGallery, setShowImageGallery] = useState(false);
 
   const headers = { Authorization: `Bearer ${token}` };
+
+  const generateImage = async () => {
+    if (!descriptionText.trim()) {
+      alert('Please enter a description first');
+      return;
+    }
+
+    setIsGeneratingImage(true);
+    try {
+      const response = await fetch(`${API_URL}/generate-image`, {
+        method: 'POST',
+        headers: { ...headers, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: descriptionText })
+      });
+
+      const data = await response.json();
+      if (data.success && data.imageUrl) {
+        setImgPreview(data.imageUrl);
+        setMenuFormDirty(true);
+      } else {
+        alert(data.error || 'Failed to generate image');
+      }
+    } catch (error) {
+      console.error('Image generation error:', error);
+      alert('Failed to generate image');
+    } finally {
+      setIsGeneratingImage(false);
+    }
+  };
+  const [kitchen, setKitchen] = useState<any>(null);
 
   const fetchAll = useCallback(async () => {
     // Manual refresh only - no automatic reloading
@@ -118,7 +153,7 @@ export default function AdminDashboard() {
     try {
       console.log('📋 Admin fetchAll started...');
 
-      const [sRes, uRes, oRes, mRes, cRes, kRes, ownersRes, subRes, todayRes, dpRes, schedRes, leadsRes] = await Promise.all([
+      const [sRes, uRes, oRes, mRes, cRes, kRes, ownersRes, subRes, todayRes, dpRes, schedRes, leadsRes, kycRes] = await Promise.all([
         fetch(`${API_URL}/admin/stats`, { headers }),
         fetch(`${API_URL}/admin/users?all=true`, { headers }),
         fetch(`${API_URL}/admin/orders`, { headers }),
@@ -131,6 +166,7 @@ export default function AdminDashboard() {
         fetch(`${API_URL}/admin/delivery-partners`, { headers }),
         fetch(`${API_URL}/admin/schedules`, { headers }),
         fetch(`${API_URL}/leads`, { headers }),
+        fetch(`${API_URL}/admin/kyc/pending`, { headers }),
       ]);
 
       console.log('📋 API responses status:', {
@@ -143,14 +179,15 @@ export default function AdminDashboard() {
         today: todayRes.status,
         deliveryPartners: dpRes.status,
         schedules: schedRes.status,
-        leads: leadsRes.status
+        leads: leadsRes.status,
+        kyc: kycRes.status
       });
 
       if (sRes.status === 403) { setError('Access denied. Admin only.'); setLoading(false); return; }
 
-      const [s, u, o, m, c, k, owners, sub, t, dp, sched, leadsData] = await Promise.all([
+      const [s, u, o, m, c, k, owners, sub, t, dp, sched, leadsData, kycData] = await Promise.all([
         sRes.json(), uRes.json(), oRes.json(), mRes.json(), cRes.json(), kRes.json(), ownersRes.json(),
-        subRes.json(), todayRes.json(), dpRes.json(), schedRes.json(), leadsRes.json()
+        subRes.json(), todayRes.json(), dpRes.json(), schedRes.json(), leadsRes.json(), kycRes.json()
       ]);
 
       console.log('📋 API responses data:', {
@@ -164,7 +201,8 @@ export default function AdminDashboard() {
         today: t.success ? 'OK' : t.error,
         deliveryPartners: dp.success ? `${dp.partners?.length || 0} partners` : dp.error,
         schedules: sched.success ? `${sched.schedules?.length || 0} schedules` : sched.error,
-        leads: leadsData.success ? `${leadsData.data?.length || 0} leads` : leadsData.error
+        leads: leadsData.success ? `${leadsData.data?.length || 0} leads` : leadsData.error,
+        kyc: kycData.success ? `${kycData.kitchens?.length || 0} pending` : kycData.error
       });
 
       if (s.stats) setStats(s.stats);
@@ -196,6 +234,17 @@ export default function AdminDashboard() {
       }
       if (leadsData.success) {
         setLeads(leadsData.data || []);
+      }
+      if (kycData.success) {
+        setPendingKyc(kycData.kitchens || []);
+      }
+
+      // If user is kitchen owner, find their specific kitchen from the list
+      if (user?.role === 'kitchen-owner' && k.kitchens) {
+        const ownerKitchen = k.kitchens.find((kit: any) => 
+          kit.ownerId === user._id || kit._id === (user.assignedKitchen || user.kitchenId)
+        );
+        if (ownerKitchen) setKitchen(ownerKitchen);
       }
     } catch (error) {
       console.error('❌ Admin fetchAll error:', error);
@@ -293,18 +342,19 @@ export default function AdminDashboard() {
       window.history.pushState(null, '', window.location.href);
 
       if (menuModal.data) {
-        const activeCategory = menuModal.data.category || 'Regular';
+        const activeCategory = (menuModal.data.scheduleSections && menuModal.data.scheduleSections.length > 0) ? menuModal.data.scheduleSections[0] : (menuModal.data.category || 'Regular');
         setSelectedCategory(activeCategory);
-        setCurrentAddOns(menuModal.data.addOns || []);
+        setDishName(menuModal.data.name || '');
         setCurrentTags((menuModal.data.tags || []).join(', '));
         setCurrentDeliveryTime(menuModal.data.deliveryTime || '');
         // Set selling & purchase prices from existing item or from categories list
         try {
           const selCat = categories?.find((c: any) => (c.name || '').toLowerCase() === (activeCategory || '').toLowerCase());
           const menuPrice = (menuModal.data.price !== undefined && menuModal.data.price !== null) ? menuModal.data.price : (selCat?.sellPrice || 0);
-          const menuPurchase = (menuModal.data.kitchenEarning !== undefined && menuModal.data.kitchenEarning !== null) ? menuModal.data.kitchenEarning : (selCat?.purchasePrice || 0);
           setSellingPrice(menuPrice || 0);
-          setPurchasePrice(menuPurchase || 0);
+          setDeliveryPrice(menuModal.data.deliveryPrice !== undefined && menuModal.data.deliveryPrice !== null ? menuModal.data.deliveryPrice : '');
+          setFreeDelivery(!!menuModal.data.freeDelivery);
+          setIsInstantLocal(!!menuModal.data.isInstant);
         } catch (e) { /* ignore */ }
         // For admin show full description textarea, for kitchen-owner keep legacy item inputs
         if (isAdmin) {
@@ -323,19 +373,27 @@ export default function AdminDashboard() {
         }
       } else {
         setSelectedCategory('Regular');
-        setCurrentAddOns([]);
+        setDishName('');
         setCurrentTags('');
         setCurrentDeliveryTime('');
         setMenuItemInputs(['', '', '', '']);
         setDescriptionText('');
         setInfoText('');
         setCorporateChecked(false);
-        // initialize default prices from categories (if available)
-        try {
-          const defaultCat = (categories || []).find((c: any) => (c.name || '').toLowerCase() === 'regular') || (categories && categories[0]);
-          setSellingPrice(defaultCat?.sellPrice || 0);
-          setPurchasePrice(defaultCat?.purchasePrice || 0);
-        } catch (e) { /* ignore */ }
+        // initialize default prices from categories (if available) - only for admin, not for kitchen owners
+        if (isAdmin) {
+          try {
+            const defaultCat = (categories || []).find((c: any) => (c.name || '').toLowerCase() === 'regular') || (categories && categories[0]);
+            setSellingPrice(defaultCat?.sellPrice || 0);
+            setDeliveryPrice('');
+            setFreeDelivery(false);
+          } catch (e) { /* ignore */ }
+        } else {
+          // For kitchen owners, start with empty prices
+          setSellingPrice(0);
+          setDeliveryPrice('');
+          setFreeDelivery(false);
+        }
       }
 
       document.addEventListener('keydown', handleKeyDown);
@@ -508,10 +566,8 @@ export default function AdminDashboard() {
     const homeCategories = fd.getAll ? fd.getAll('homeCategories') : [];
     let scheduleSections = fd.getAll ? fd.getAll('scheduleSections') : [];
 
-    // If a kitchen-owner is adding the menu and did not provide explicit scheduleSections,
-    // map their simple category selection to scheduleSections so the item appears on schedule pages.
-    const isKitchenOwnerLocal = user?.role === 'kitchen-owner';
-    if ((!scheduleSections || scheduleSections.length === 0) && isKitchenOwnerLocal && selectedCategory) {
+    // If scheduleSections not provided, map the selectedCategory into scheduleSections
+    if ((!scheduleSections || scheduleSections.length === 0) && selectedCategory) {
       scheduleSections = [selectedCategory];
     }
 
@@ -525,20 +581,15 @@ export default function AdminDashboard() {
       descriptionValue = menuItemInputs.filter(Boolean).join(', ');
     }
 
-    let categoryValue: string;
-    if (isAdmin) {
-      const fdCat = fd.get('category');
-      categoryValue = (typeof fdCat === 'string' && fdCat) ? fdCat : (selectedCategory || 'regular');
-    } else {
-      const fdCat = fd.get('category');
-      categoryValue = selectedCategory || ((typeof fdCat === 'string' && fdCat) ? fdCat : 'regular');
-    }
+    const categoryValue = selectedCategory || 'regular';
 
     // Ensure a `name` is always sent. If the admin didn't provide one,
     // derive it from the first line of the description so older servers
     // that require `name` continue to work.
     const fdName = fd.get('name');
-    let nameValue = (typeof fdName === 'string' && String(fdName).trim()) ? String(fdName).trim() : '';
+    let nameValue = isAdmin 
+      ? ((typeof fdName === 'string' && String(fdName).trim()) ? String(fdName).trim() : '')
+      : dishName.trim();
     if (!nameValue) {
       const derived = (descriptionValue || '').split('\n')[0].trim();
       nameValue = derived ? derived.slice(0, 60) : 'Menu Item';
@@ -549,10 +600,12 @@ export default function AdminDashboard() {
       description: descriptionValue,
       category: categoryValue || 'regular',
       price: sellingPrice || menuModal.data?.price || 0,
-      kitchenEarning: purchasePrice || menuModal.data?.kitchenEarning || 0,
+      kitchenEarning: menuModal.data?.kitchenEarning || 0,
+      deliveryPrice: freeDelivery ? 0 : (deliveryPrice || menuModal.data?.deliveryPrice || 0),
+      freeDelivery: freeDelivery,
       image: imgPreview || fd.get('imageUrl'),
       isVeg: true,
-      isInstant: fd.get('isInstant') === 'true',
+      isInstant: false,
       isSpecial: fd.get('isSpecial') === 'true',
       isSubscription: fd.get('isSubscription') === 'true',
       cloudKitchen: cloudKitchenValue || null,
@@ -560,7 +613,6 @@ export default function AdminDashboard() {
       mealTypes: mealTypes || [],
       homeCategories: homeCategories || [],
       scheduleSections: scheduleSections || [],
-      addOns: currentAddOns,
       deliveryTime: currentDeliveryTime,
       tags: currentTags.split(',').map(t => t.trim()).filter(t => t),
       info: infoText || null,
@@ -585,52 +637,12 @@ export default function AdminDashboard() {
       setInfoText('');
       setCorporateChecked(false);
       setSellingPrice(0);
-      setPurchasePrice(0);
+      setDeliveryPrice('');
+      setFreeDelivery(false);
       setIsGenerateDisabled(false);
       fetchAll();
     } else {
       alert(data.error || 'Failed to save menu item');
-    }
-  };
-
-  const generateDescriptionWithAI = async (e: React.MouseEvent<HTMLButtonElement>) => {
-    e.preventDefault();
-    const form = e.currentTarget.closest('form');
-    if (!form) return;
-    const nameInput = form.querySelector('input[name="name"]') as HTMLInputElement;
-    if (!nameInput?.value) {
-      alert('Please enter a menu name first.');
-      return;
-    }
-    const title = nameInput.value;
-    const imgBase64 = imgPreview || menuModal.data?.image || '';
-
-    setIsGeneratingDesc(true);
-    try {
-      const res = await fetch('/api/generate-description', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title, imageBase64: imgBase64 })
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to generate');
-
-      const descTextarea = form.querySelector('textarea[name="description"]') as HTMLTextAreaElement;
-      if (descTextarea) {
-        descTextarea.value = data.description;
-        setDescriptionText(data.description);
-        setIsGenerateDisabled(true);
-        setMenuFormDirty(true);
-
-        // mark form dirty when description is generated
-        if (!menuModal.data) {
-          setMenuFormDirty(true);
-        }
-      }
-    } catch (err: any) {
-      alert(err.message || 'Error generating description');
-    } finally {
-      setIsGeneratingDesc(false);
     }
   };
 
@@ -644,10 +656,12 @@ export default function AdminDashboard() {
     { id: 'menu', label: 'Kitchen Menu', icon: UtensilsCrossed, count: menuItems.length },
     { id: 'stats', label: 'Analytics', icon: BarChart2 },
     { id: 'earnings', label: 'Earnings', icon: CreditCard },
+    { id: 'profile', label: 'Profile & KYC', icon: User },
   ] : [
     { id: 'orders', label: 'Orders', icon: ShoppingBag, count: orders.length },
     { id: 'menu', label: 'Menu', icon: UtensilsCrossed, count: menuItems.length },
     { id: 'kitchens', label: 'Kitchens', icon: Store, count: kitchens.length },
+    { id: 'gallery', label: 'Gallery', icon: ImageIcon },
     { id: 'settings', label: 'Settings', icon: Tag },
     { id: 'stats', label: 'Analytics', icon: BarChart2 },
     { id: 'earnings', label: 'Earnings', icon: CreditCard },
@@ -744,6 +758,20 @@ export default function AdminDashboard() {
       </aside>
 
       <div className="flex-1 flex flex-col overflow-hidden relative bg-slate-50">
+        {isKitchenOwner && kitchen && !kitchen.isKycDone && (
+          <div className="bg-amber-500 text-white px-6 py-2.5 flex items-center justify-between shadow-lg shadow-amber-500/20 relative z-30">
+            <div className="flex items-center gap-3">
+              <AlertTriangle className="w-4 h-4 animate-pulse" />
+              <span className="text-[11px] font-black uppercase tracking-wider">KYC Action Required — Please complete verification to start selling</span>
+            </div>
+            <button 
+              onClick={() => handleTabChange('profile')}
+              className="px-4 py-1.5 bg-white text-amber-600 rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-amber-50 active:scale-95 transition shadow-sm"
+            >
+              Verify Now
+            </button>
+          </div>
+        )}
 
         <header className="bg-white border-b border-slate-200 px-4 md:px-6 py-3 mt-0 md:mt-0 flex items-center justify-between shrink-0 z-20">
           <div className="flex items-center gap-3">
@@ -791,7 +819,7 @@ export default function AdminDashboard() {
                   </div>
                   {user?.role === 'kitchen-owner' && (
                     <button
-                      onClick={() => { setShowProfileMenu(false); setOwnerProfileModal({ open: true }); }}
+                      onClick={() => { setShowProfileMenu(false); setTab('profile'); }}
                       className="w-full text-left px-4 py-3 text-xs font-bold text-slate-600 hover:bg-slate-50 transition border-b border-slate-50 flex items-center gap-2"
                     >
                       <User className="w-4 h-4" /> Edit Profile
@@ -844,7 +872,7 @@ export default function AdminDashboard() {
                 <OrdersTab orders={orders} search={orderSearch} setSearch={setOrderSearch} dateFilter={dateFilter} setDateFilter={setDateFilter} deliveryPartners={deliveryPartners} kitchens={kitchens} users={users} {...commonProps} />
               )}
               {tab === 'menu' && (
-                <MenuTab menuItems={menuItems} search={search} setSearch={setSearch} expandedRow={expandedRow} setExpandedRow={setExpandedRow} setMenuModal={setMenuModal} setImgPreview={setImgPreview} kitchens={kitchens} setSelectedCategory={setSelectedCategory} setSellingPrice={setSellingPrice} setPurchasePrice={setPurchasePrice} categories={categories} {...commonProps} />
+                <MenuTab menuItems={menuItems} search={search} setSearch={setSearch} expandedRow={expandedRow} setExpandedRow={setExpandedRow} setMenuModal={setMenuModal} setImgPreview={setImgPreview} kitchens={kitchens} setSelectedCategory={setSelectedCategory} setSellingPrice={setSellingPrice} categories={categories} {...commonProps} />
               )}
               {tab === 'kitchens' && isAdmin && (
                 <KitchensTab kitchens={kitchens} menuItems={menuItems} users={users} kitchenOwners={kitchenOwners} setKitchenModal={setKitchenModal} {...commonProps} />
@@ -887,6 +915,9 @@ export default function AdminDashboard() {
                   uploadImage={uploadImage}
                 />
               )}
+              {tab === 'gallery' && isAdmin && (
+                <GalleryTab {...commonProps} />
+              )}
               {tab === 'coupons' && isAdmin && (
                 <CouponsTab coupons={coupons} userPerformance={userPerformance} setCouponModal={setCouponModal} performanceDateFrom={performanceDateFrom} setPerformanceDateFrom={setPerformanceDateFrom} performanceDateTo={performanceDateTo} setPerformanceDateTo={setPerformanceDateTo} {...commonProps} />
               )}
@@ -901,6 +932,9 @@ export default function AdminDashboard() {
               )}
               {tab === 'payouts' && isAdmin && (
                 <PayoutsTab fetchAll={fetchAll} headers={headers} API_URL={API_URL} />
+              )}
+              {tab === 'profile' && (
+                <KitchenSettingsTab user={user} kitchen={kitchen} headers={headers} API_URL={API_URL} fetchAll={fetchAll} />
               )}
             </div>
           )}
@@ -1077,21 +1111,6 @@ export default function AdminDashboard() {
               }}
               className="space-y-2 max-h-[70vh] overflow-y-auto pr-4"
             >
-              <div className="space-y-3">
-                <div className="flex items-center gap-4 bg-slate-50 p-4 rounded-[2rem] border border-slate-100">
-                  <img src={imgPreview || menuModal.data?.image || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=120&h=120&fit=crop'} alt="preview" className="w-20 h-20 rounded-[1.5rem] object-cover shrink-0 shadow-lg shadow-orange-100" />
-                  <label className="flex-1 cursor-pointer">
-                    <div className="py-4 bg-white border border-slate-200 rounded-full text-center text-[10px] font-black uppercase tracking-widest text-orange-500 shadow-sm hover:border-orange-200 transition">
-                      <span className="flex items-center justify-center gap-2">
-                        {imgUploading ? 'Uploading…' : <><Camera className="w-4 h-4" /> Capture Image</>}
-                      </span>
-                    </div>
-                    <input type="file" accept="image/*" className="hidden" onChange={async e => { const f = e.target.files?.[0]; if (!f) return; try { const url = await uploadImage(f); setImgPreview(url); setMenuFormDirty(true); } catch { alert('Upload failed'); } }} disabled={imgUploading} />
-                  </label>
-                  {(imgPreview || menuModal.data?.image) && <input type="hidden" name="imageUrl" value={imgPreview || menuModal.data?.image || ''} />}
-                </div>
-              </div>
-
               {/* Name field — admin only */}
               {isAdmin && (
                 <div className="space-y-1">
@@ -1135,130 +1154,139 @@ export default function AdminDashboard() {
                       </div>
                     </div>
 
-                    <div className="pt-2">
-                      <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-4 mb-2">Schedule Sections</p>
-                      <div className="flex gap-3 px-4 flex-wrap">
-                        <label className="inline-flex items-center gap-2 text-sm">
-                          <input type="checkbox" name="scheduleSections" value="Regular" defaultChecked={menuModal.data?.scheduleSections?.includes?.('Regular')} />
-                          <span>Regular</span>
-                        </label>
-                        <label className="inline-flex items-center gap-2 text-sm">
-                          <input type="checkbox" name="scheduleSections" value="Shahi Thali" defaultChecked={menuModal.data?.scheduleSections?.includes?.('Shahi Thali')} />
-                          <span>Shahi Thali</span>
-                        </label>
-                        <label className="inline-flex items-center gap-2 text-sm">
-                          <input type="checkbox" name="scheduleSections" value="Corporate Order" defaultChecked={menuModal.data?.scheduleSections?.includes?.('Corporate Order')} onChange={(e) => { setCorporateChecked(!!(e.target as HTMLInputElement).checked); setMenuFormDirty(true); }} />
-                          <span>Corporate Order</span>
-                        </label>
-                        <label className="inline-flex items-center gap-2 text-sm">
-                          <input type="checkbox" name="scheduleSections" value="School Tiffins" defaultChecked={menuModal.data?.scheduleSections?.includes?.('School Tiffins')} />
-                          <span>School Tiffins</span>
-                        </label>
-                      </div>
-                    </div>
+                    {/* Schedule Sections moved to the price & schedule block below (single-select) */}
                   </>
                 )}
 
-              {isAdmin ? (
+                {isAdmin ? (
                 <div className="space-y-2">
-                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-4">Category Selection</p>
-                  <select
-                    name="category"
-                    value={selectedCategory}
-                    onChange={(e) => {
-                      const categoryName = e.target.value;
-                      setSelectedCategory(categoryName);
-                      setMenuFormDirty(true);
-
-                      if (categoryName.toLowerCase() === 'shahi thali') {
-                        setMenuItemInputs(prev => {
-                          let next = [...prev];
-                          while (next.length < 5) next.push('');
-                          return next.slice(0, 5);
-                        });
-                      } else {
-                        setMenuItemInputs(prev => {
-                          let next = [...prev];
-                          while (next.length < 4) next.push('');
-                          return next.slice(0, 4);
-                        });
-                      }
-
-                      // Find category and update price
-                      const selectedCat = categories?.find((c: any) => (c.name || '') === categoryName || (c.name || '').toLowerCase() === categoryName.toLowerCase());
-                      if (selectedCat) {
-                        setSellingPrice(selectedCat.sellPrice || 0);
-                        setPurchasePrice(selectedCat.purchasePrice || 0);
-                      }
-                    }}
-                    className={inputCls}
-                  >
-                    <option value="">Select category</option>
-                    {categories?.map((c: any) => (
-                      <option key={c._id} value={c.name}>{c.name}</option>
+                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-4">Schedule Category</p>
+                  <div className="flex gap-3 px-4 flex-wrap">
+                    {['Regular','Shahi Thali','Corporate Order','Mini Bowl'].map(opt => (
+                      <label key={opt} className="inline-flex items-center gap-2 text-sm">
+                        <input
+                          type="checkbox"
+                          name="scheduleSections"
+                          value={opt}
+                          checked={String(selectedCategory) === String(opt)}
+                          onChange={(e) => {
+                            const checked = (e.target as HTMLInputElement).checked;
+                            if (checked) {
+                              setSelectedCategory(opt);
+                              // set items count for shahi thali
+                              if (opt.toLowerCase() === 'shahi thali') {
+                                setMenuItemInputs(prev => { let next = [...prev]; while (next.length < 5) next.push(''); return next.slice(0,5); });
+                              } else {
+                                setMenuItemInputs(prev => { let next = [...prev]; while (next.length < 4) next.push(''); return next.slice(0,4); });
+                              }
+                              // try to apply category prices
+                              const selectedCat = categories?.find((c: any) => (c.name || '').toLowerCase() === opt.toLowerCase());
+                              if (selectedCat) {
+                                setSellingPrice(selectedCat.sellPrice || 0);
+                                setDeliveryPrice('');
+                              }
+                            } else {
+                              setSelectedCategory('');
+                            }
+                            setMenuFormDirty(true);
+                          }}
+                        />
+                        <span>{opt}</span>
+                      </label>
                     ))}
-                  </select>
+                  </div>
+
+                  <div className="px-4 pt-2 grid grid-cols-1 gap-3">
+                    <div>
+                      <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-0">Selling Price (customer)</p>
+                      <input type="number" name="price" value={sellingPrice} onChange={e => { setSellingPrice(Number(e.target.value || 0)); setMenuFormDirty(true); }} className={inputCls} />
+                    </div>
+                  </div>
+
+                  <div className="px-4 pt-3">
+                    <label className="inline-flex items-center gap-2 text-sm">
+                      <input type="checkbox" name="isInstant" value="true" checked={isInstantLocal} onChange={(e) => { setIsInstantLocal((e.target as HTMLInputElement).checked); setMenuFormDirty(true); }} />
+                      <span className="text-sm">Instant</span>
+                    </label>
+                  </div>
                 </div>
               ) : (
                 isKitchenOwner ? (
                   <div className="space-y-2">
-                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-4">Category Selection</p>
-                    <select
-                      name="category"
-                      value={selectedCategory}
-                      onChange={(e) => {
-                        const categoryName = e.target.value;
-                        setSelectedCategory(categoryName);
-                        setMenuFormDirty(true);
-
-                        if (categoryName.toLowerCase() === 'shahi thali') {
-                          setMenuItemInputs(prev => {
-                            let next = [...prev];
-                            while (next.length < 5) next.push('');
-                            return next.slice(0, 5);
-                          });
-                        } else {
-                          setMenuItemInputs(prev => {
-                            let next = [...prev];
-                            while (next.length < 4) next.push('');
-                            return next.slice(0, 4);
-                          });
-                        }
-
-                        // Try to set prices from categories list if available
-                        const selectedCat = categories?.find((c: any) => (c.name || '').toLowerCase() === categoryName.toLowerCase());
-                        if (selectedCat) {
-                          setSellingPrice(selectedCat.sellPrice || 0);
-                          setPurchasePrice(selectedCat.purchasePrice || 0);
-                        }
-                      }}
-                      className={inputCls}
-                    >
-                      {(() => {
-                        // Source kitchen-owner options from settings but only expose
-                        // Regular and Shahi Thali if present in settings.
-                        const kitchenCats = (categories || []).filter((c: any) => {
-                          const n = (c.name || '').toLowerCase();
-                          return n === 'regular' || n === 'shahi thali';
-                        });
-                        if (kitchenCats.length > 0) {
-                          return kitchenCats.map((c: any) => (
-                            <option key={c._id} value={c.name}>{c.name}</option>
-                          ));
-                        }
-                        // Fallback hard-coded options
-                        return (
-                          <>
-                            <option value="Regular">Regular</option>
-                            <option value="Shahi Thali">Shahi Thali</option>
-                          </>
-                        );
-                      })()}
-                    </select>
-                    {/* Show kitchen-owner their purchasing price only */}
-                    <div className="px-4 pt-2">
-                      <p className="text-xs text-slate-600">Purchase price (your earning): <span className="font-bold">₹{purchasePrice}</span></p>
+                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-4">Schedule Category</p>
+                    <div className="flex gap-3 px-4 flex-wrap">
+                      {['Regular','Shahi Thali','Corporate Order','School Tiffins'].map(opt => (
+                        <label key={opt} className="inline-flex items-center gap-2 text-sm">
+                          <input
+                            type="checkbox"
+                            name="scheduleSections"
+                            value={opt}
+                            checked={String(selectedCategory) === String(opt)}
+                            onChange={(e) => {
+                              const checked = (e.target as HTMLInputElement).checked;
+                              if (checked) {
+                                setSelectedCategory(opt);
+                                if (opt.toLowerCase() === 'shahi thali') {
+                                  setMenuItemInputs(prev => { let next = [...prev]; while (next.length < 5) next.push(''); return next.slice(0,5); });
+                                } else {
+                                  setMenuItemInputs(prev => { let next = [...prev]; while (next.length < 4) next.push(''); return next.slice(0,4); });
+                                }
+                                const selectedCat = categories?.find((c: any) => (c.name || '').toLowerCase() === opt.toLowerCase());
+                                if (selectedCat) {
+                                  setSellingPrice(selectedCat.sellPrice || 0);
+                                  setDeliveryPrice('');
+                                }
+                              } else {
+                                setSelectedCategory('');
+                              }
+                              setMenuFormDirty(true);
+                            }}
+                          />
+                          <span>{opt}</span>
+                        </label>
+                      ))}
                     </div>
+
+                    <div className="px-4 pt-2 grid grid-cols-2 gap-3">
+                      <div>
+                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-0">Selling Price (customer)</p>
+                        <input type="number" name="price" value={sellingPrice} onChange={e => { setSellingPrice(Number(e.target.value || 0)); setMenuFormDirty(true); }} className={inputCls} />
+                      </div>
+
+                    </div>
+                    <div className="px-4 pt-3">
+                      <label className="inline-flex items-center gap-2 text-sm">
+                        <input type="checkbox" name="freeDelivery" checked={freeDelivery} onChange={(e) => { setFreeDelivery((e.target as HTMLInputElement).checked); setMenuFormDirty(true); }} />
+                        <span className="text-sm">Free Delivery</span>
+                      </label>
+                    </div>
+                    {!freeDelivery && (
+                      <div className="px-4 pt-2">
+                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-0">Delivery Price (Max ₹30)</p>
+                        <input 
+                          type="number" 
+                          name="deliveryPrice" 
+                          value={deliveryPrice} 
+                          placeholder="Enter delivery price"
+                          max="30"
+                          onChange={e => { 
+                            let value = e.target.value;
+                            if (value === '') {
+                              setDeliveryPrice('');
+                            } else {
+                              let numValue = Number(value || 0);
+                              if (numValue > 30) {
+                                numValue = 30;
+                              }
+                              setDeliveryPrice(numValue);
+                            }
+                            setMenuFormDirty(true); 
+                          }} 
+                          className={inputCls + ' [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none'} 
+                          style={{ MozAppearance: 'textfield' }}
+                        />
+                      </div>
+                    )}
                   </div>
                 ) : (
                   // Other roles: include hidden input so backend still receives category
@@ -1281,20 +1309,7 @@ export default function AdminDashboard() {
                 </div>
               )}
 
-              {selectedCategory?.toLowerCase() === 'regular' && (
-                <div className="px-4 py-2 bg-orange-50 border border-orange-100 rounded-xl">
-                  <p className="text-xs text-orange-600 font-medium">
-                    Note: You have to add 4 roti, do sabji or salad
-                  </p>
-                </div>
-              )}
-              {selectedCategory?.toLowerCase() === 'shahi thali' && (
-                <div className="px-4 py-2 bg-teal-50 border border-teal-100 rounded-xl">
-                  <p className="text-xs text-teal-600 font-medium">
-                    Note: You have to add 5 items (e.g. 5 roti, dal, paneer sabji, salad, sweet)
-                  </p>
-                </div>
-              )}
+             
 
               {isAdmin ? (
                 <div className="space-y-2">
@@ -1306,41 +1321,42 @@ export default function AdminDashboard() {
                     placeholder="Full description for schedule and listing"
                     className={inputCls + ' h-32 resize-y'}
                   />
-                  <div className="flex gap-2">
-                    <button type="button" onClick={generateDescriptionWithAI} disabled={isGeneratingDesc || isGenerateDisabled} className="px-3 py-2 text-sm bg-orange-50 text-orange-700 rounded-lg">{isGeneratingDesc ? 'Generating…' : 'Generate description'}</button>
-                  </div>
                 </div>
               ) : (
-                <div className="space-y-2">
-                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-4">Menu Items</p>
-                  {menuItemInputs.map((val, idx) => (
+                <div className="space-y-3">
+                  <div>
+                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-4 mb-2">Dish Name</p>
                     <input
-                      key={idx}
                       type="text"
-                      value={val}
-                      onChange={e => {
-                        const newVals = [...menuItemInputs];
-                        newVals[idx] = e.target.value;
-                        setMenuItemInputs(newVals);
+                      name="name"
+                      value={dishName}
+                      onChange={e => { 
+                        setDishName(e.target.value);
                         setMenuFormDirty(true);
-                        setIsGenerateDisabled(false);
                       }}
-                      placeholder={`Item ${idx + 1} (e.g. ${['4 Roti', 'Dal', 'Sabji', 'Salad/Papad'][idx] || 'Item'})`}
+                      placeholder="e.g., Chicken Biryani, Paneer Tikka"
                       className={inputCls}
                     />
-                  ))}
+                  </div>
+
+                  <div>
+                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-4 mb-2">Description</p>
+                    <textarea
+                      name="description"
+                      value={descriptionText}
+                      onChange={e => { setDescriptionText(e.target.value); setMenuFormDirty(true); }}
+                      placeholder="Describe your dish (ingredients, preparation, etc.)"
+                      className={inputCls + ' h-20 resize-y'}
+                    />
+                  </div>
                 </div>
               )}
 
-              {/* Instant & Today's Special Checkboxes - Only for Admin */}
+              {/* Today's Special & Subscription Checkboxes - Only for Admin */}
               {isAdmin && (
                 <div className="pt-2">
                   <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-4 mb-3">Menu Flags</p>
                   <div className="flex gap-4 px-4">
-                    <label className="inline-flex items-center gap-2 text-sm">
-                      <input type="checkbox" name="isInstant" value="true" defaultChecked={menuModal.data?.isInstant} />
-                      <span>Instant</span>
-                    </label>
                     <label className="inline-flex items-center gap-2 text-sm">
                       <input type="checkbox" name="isSpecial" value="true" defaultChecked={menuModal.data?.isSpecial} />
                       <span>Today's Special</span>
@@ -1396,99 +1412,25 @@ export default function AdminDashboard() {
                 </>
               )}
 
-              <div className="space-y-3 pt-2">
-                <div className="flex items-center justify-between px-4">
-                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Add-ons</p>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setCurrentAddOns([...currentAddOns, { name: '', price: '', image: '' }]);
-                      setMenuFormDirty(true);
-                    }}
-                    className="text-[10px] font-bold text-orange-500 flex items-center gap-1"
-                  >
-                    <Plus className="w-3 h-3" /> Add Item
-                  </button>
-                </div>
-                
-                <div className="space-y-2 px-4 pb-4">
-                  {currentAddOns.map((addon, idx) => (
-                    <div key={idx} className="space-y-2 bg-slate-50 p-3 rounded-2xl border border-slate-100">
-                      <div className="flex gap-2 items-start">
-                        {/* Image Preview & Upload */}
-                        <div className="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0 bg-white border border-slate-200">
-                          <img src={addon.image || 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=64&h=64&fit=crop'} alt="addon" className="w-full h-full object-cover" />
-                        </div>
-                        
-                        {/* Input Fields */}
-                        <div className="flex-1 space-y-2">
-                          <input
-                            type="text"
-                            placeholder="Name (e.g. Achar)"
-                            value={addon.name}
-                            onChange={e => {
-                              const newList = [...currentAddOns];
-                              newList[idx].name = e.target.value;
-                              setCurrentAddOns(newList);
-                              setMenuFormDirty(true);
-                            }}
-                            className="w-full text-xs border border-slate-200 rounded-lg px-3 py-2 focus:outline-none bg-white"
-                          />
-                          <input
-                            type="number"
-                            placeholder="Price"
-                            value={addon.price}
-                            onChange={e => {
-                              const newList = [...currentAddOns];
-                              newList[idx].price = Number(e.target.value);
-                              setCurrentAddOns(newList);
-                              setMenuFormDirty(true);
-                            }}
-                            className="w-full text-xs border border-slate-200 rounded-lg px-3 py-2 focus:outline-none bg-white font-bold"
-                          />
-                        </div>
-
-                        {/* Delete Button */}
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setCurrentAddOns(currentAddOns.filter((_, i) => i !== idx));
-                            setMenuFormDirty(true);
-                          }}
-                          className="p-1.5 text-slate-400 hover:text-red-500 transition flex-shrink-0"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-
-                      {/* Image Upload */}
-                      <label className="block cursor-pointer">
-                        <div className="py-2 bg-white border border-slate-200 rounded-lg text-center text-[9px] font-bold uppercase tracking-widest text-orange-500 shadow-sm hover:border-orange-300 transition">
-                          📷 Upload Image
-                        </div>
-                        <input 
-                          type="file" 
-                          accept="image/*" 
-                          className="hidden" 
-                          onChange={async e => { 
-                            const f = e.target.files?.[0]; 
-                            if (!f) return; 
-                            try { 
-                              const url = await uploadImage(f); 
-                              const newList = [...currentAddOns];
-                              newList[idx].image = url;
-                              setCurrentAddOns(newList);
-                              setMenuFormDirty(true);
-                            } catch { 
-                              alert('Upload failed'); 
-                            } 
-                          }} 
-                        />
-                      </label>
-                    </div>
-                  ))}
+              {/* Image Selection - At Bottom */}
+              <div className="pt-4 border-t border-slate-200">
+                <div className="flex items-center gap-4 bg-slate-50 p-4 rounded-[2rem] border border-slate-100">
+                  <img src={imgPreview || menuModal.data?.image || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=120&h=120&fit=crop'} alt="preview" className="w-20 h-20 rounded-[1.5rem] object-cover shrink-0 shadow-lg shadow-orange-100" />
+                  <div className="flex-1 space-y-2">
+                    <button
+                      type="button"
+                      onClick={() => setShowImageGallery(true)}
+                      className="py-4 bg-blue-500 border border-blue-600 rounded-full text-center text-[10px] font-black uppercase tracking-widest text-white shadow-sm hover:border-blue-700 transition w-full"
+                    >
+                      <span className="flex items-center justify-center gap-2">
+                        🖼️ Browse & Select Image
+                      </span>
+                    </button>
+                  </div>
+                  {(imgPreview || menuModal.data?.image) && <input type="hidden" name="imageUrl" value={imgPreview || menuModal.data?.image || ''} />}
                 </div>
               </div>
+
               <div className="flex gap-4 pt-6 sticky bottom-0 bg-white">
                 <button
                   type="button"
@@ -1512,6 +1454,29 @@ export default function AdminDashboard() {
         </div>
       )}
 
+      {/* ── IMAGE GALLERY MODAL ── */}
+      {showImageGallery && (
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-md z-50 flex items-center justify-center p-6 overflow-y-auto" onClick={(e) => {
+          if (e.target === e.currentTarget) {
+            setShowImageGallery(false);
+          }
+        }}>
+          <div className="bg-white rounded-[1rem] w-full max-w-4xl p-4 my-4 shadow-2xl animate-in zoom-in-95 duration-300 max-h-[90vh] overflow-y-auto">
+            <ImageGallery
+              onSelectImage={(imageUrl: string) => {
+                setImgPreview(imageUrl);
+                setShowImageGallery(false);
+              }}
+              kitchenId={(user as any)?.kitchenId || (user as any)?.assignedKitchen}
+              token={token || ''}
+              API_URL={API_URL}
+              onClose={() => setShowImageGallery(false)}
+              initialSearchQuery={dishName || descriptionText}
+            />
+          </div>
+        </div>
+      )}
+
       {/* ── COUPON MODAL ── */}
       {couponModal.open && (
         <CouponModal
@@ -1529,209 +1494,6 @@ export default function AdminDashboard() {
         />
       )}
 
-      {/* ── OWNER PROFILE MODAL ── */}
-      {ownerProfileModal.open && (
-        <OwnerProfileModal
-          isOpen={ownerProfileModal.open}
-          onClose={() => setOwnerProfileModal({ open: false })}
-          API_URL={API_URL}
-          headers={headers}
-          user={user}
-          inputCls={inputCls}
-        />
-      )}
-    </div>
-  );
-}
-
-function OwnerProfileModal({ isOpen, onClose, API_URL, headers, user, inputCls }: any) {
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [locating, setLocating] = useState(false);
-  const [data, setData] = useState({
-    kitchenName: '',
-    address: '',
-    ownerName: '',
-    phone: '',
-    email: '',
-    latitude: '',
-    longitude: ''
-  });
-
-  useEffect(() => {
-    if (isOpen) {
-      fetchData();
-    }
-  }, [isOpen]);
-
-  const fetchData = async () => {
-    try {
-      const res = await fetch(`${API_URL}/admin/my-kitchen`, { headers });
-      const d = await res.json();
-      if (d.success && d.kitchen) {
-        const k = d.kitchen;
-        setData({
-          kitchenName: k.name || '',
-          address: k.address?.fullAddress || k.address?.street || '',
-          ownerName: k.ownerName || k.owner?.name || user?.name || '',
-          phone: k.ownerPhone || k.owner?.phone || user?.phone || '',
-          email: k.ownerEmail || k.owner?.email || user?.email || '',
-          latitude: k.location?.coordinates?.[1] || '',
-          longitude: k.location?.coordinates?.[0] || ''
-        });
-      }
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSetLocation = async () => {
-    setLocating(true);
-    try {
-      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
-        navigator.geolocation.getCurrentPosition(resolve, reject, {
-          enableHighAccuracy: true,
-          timeout: 10000,
-          maximumAge: 0
-        });
-      });
-
-      const { latitude, longitude } = position.coords;
-      setData(p => ({
-        ...p,
-        latitude: latitude.toString(),
-        longitude: longitude.toString()
-      }));
-
-      alert(`✅ Location captured!\nLatitude: ${latitude.toFixed(6)}\nLongitude: ${longitude.toFixed(6)}`);
-    } catch (error) {
-      console.error('Error getting location:', error);
-      alert('❌ Failed to get location. Please enable location permission in your browser.');
-    } finally {
-      setLocating(false);
-    }
-  };
-
-  const handleSave = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSaving(true);
-    try {
-      // 1. Update Kitchen Profile
-      const resK = await fetch(`${API_URL}/admin/my-kitchen`, {
-        method: 'PUT',
-        headers: { ...headers, 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: data.kitchenName,
-          ownerName: data.ownerName,
-          ownerPhone: data.phone,
-          ownerEmail: data.email,
-          address: { street: data.address, fullAddress: data.address },
-          location: data.latitude && data.longitude ? {
-            type: 'Point',
-            coordinates: [parseFloat(data.longitude), parseFloat(data.latitude)]
-          } : undefined
-        })
-      });
-
-      // 2. Update User Profile if needed
-      await fetch(`${API_URL}/auth/profile`, {
-        method: 'PUT',
-        headers: { ...headers, 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: data.ownerName,
-          phone: data.phone,
-          email: data.email
-        })
-      });
-
-      const dK = await resK.json();
-      if (dK.success) {
-        alert('✅ Profile updated successfully!');
-        onClose();
-      } else {
-        alert('❌ Update failed: ' + dK.error);
-      }
-    } catch (e) {
-      alert('❌ Error updating profile');
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  if (!isOpen) return null;
-
-  return (
-    <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-md z-[100] flex items-center justify-center p-6" onClick={onClose}>
-      <div className="bg-white rounded-[2rem] w-full max-w-sm p-8 shadow-2xl animate-in zoom-in-95 duration-300" onClick={(e) => e.stopPropagation()}>
-        <div className="mb-6">
-          <h3 className="text-xl font-black text-slate-900">Profile Settings</h3>
-          <p className="text-xs text-slate-400 font-medium">Manage your kitchen and owner details</p>
-        </div>
-
-        {loading ? (
-          <div className="py-20 flex justify-center"><RefreshCw className="w-8 h-8 text-slate-200 animate-spin" /></div>
-        ) : (
-          <form onSubmit={handleSave} className="space-y-4">
-            <div className="space-y-1">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-4">Kitchen Name</label>
-              <input value={data.kitchenName} onChange={e => setData(p => ({ ...p, kitchenName: e.target.value }))} required placeholder="Kitchen Title" className={inputCls} />
-            </div>
-            <div className="space-y-1">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-4">Address</label>
-              <input value={data.address} onChange={e => setData(p => ({ ...p, address: e.target.value }))} required placeholder="Kitchen Address" className={inputCls} />
-            </div>
-            <div className="space-y-1">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-4">Owner Name</label>
-              <input value={data.ownerName} onChange={e => setData(p => ({ ...p, ownerName: e.target.value }))} required placeholder="Your Name" className={inputCls} />
-            </div>
-            <div className="space-y-1">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-4">Owner Phone</label>
-              <input value={data.phone} onChange={e => setData(p => ({ ...p, phone: e.target.value }))} required placeholder="10-digit number" type="tel" className={inputCls} />
-            </div>
-            <div className="space-y-1">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-4">Owner Email</label>
-              <input value={data.email} onChange={e => setData(p => ({ ...p, email: e.target.value }))} required placeholder="Email Address" type="email" className={inputCls} />
-            </div>
-
-            {/* Location Section */}
-            <div className="space-y-2 pt-2 border-t border-slate-200">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-4">Kitchen Location</label>
-              {data.latitude && data.longitude ? (
-                <div className="px-4 py-2 bg-green-50 border border-green-200 rounded-lg">
-                  <p className="text-xs font-semibold text-green-700">✅ Location Set</p>
-                  <p className="text-[10px] text-green-600 mt-1">
-                    Latitude: {parseFloat(data.latitude).toFixed(6)}<br />
-                    Longitude: {parseFloat(data.longitude).toFixed(6)}
-                  </p>
-                </div>
-              ) : (
-                <div className="px-4 py-2 bg-amber-50 border border-amber-200 rounded-lg">
-                  <p className="text-[10px] text-amber-700">📍 No location set</p>
-                </div>
-              )}
-              <button
-                type="button"
-                onClick={handleSetLocation}
-                disabled={locating}
-                className="w-full py-3 bg-blue-500 text-white rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-blue-600 transition disabled:opacity-50 flex items-center justify-center gap-2"
-              >
-                {locating ? <Loader2 className="w-3 h-3 animate-spin" /> : <MapPin className="w-3 h-3" />}
-                {locating ? 'Capturing Location…' : 'Set Location'}
-              </button>
-            </div>
-
-            <div className="flex gap-3 pt-4">
-              <button type="button" onClick={onClose} className="flex-1 py-4 bg-slate-50 text-slate-400 rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-slate-100 transition">Cancel</button>
-              <button type="submit" disabled={saving} className="flex-1 py-4 bg-orange-500 text-white rounded-full text-[10px] font-black uppercase tracking-widest shadow-xl shadow-orange-200 transition disabled:opacity-50 flex items-center justify-center gap-2">
-                {saving ? <Loader2 className="w-3 h-3 animate-spin" /> : <Save className="w-3 h-3" />}
-                {saving ? 'Saving…' : 'Save'}
-              </button>
-            </div>
-          </form>
-        )}
-      </div>
     </div>
   );
 }

@@ -165,9 +165,19 @@ export default function LoginPage() {
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                   <Lock className="w-5 h-5 text-gray-500 group-focus-within:text-orange-400 transition-colors" />
                 </div>
-                <input type={showPass ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)}
-                  placeholder="Password" required
-                  className="w-full bg-black/40 border border-white/10 rounded-2xl pl-12 pr-12 py-4 text-white placeholder:text-gray-500 focus:outline-none focus:border-orange-500/50 focus:ring-1 focus:ring-orange-500/50 transition-all" />
+                <input 
+                  type={showPass ? 'text' : 'password'} 
+                  value={password} 
+                  onChange={e => {
+                    const val = e.target.value.replace(/\D/g, '').slice(0, 4);
+                    setPassword(val);
+                  }}
+                  placeholder="4-digit Login Pin" 
+                  required
+                  inputMode="numeric"
+                  pattern="\d{4}"
+                  className="w-full bg-black/40 border border-white/10 rounded-2xl pl-12 pr-12 py-4 text-white placeholder:text-gray-500 focus:outline-none focus:border-orange-500/50 focus:ring-1 focus:ring-orange-500/50 transition-all font-mono tracking-widest" 
+                />
                 <button type="button" onClick={() => setShowPass(v => !v)} className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-500 hover:text-white transition-colors">
                   {showPass ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
@@ -176,7 +186,7 @@ export default function LoginPage() {
 
             <div className="flex justify-end pb-2">
               <Link href="/forgot-password" className="text-sm text-gray-400 hover:text-orange-400 transition-colors">
-                Forgot password?
+                Forgot PIN?
               </Link>
             </div>
 
@@ -184,7 +194,7 @@ export default function LoginPage() {
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               type="submit"
-              disabled={loading || !loginId || password.length < 6}
+              disabled={loading || !loginId || password.length !== 4}
               className="w-full py-4 bg-gradient-to-r from-orange-500 to-rose-500 hover:from-orange-400 hover:to-rose-400 text-white font-bold rounded-2xl shadow-[0_0_40px_-10px_rgba(249,115,22,0.4)] flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <>Login to Account <ArrowRight className="w-4 h-4 ml-1" /></>}

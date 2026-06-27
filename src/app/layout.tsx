@@ -15,6 +15,7 @@ import CartBar from "@/components/CartBar";
 import WalletBar from "@/components/wallet-bar";
 import { AppUpdateNotification } from "@/components/AppUpdateNotification";
 import ActivityTracker from "@/components/ActivityTracker";
+import PushSoundPlayer from '@/components/PushSoundPlayer';
 
 export const viewport: Viewport = {
   themeColor: '#f97316',
@@ -41,6 +42,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <DeliveryAuthProvider>
               <NotificationProvider>
                 <CartProvider>
+                  <PushSoundPlayer />
                   <LocationProvider>
                     <RoleRedirect />
                     <ActivityTracker />

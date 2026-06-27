@@ -70,6 +70,9 @@ export default function ScheduleClient() {
   const [infoItem, setInfoItem] = useState<any>(null);
   const [infoAnchorRect, setInfoAnchorRect] = useState<{ top: number; left: number; width: number; height: number } | null>(null);
 
+  // Whether to show kitchen name for current section (hide in Regular & Shahi Thali)
+  const showKitchenName = ['corporateOrder', 'schoolTiffins'].includes(selectedSection || '');
+
   // Fetch Homestyle data for banners and section images
   useEffect(() => {
     fetch(`${API_URL}/homestyles`)
@@ -77,7 +80,7 @@ export default function ScheduleClient() {
       .then((d) => {
         if (d.success) setHomestyle(d.data);
       })
-      .catch(() => {})
+      .catch(() => { })
       .finally(() => setLoading(false));
   }, []);
 
@@ -152,6 +155,7 @@ export default function ScheduleClient() {
         price: item.price,
         image: item.image,
         cloudKitchen: item.cloudKitchen,
+        isCorporate: selectedSection === 'corporateOrder'
       });
       addToast(`${item.name} added to cart!`, "success");
     }
@@ -174,6 +178,7 @@ export default function ScheduleClient() {
         price: selectedItem.price,
         image: selectedItem.image,
         cloudKitchen: selectedItem.cloudKitchen,
+        isCorporate: selectedSection === 'corporateOrder'
       });
     }
 
@@ -211,9 +216,8 @@ export default function ScheduleClient() {
               <button
                 key={i}
                 onClick={() => setCurrentBanner(i)}
-                className={`w-1.5 h-1.5 rounded-full transition-all ${
-                  currentBanner === i ? "w-6 bg-white" : "bg-white/40"
-                }`}
+                className={`w-1.5 h-1.5 rounded-full transition-all ${currentBanner === i ? "w-6 bg-white" : "bg-white/40"
+                  }`}
               />
             ))}
           </div>
@@ -296,27 +300,25 @@ export default function ScheduleClient() {
             <div className="flex gap-3">
               <button
                 onClick={() => setMealTypeFilter("lunch")}
-                className={`flex-1 py-1 px-4 rounded-2xl font-bold text-sm transition-all flex flex-col items-center justify-center gap-1 shadow-sm border-2 ${
-                  mealTypeFilter === "lunch"
-                    ? "bg-orange-500 border-orange-500 text-white shadow-lg shadow-orange-200"
-                    : "bg-white border-slate-100 text-slate-600"
-                }`}
+                className={`flex-1 py-3 px-4 rounded-2xl font-bold text-[1.5vh] transition-all flex items-center justify-center gap-1 shadow-sm border-2 ${mealTypeFilter === "lunch"
+                  ? "bg-orange-500 border-orange-500 text-white shadow-lg shadow-orange-200"
+                  : "bg-white border-slate-100 text-slate-600"
+                  }`}
               >
                 <Clock
-                  className={`w-5 h-5 ${mealTypeFilter === "lunch" ? "text-white" : "text-orange-500"}`}
+                  className={`w-4 h-4 ${mealTypeFilter === "lunch" ? "text-white" : "text-orange-500"}`}
                 />
                 <span>Lunch (12–2 PM)</span>
               </button>
               <button
                 onClick={() => setMealTypeFilter("dinner")}
-                className={`flex-1 py-3 px-4 rounded-2xl font-bold text-sm transition-all flex flex-col items-center justify-center gap-1 shadow-sm border-2 ${
-                  mealTypeFilter === "dinner"
-                    ? "bg-orange-500 border-orange-500 text-white shadow-lg shadow-orange-200"
-                    : "bg-white border-slate-100 text-slate-600"
-                }`}
+                className={`flex-1  px-4 rounded-2xl font-bold text-[1.5vh] transition-all flex  items-center justify-center gap-1 shadow-sm border-2 ${mealTypeFilter === "dinner"
+                  ? "bg-orange-500 border-orange-500 text-white shadow-lg shadow-orange-200"
+                  : "bg-white border-slate-100 text-slate-600"
+                  }`}
               >
                 <Clock
-                  className={`w-5 h-5 ${mealTypeFilter === "dinner" ? "text-white" : "text-orange-500"}`}
+                  className={`w-4 h-4 ${mealTypeFilter === "dinner" ? "text-white" : "text-orange-500"}`}
                 />
                 <span>Dinner (7–9 PM)</span>
               </button>
@@ -355,12 +357,14 @@ export default function ScheduleClient() {
                   >
                     <span className="p-4 flex-1">
                       <div className="flex-1 min-w-0">
-                        {selectedSection === "corporateOrder" ? (
-                          <> <span className="flex">
+                        <span className="flex items-center gap-2">
+                          {showKitchenName && (
                             <p className="text-orange-500 font-bold text-[10px] uppercase tracking-widest mb-1 flex items-center gap-1">
                               <span className="w-1.5 h-1.5 bg-orange-500 rounded-full animate-pulse" />
-                              {item.cloudKitchen?.name || "Tiffica Kitchen"}
+                              {item.cloudKitchen?.name || 'Tiffica Kitchen'}
                             </p>
+                          )}
+                          {selectedSection === 'corporateOrder' ?
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
@@ -369,59 +373,48 @@ export default function ScheduleClient() {
                                 setInfoItem(item);
                               }}
                               title="Info"
-                              className="ml-4 w-5 h-5  rounded-full border border-slate-200 bg-orange-200 flex items-center justify-center text-slate-600 hover:bg-slate-50 transition"
+                              className={`ml-4 ${selectedSection === 'corporateOrder' ? 'w-5 h-5 rounded-full bg-orange-200' : 'w-8 h-8 rounded-full bg-white'} border border-slate-200 flex items-center justify-center text-slate-600 hover:bg-slate-50 transition`}
                             >
-                            <Info />
+                              <Info />
                             </button>
-                            </span>
-                          </>
-                        ) : (
-                          <>
-                            <p className="text-orange-500 font-bold text-[10px] uppercase tracking-widest mb-1 flex items-center gap-1">
-                              <span className="w-1.5 h-1.5 bg-orange-500 rounded-full animate-pulse" />
-                              {item.cloudKitchen?.name || "Tiffica Kitchen"}
-                            </p>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-                                setInfoAnchorRect({ top: rect.top, left: rect.left, width: rect.width, height: rect.height });
-                                setInfoItem(item);
-                              }}
-                              title="Info"
-                              className="ml-4 w-8 h-8 rounded-full border border-slate-200 bg-white flex items-center justify-center text-slate-600 hover:bg-slate-50 transition"
-                            >
-                              i
-                            </button>
-                          </>
-                        )}
+                            : ''}
+                        </span>
                         <>
                           <h3 className="text-[1rem] font-bold text-slate-900">
                             {["corporateOrder", "schoolTiffins"].includes(
                               selectedSection || "",
                             )
                               ? item.name || item.description
-                              : item.description}
+                              : ""}
                           </h3>
-                          <p className="text-[0.8rem] font-bold text-slate-900">
-                            {item.description}
-                          </p>
+                          <h3 className="text-[0.8rem] font-bold text-slate-500">{item.description}</h3>
+                          {["corporateOrder", "schoolTiffins"].includes(
+                            selectedSection || "",
+                          ) && (
+                              <p className="text-[0.8rem] font-bold text-slate-500">
+                                {item.description}
+                              </p>
+                            )}
+                          <span className="flex items-center justify-between">
 
-                          <p className="text-orange-500 font-black text-lg mt-2">
-                            ₹{item.price}
-                          </p>
+                            <div className="mt-3">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDirectCheckout(item);
+                                }}
+                                className="bg-gradient-to-r from-orange-500 to-amber-500 text-white font-bold px-3 text-[0.7rem] py-2 rounded-xl shadow-sm active:scale-95 transition-transform"
+                              >
+                                Buy Now
+                              </button>
+                            </div>
 
-                          <div className="mt-3">
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleDirectCheckout(item);
-                              }}
-                              className="bg-gradient-to-r from-orange-500 to-amber-500 text-white font-bold px-3 py-2 rounded-xl shadow-sm active:scale-95 transition-transform"
-                            >
-                              Buy Now
-                            </button>
-                          </div>
+                            <p className="text-orange-500 font-black text-lg mt-2">
+                              ₹{item.price}
+                            </p>
+
+
+                          </span>
                         </>
                       </div>
                     </span>
@@ -521,11 +514,10 @@ export default function ScheduleClient() {
                     {/* Lunch */}
                     <button
                       onClick={() => setSelectedMealType("lunch")}
-                      className={`p-4 rounded-xl border-2 transition-all ${
-                        selectedMealType === "lunch"
-                          ? "border-orange-500 bg-orange-50"
-                          : "border-slate-200 bg-white"
-                      }`}
+                      className={`p-4 rounded-xl border-2 transition-all ${selectedMealType === "lunch"
+                        ? "border-orange-500 bg-orange-50"
+                        : "border-slate-200 bg-white"
+                        }`}
                     >
                       <div className="flex items-center gap-2 mb-2">
                         <Clock
@@ -545,11 +537,10 @@ export default function ScheduleClient() {
                     {/* Dinner */}
                     <button
                       onClick={() => setSelectedMealType("dinner")}
-                      className={`p-4 rounded-xl border-2 transition-all ${
-                        selectedMealType === "dinner"
-                          ? "border-orange-500 bg-orange-50"
-                          : "border-slate-200 bg-white"
-                      }`}
+                      className={`p-4 rounded-xl border-2 transition-all ${selectedMealType === "dinner"
+                        ? "border-orange-500 bg-orange-50"
+                        : "border-slate-200 bg-white"
+                        }`}
                     >
                       <div className="flex items-center gap-2 mb-2">
                         <Clock
@@ -616,7 +607,7 @@ export default function ScheduleClient() {
             >
               <div className="bg-white rounded-lg w-[30vw] h-[30vh] shadow-lg p-3">
                 <div className="flex items-start justify-between gap-4">
-                 
+
                   <button onClick={() => { setInfoItem(null); setInfoAnchorRect(null); }} className="ml-auto w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center">×</button>
                 </div>
                 <div className="mt-3">

@@ -36,6 +36,7 @@ export default function CheckoutPage() {
   const [couponCode, setCouponCode] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState<any>(null);
   const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
+  const [settings, setSettings] = useState<{ defaultDeliveryFee: number; corporateDeliveryFee: number; subscriptionDeliveryPerTiffin: number }>({ defaultDeliveryFee: 25, corporateDeliveryFee: 100, subscriptionDeliveryPerTiffin: 20 });
 
   useEffect(() => {
     if (cart.length === 0 && !isOrderSuccess) {
@@ -119,8 +120,28 @@ export default function CheckoutPage() {
   };
 
   const discount = appliedCoupon ? appliedCoupon.discountAmount : 0;
-  const finalTotal = Math.max(0, total - discount);
+  // Delivery fee calculation based on cart flags and admin settings
+  const hasCorporate = cart.some(i => (i as any).isCorporate);
+  const subscriptionCount = cart.filter(i => (i as any).isSubscription).reduce((s, it) => s + (it.quantity || 0), 0);
+  const deliveryFee = hasCorporate && cart.length > 0
+    ? (settings.corporateDeliveryFee || 100)
+    : (subscriptionCount > 0 ? ((settings.subscriptionDeliveryPerTiffin || 20) * subscriptionCount) : (settings.defaultDeliveryFee || 25));
+
+  const finalTotal = Math.max(0, total - discount + (deliveryFee || 0));
   const canUseWallet = useWallet && walletBalance >= finalTotal;
+
+  // Load settings once
+  useEffect(() => {
+    fetch(`${API_URL}/settings`).then(r => r.json()).then(d => {
+      if (d?.success && d.settings) {
+        setSettings({
+          defaultDeliveryFee: Number(d.settings.defaultDeliveryFee || 25),
+          corporateDeliveryFee: Number(d.settings.corporateDeliveryFee || 100),
+          subscriptionDeliveryPerTiffin: Number(d.settings.subscriptionDeliveryPerTiffin || 20)
+        });
+      }
+    }).catch(() => {});
+  }, []);
 
   const handlePayment = async () => {
     if (!token || !user) return;
@@ -134,7 +155,7 @@ export default function CheckoutPage() {
 
     try {
       await openRazorpay({
-        amount: total,
+        amount: finalTotal,
         description,
         token,
         userName: user.name,
@@ -152,7 +173,7 @@ export default function CheckoutPage() {
                 quantity: item.quantity
               })),
               deliveryAddress: selectedAddress,
-              deliveryFee: 0,
+              deliveryFee: deliveryFee || 0,
               couponId: appliedCoupon?._id,
               paymentMethod: 'razorpay',
               paymentId: paymentId,
@@ -223,7 +244,7 @@ export default function CheckoutPage() {
           quantity: item.quantity
         })),
         deliveryAddress: selectedAddress,
-        deliveryFee: 0,
+        deliveryFee: deliveryFee || 0,
         couponId: appliedCoupon?._id,
         paymentMethod: 'wallet',
         specialInstructions: specialInstructions.trim(),
@@ -568,7 +589,7 @@ export default function CheckoutPage() {
             )}
             <div className="flex justify-between text-sm text-gray-600">
               <span>Delivery Fee</span>
-              <span className="text-green-600 font-bold">FREE</span>
+              <span className="text-green-600 font-bold">{deliveryFee && deliveryFee > 0 ? `₹${deliveryFee}` : 'FREE'}</span>
             </div>
             <div className="flex justify-between text-base font-extrabold text-gray-900 border-t border-gray-100 pt-3">
               <span>Total Amount</span>

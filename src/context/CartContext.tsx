@@ -11,6 +11,9 @@ interface CartItem {
   quantity: number;
   cloudKitchen?: { _id: string; name: string };
   selectedAddOns?: Array<{ name: string; price: number }>;
+  // Optional flags used to determine delivery fee rules
+  isCorporate?: boolean;
+  isSubscription?: boolean;
 }
 
 interface CartContextType {
