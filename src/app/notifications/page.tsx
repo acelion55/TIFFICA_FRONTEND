@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Tag, Bell, Package, Info, AlertCircle, Gift } from 'lucide-react';
+import { ArrowLeft, Tag, Bell, Package, Info, AlertCircle, Gift, Trash2 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useNotifications } from '@/context/NotificationContext';
 
@@ -30,6 +30,7 @@ export default function NotificationsPage() {
   const router = useRouter();
   const [notifications, setNotifications] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     fetchNotifications();
@@ -68,26 +69,74 @@ export default function NotificationsPage() {
     }
   };
 
+  const deleteNotification = async (id: string) => {
+    try {
+      const res = await fetch(`${API_URL}/notifications/${id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        setNotifications(prev => prev.filter(n => n._id !== id));
+        refreshUnreadCount();
+      }
+    } catch (error) {
+      console.error('Failed to delete notification:', error);
+    }
+  };
+
+  const deleteAllNotifications = async () => {
+    if (!confirm('Are you sure you want to delete all notifications?')) return;
+    
+    setDeleting(true);
+    try {
+      const res = await fetch(`${API_URL}/notifications`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (data.success) {
+        setNotifications([]);
+        refreshUnreadCount();
+      }
+    } catch (error) {
+      console.error('Failed to delete all notifications:', error);
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   const unreadCount = notifications.filter(n => !n.isRead).length;
 
   return (
     <div className="min-h-screen bg-[#FAF7F5] pb-24">
       <div className="bg-white px-4 pt-20 pb-4 sticky top-0 z-30 shadow-sm">
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => router.back()}
-            className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center active:scale-95"
-          >
-            <ArrowLeft className="w-5 h-5 text-gray-700" />
-          </button>
-          <div>
-            <h1 className="text-lg font-extrabold text-gray-900">Notifications</h1>
-            {unreadCount > 0 && (
-              <p className="text-xs text-orange-500 font-semibold">
-                {unreadCount} unread
-              </p>
-            )}
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => router.back()}
+              className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center active:scale-95"
+            >
+              <ArrowLeft className="w-5 h-5 text-gray-700" />
+            </button>
+            <div>
+              <h1 className="text-lg font-extrabold text-gray-900">Notifications</h1>
+              {unreadCount > 0 && (
+                <p className="text-xs text-orange-500 font-semibold">
+                  {unreadCount} unread
+                </p>
+              )}
+            </div>
           </div>
+          {notifications.length > 0 && (
+            <button
+              onClick={deleteAllNotifications}
+              disabled={deleting}
+              className="px-3 py-2 bg-red-50 text-red-600 rounded-lg text-xs font-bold hover:bg-red-100 transition active:scale-95 disabled:opacity-50 flex items-center gap-1"
+            >
+              <Trash2 className="w-4 h-4" />
+              {deleting ? 'Deleting...' : 'Clear All'}
+            </button>
+          )}
         </div>
       </div>
 
@@ -108,8 +157,7 @@ export default function NotificationsPage() {
               return (
                 <div
                   key={n._id}
-                  onClick={() => !n.isRead && markAsRead(n._id)}
-                  className={`rounded-2xl p-4 border cursor-pointer transition active:scale-98 ${
+                  className={`rounded-2xl p-4 border cursor-pointer transition active:scale-98 group ${
                     n.isRead
                       ? 'bg-white border-gray-100'
                       : 'bg-orange-50 border-orange-200 shadow-sm'
@@ -117,7 +165,8 @@ export default function NotificationsPage() {
                 >
                   <div className="flex items-start gap-3">
                     <div
-                      className={`w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0 ${
+                      onClick={() => !n.isRead && markAsRead(n._id)}
+                      className={`w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0 cursor-pointer ${
                         n.isRead ? 'bg-gray-100' : colorClass
                       }`}
                     >
@@ -132,9 +181,18 @@ export default function NotificationsPage() {
                         <p className="text-sm font-extrabold text-gray-900">
                           {n.title}
                         </p>
-                        {!n.isRead && (
-                          <div className="w-2 h-2 bg-orange-500 rounded-full flex-shrink-0 mt-1" />
-                        )}
+                        <div className="flex items-center gap-2">
+                          {!n.isRead && (
+                            <div className="w-2 h-2 bg-orange-500 rounded-full flex-shrink-0 mt-1" />
+                          )}
+                          <button
+                            onClick={() => deleteNotification(n._id)}
+                            className="text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition"
+                            title="Delete"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
                       </div>
                       <p className="text-xs text-gray-600 mb-2">{n.message}</p>
                       

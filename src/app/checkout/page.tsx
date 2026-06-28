@@ -143,10 +143,55 @@ export default function CheckoutPage() {
     }).catch(() => {});
   }, []);
 
+  const checkTimeWindowForCart = () => {
+    const restrictedCats = ['regular', 'shahi thali', 'mini bowl'];
+    const restrictedItem = cart.find((item: any) => {
+      const cat = String(item.category || '').toLowerCase().trim();
+      const name = String(item.name || '').toLowerCase();
+      const scheduleSections = Array.isArray((item as any).scheduleSections)
+        ? (item as any).scheduleSections.map((s: string) => String(s).toLowerCase().trim())
+        : [];
+      return restrictedCats.includes(cat) ||
+             name.includes('regular') ||
+             name.includes('shahi thali') ||
+             name.includes('mini bowl') ||
+             scheduleSections.some((s: string) => restrictedCats.includes(s));
+    });
+
+    if (restrictedItem) {
+      const now = new Date();
+      const currentHour = now.getHours();
+      const currentMin = now.getMinutes();
+      const totalMinutes = currentHour * 60 + currentMin;
+
+      const mealTypes = [
+        ...(Array.isArray((restrictedItem as any).mealTypes) ? (restrictedItem as any).mealTypes : []),
+        ...((restrictedItem as any).mealType ? [(restrictedItem as any).mealType] : [])
+      ].map((m: string) => String(m).toLowerCase().trim());
+
+      const isLunch = mealTypes.includes('lunch') || (!mealTypes.includes('dinner') && totalMinutes < 14 * 60);
+      const isDinner = mealTypes.includes('dinner') || (!mealTypes.includes('lunch') && totalMinutes >= 14 * 60);
+
+      if (isLunch && totalMinutes >= 710) {
+        addToast(`Lunch orders for "${restrictedItem.name}" must be placed before 11:50 AM. Please remove it from your cart.`, 'error');
+        return false;
+      }
+
+      if (isDinner && totalMinutes >= 1080) {
+        addToast(`Dinner orders for "${restrictedItem.name}" must be placed before 6:00 PM. Please remove it from your cart.`, 'error');
+        return false;
+      }
+    }
+    return true;
+  };
+
   const handlePayment = async () => {
     if (!token || !user) return;
     if (!selectedAddress) {
       addToast('Please select a delivery address', 'error');
+      return;
+    }
+    if (!checkTimeWindowForCart()) {
       return;
     }
     setPaying(true);
@@ -234,6 +279,9 @@ export default function CheckoutPage() {
 
   const handleWalletPayment = async () => {
     if (!token || !user || !selectedAddress) return;
+    if (!checkTimeWindowForCart()) {
+      return;
+    }
     setPaying(true);
 
     try {

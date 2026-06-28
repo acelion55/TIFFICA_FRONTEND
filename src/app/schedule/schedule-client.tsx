@@ -38,10 +38,10 @@ const SECTIONS = [
     desc: "Bulk meals for offices and events",
   },
   {
-    id: "schoolTiffins",
-    label: "School Tiffins",
-    tag: "School Tiffins",
-    desc: "Nutritious & fun meals for kids",
+    id: "miniBowl",
+    label: "Mini Bowl",
+    tag: "Mini Bowl",
+    desc: "Compact & delicious mini bowl meals",
   },
 ];
 
@@ -71,7 +71,7 @@ export default function ScheduleClient() {
   const [infoAnchorRect, setInfoAnchorRect] = useState<{ top: number; left: number; width: number; height: number } | null>(null);
 
   // Whether to show kitchen name for current section (hide in Regular & Shahi Thali)
-  const showKitchenName = ['corporateOrder', 'schoolTiffins'].includes(selectedSection || '');
+  const showKitchenName = ['corporateOrder', 'miniBowl'].includes(selectedSection || '');
 
   // Fetch Homestyle data for banners and section images
   useEffect(() => {
@@ -128,11 +128,69 @@ export default function ScheduleClient() {
     return () => clearInterval(interval);
   }, [homestyle]);
 
-  // Initialize date to today
+  // Local date helper to avoid server-client timezone offset issues
+  const getLocalDateString = () => {
+    const d = new Date();
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  // Set default tabs based on clock time (India/Local timezone) on component mount
   useEffect(() => {
-    const today = new Date().toISOString().split("T")[0];
-    setSelectedDate(today);
+    setSelectedDate(getLocalDateString());
+    const hr = new Date().getHours();
+    if (hr >= 14 && hr < 21) {
+      setMealTypeFilter("dinner");
+      setSelectedMealType("dinner");
+    } else {
+      setMealTypeFilter("lunch");
+      setSelectedMealType("lunch");
+    }
   }, []);
+
+  const isRestrictedSectionItem = (item: any) => {
+    if (!item) return false;
+    const category = String(item.category || '').toLowerCase().trim();
+    const name = String(item.name || '').toLowerCase();
+    const scheduleSections = Array.isArray(item.scheduleSections) 
+      ? item.scheduleSections.map((s: string) => String(s).toLowerCase().trim()) 
+      : [];
+    const restrictedCats = ['regular', 'shahi thali', 'mini bowl'];
+    
+    return restrictedCats.includes(category) || 
+           name.includes('regular') || 
+           name.includes('shahi thali') || 
+           name.includes('mini bowl') ||
+           scheduleSections.some((s: string) => restrictedCats.includes(s));
+  };
+
+  const validateTimeWindow = (mealType: 'lunch' | 'dinner') => {
+    const now = new Date();
+    const currentHour = now.getHours();
+    const currentMin = now.getMinutes();
+    const totalMinutes = currentHour * 60 + currentMin;
+
+    if (mealType === 'lunch') {
+      // 11:50 AM cutoff: 11 * 60 + 50 = 710 minutes of the day
+      if (totalMinutes >= 710) {
+        return {
+          valid: false,
+          msg: "Lunch orders for this section must be placed before 11:50 AM."
+        };
+      }
+    } else if (mealType === 'dinner') {
+      // 6:00 PM cutoff: 18 * 60 = 1080 minutes of the day
+      if (totalMinutes >= 1080) {
+        return {
+          valid: false,
+          msg: "Dinner orders for this section must be placed before 6:00 PM."
+        };
+      }
+    }
+    return { valid: true };
+  };
 
   const banners = homestyle?.scheduleBannerImages || [
     "https://images.unsplash.com/photo-1543353071-10c8ba85a904?w=1200&h=400&fit=crop",
@@ -144,6 +202,14 @@ export default function ScheduleClient() {
       addToast("Please login to schedule meals", "error");
       router.push("/login");
       return;
+    }
+
+    if (isRestrictedSectionItem(item)) {
+      const validation = validateTimeWindow(mealTypeFilter);
+      if (!validation.valid) {
+        addToast(validation.msg || "Ordering window has closed for today.", "error");
+        return;
+      }
     }
 
     // Add item to cart
@@ -168,6 +234,14 @@ export default function ScheduleClient() {
       addToast("Please login to schedule meals", "error");
       router.push("/login");
       return;
+    }
+
+    if (isRestrictedSectionItem(selectedItem) && selectedDate === getLocalDateString()) {
+      const validation = validateTimeWindow(selectedMealType);
+      if (!validation.valid) {
+        addToast(validation.msg || "Ordering window has closed for today.", "error");
+        return;
+      }
     }
 
     if (addToCart) {
@@ -381,14 +455,14 @@ export default function ScheduleClient() {
                         </span>
                         <>
                           <h3 className="text-[1rem] font-bold text-slate-900">
-                            {["corporateOrder", "schoolTiffins"].includes(
+                            {["corporateOrder", "miniBowl"].includes(
                               selectedSection || "",
                             )
                               ? item.name || item.description
                               : ""}
                           </h3>
                           <h3 className="text-[0.8rem] font-bold text-slate-500">{item.description}</h3>
-                          {["corporateOrder", "schoolTiffins"].includes(
+                          {["corporateOrder", "miniBowl"].includes(
                             selectedSection || "",
                           ) && (
                               <p className="text-[0.8rem] font-bold text-slate-500">
@@ -499,7 +573,7 @@ export default function ScheduleClient() {
                       type="date"
                       value={selectedDate}
                       onChange={(e) => setSelectedDate(e.target.value)}
-                      min={new Date().toISOString().split("T")[0]}
+                      min={getLocalDateString()}
                       className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl py-3 pl-12 pr-4 text-sm font-medium focus:border-orange-500 outline-none transition-all"
                     />
                   </div>

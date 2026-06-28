@@ -149,8 +149,8 @@ export function UsersTab({ users, search, setSearch, setUserModal, openEditUserM
       />
 
       {selectedUserDetails.open && (
-        <UserDetailsModal 
-          userId={selectedUserDetails.userId} 
+        <UserDetailsModal
+          userId={selectedUserDetails.userId}
           onClose={() => setSelectedUserDetails({ open: false, userId: null })}
           API_URL={API_URL}
           headers={headers}
@@ -213,16 +213,16 @@ function UserDetailsModal({ userId, onClose, API_URL, headers }: any) {
                       </div>
                       <h4 className="font-black text-lg truncate">{data.user.name}</h4>
                       <p className="text-[10px] font-bold text-white/50 uppercase tracking-widest">{data.user.role || 'Consumer'}</p>
-                      
+
                       <div className="mt-6 pt-6 border-t border-white/10 flex justify-center gap-6">
-                         <div>
-                            <p className="text-[9px] font-black text-white/30 uppercase tracking-widest mb-1">Wallet</p>
-                            <p className="font-black text-orange-400">₹{data.user.walletBalance || 0}</p>
-                         </div>
-                         <div>
-                            <p className="text-[9px] font-black text-white/30 uppercase tracking-widest mb-1">Orders</p>
-                            <p className="font-black text-white">{data.orders.length}</p>
-                         </div>
+                        <div>
+                          <p className="text-[9px] font-black text-white/30 uppercase tracking-widest mb-1">Wallet</p>
+                          <p className="font-black text-orange-400">₹{data.user.walletBalance || 0}</p>
+                        </div>
+                        <div>
+                          <p className="text-[9px] font-black text-white/30 uppercase tracking-widest mb-1">Orders</p>
+                          <p className="font-black text-white">{data.orders.length}</p>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -256,7 +256,7 @@ function UserDetailsModal({ userId, onClose, API_URL, headers }: any) {
                   {/* Addresses */}
                   <div>
                     <h5 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
-                       <MapPin className="w-3.5 h-3.5" /> Registered Addresses
+                      <MapPin className="w-3.5 h-3.5" /> Registered Addresses
                     </h5>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       {data.user.addresses && data.user.addresses.length > 0 ? data.user.addresses.map((addr: any, i: number) => (
@@ -279,28 +279,27 @@ function UserDetailsModal({ userId, onClose, API_URL, headers }: any) {
                   {/* Order History */}
                   <div>
                     <h5 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
-                       <ShoppingBag className="w-3.5 h-3.5" /> Recent Transactions
+                      <ShoppingBag className="w-3.5 h-3.5" /> Recent Transactions
                     </h5>
                     <div className="space-y-2">
                       {data.orders.length > 0 ? data.orders.map((o: any) => (
                         <div key={o._id} className="flex items-center justify-between p-4 bg-white border border-slate-100 rounded-2xl hover:border-orange-100 transition-all group">
                           <div className="flex items-center gap-4">
                             <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center group-hover:bg-orange-50 transition-colors">
-                               <Package className="w-5 h-5 text-slate-400 group-hover:text-orange-500" />
+                              <Package className="w-5 h-5 text-slate-400 group-hover:text-orange-500" />
                             </div>
                             <div>
-                               <p className="text-xs font-black text-slate-900 leading-none">#{o._id.slice(-6).toUpperCase()}</p>
-                               <p className="text-[9px] font-bold text-slate-400 mt-1 uppercase tracking-wider">{new Date(o.createdAt).toLocaleDateString()} · {o.items?.length || 0} Items</p>
+                              <p className="text-xs font-black text-slate-900 leading-none">#{o._id.slice(-6).toUpperCase()}</p>
+                              <p className="text-[9px] font-bold text-slate-400 mt-1 uppercase tracking-wider">{new Date(o.createdAt).toLocaleDateString()} · {o.items?.length || 0} Items</p>
                             </div>
                           </div>
                           <div className="text-right">
-                             <p className="text-sm font-black text-slate-900 leading-none">₹{o.finalAmount || o.totalAmount}</p>
-                             <span className={`text-[8px] font-black uppercase rounded-full px-2 py-0.5 mt-1 inline-block ${
-                               o.status === 'delivered' ? 'bg-green-100 text-green-700' : 
-                               o.status === 'cancelled' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'
-                             }`}>
-                               {o.status}
-                             </span>
+                            <p className="text-sm font-black text-slate-900 leading-none">₹{o.finalAmount || o.totalAmount}</p>
+                            <span className={`text-[8px] font-black uppercase rounded-full px-2 py-0.5 mt-1 inline-block ${o.status === 'delivered' ? 'bg-green-100 text-green-700' :
+                                o.status === 'cancelled' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'
+                              }`}>
+                              {o.status}
+                            </span>
                           </div>
                         </div>
                       )) : (
@@ -319,7 +318,7 @@ function UserDetailsModal({ userId, onClose, API_URL, headers }: any) {
         </div>
 
         <div className="px-8 py-5 border-t border-slate-100 bg-slate-50/50 flex justify-end">
-           <button onClick={onClose} className="px-8 py-2.5 bg-slate-900 text-white rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-slate-800 transition active:scale-95">Dismiss</button>
+          <button onClick={onClose} className="px-8 py-2.5 bg-slate-900 text-white rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-slate-800 transition active:scale-95">Dismiss</button>
         </div>
       </div>
     </div>
@@ -917,13 +916,25 @@ export function MenuTab({ menuItems, search, setSearch, setMenuModal, setImgPrev
     return matchesSearch;
   });
 
-  const myKitchen = user?.role === 'kitchen-owner' 
+  const myKitchen = user?.role === 'kitchen-owner'
     ? kitchens.find((k: any) => k._id === (user.kitchenId || user.assignedKitchen))
     : null;
   const isKycRestricted = user?.role === 'kitchen-owner' && myKitchen && !myKitchen.isKycDone;
+  const isKitchenLocked = user?.role === 'kitchen-owner' && myKitchen && !myKitchen.isActive;
 
   return (
     <div className={ERP.page}>
+      {isKitchenLocked && (
+        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-2xl flex items-center gap-3 animate-in fade-in slide-in-from-top-2">
+          <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center shrink-0">
+            <Lock className="w-5 h-5 text-red-600" />
+          </div>
+          <div>
+            <p className="text-sm font-bold text-red-900">Your ID is Locked by Admin</p>
+            <p className="text-xs text-red-700 mt-0.5">Your kitchen access has been deactivated. Please contact support for assistance.</p>
+          </div>
+        </div>
+      )}
       {isKycRestricted && (
         <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-2xl flex items-center gap-3 animate-in fade-in slide-in-from-top-2">
           <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center shrink-0">
@@ -937,11 +948,11 @@ export function MenuTab({ menuItems, search, setSearch, setMenuModal, setImgPrev
       )}
 
       <span className='flex justify-between -mt-3'>
-        <button 
-          type="button" 
-          disabled={isKycRestricted}
-          onClick={() => { setSelectedCategory('regular'); setMenuModal({ open: true, data: null }); }} 
-          className={`${ERP.btn} ${ERP.btnPrimary} ${isKycRestricted ? 'opacity-50 cursor-not-allowed grayscale' : ''}`}
+        <button
+          type="button"
+          disabled={isKycRestricted || isKitchenLocked}
+          onClick={() => { setSelectedCategory('regular'); setMenuModal({ open: true, data: null }); }}
+          className={`${ERP.btn} ${ERP.btnPrimary} ${(isKycRestricted || isKitchenLocked) ? 'opacity-50 cursor-not-allowed grayscale' : ''}`}
         >
           <Plus className="w-4 h-4" /> Add item
         </button>
@@ -1036,7 +1047,7 @@ export function MenuTab({ menuItems, search, setSearch, setMenuModal, setImgPrev
                         <p className="font-black text-slate-800 text-sm">₹{m.price}</p>
                       )}
                     </div>
-                    
+
                     <h3 className="font-bold text-slate-800 text-base leading-tight line-clamp-3">
                       {m.description || m.name || 'Menu Item'}
                     </h3>
@@ -1049,7 +1060,7 @@ export function MenuTab({ menuItems, search, setSearch, setMenuModal, setImgPrev
                       </div>
                     )}
                   </div>
-                  
+
                   {/* Action buttons */}
                   <div className="flex gap-2 pt-3 mt-auto">
                     <button
@@ -1219,7 +1230,7 @@ export function KitchensTab({ kitchens, menuItems, setKitchenModal, fetchAll, he
       alert('⚠️ Cannot approve: At least 2 documents are required for KYC approval.');
       return;
     }
-    
+
     if (!confirm(`Are you sure you want to change KYC status to ${status.toUpperCase()}?`)) return;
 
     try {
@@ -1280,31 +1291,34 @@ export function KitchensTab({ kitchens, menuItems, setKitchenModal, fetchAll, he
               render: (k: any) => (
                 <button
                   onClick={(e) => { e.stopPropagation(); toggleKitchenStatus(k._id, k.isActive); }}
-                  className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border shadow-sm transition-all ${k.isActive
-                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
-                    : 'bg-red-50 text-red-700 border-red-200 hover:bg-red-100'
-                    }`}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                    k.isActive ? 'bg-emerald-500' : 'bg-slate-300'
+                  }`}
+                  title={k.isActive ? 'Click to deactivate' : 'Click to activate'}
                 >
-                  {k.isActive ? 'Active' : 'Inactive'}
+                  <span
+                    className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-md transition-transform ${
+                      k.isActive ? 'translate-x-5' : 'translate-x-0.5'
+                    }`}
+                  />
                 </button>
               )
             },
             { key: 'ownerName', header: 'Owner Name', sortable: true, render: (k: any) => getOwnerDetails(k).name },
             { key: 'ownerPhone', header: 'Phone', render: (k: any) => getOwnerDetails(k).phone },
             { key: 'ownerEmail', header: 'Email', render: (k: any) => getOwnerDetails(k).email },
-            { 
-              key: 'kyc', 
-              header: 'KYC Status', 
+            {
+              key: 'kyc',
+              header: 'KYC Status',
               render: (k: any) => {
                 const docs = getKycDocs(k);
                 return (
                   <div className="flex flex-col gap-1">
                     <div className="flex items-center gap-1.5">
-                      <span className={`px-1.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-tighter ${
-                        k.kycStatus === 'approved' ? 'bg-emerald-100 text-emerald-700' :
-                        k.kycStatus === 'rejected' ? 'bg-red-100 text-red-700' :
-                        'bg-amber-100 text-amber-700'
-                      }`}>
+                      <span className={`px-1.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-tighter ${k.kycStatus === 'approved' ? 'bg-emerald-100 text-emerald-700' :
+                          k.kycStatus === 'rejected' ? 'bg-red-100 text-red-700' :
+                            'bg-amber-100 text-amber-700'
+                        }`}>
                         {k.kycStatus || 'pending'}
                       </span>
                       <span className="text-[10px] font-bold text-slate-400">
@@ -1329,34 +1343,14 @@ export function KitchensTab({ kitchens, menuItems, setKitchenModal, fetchAll, he
                 const docs = getKycDocs(k);
                 return (
                   <div className="flex items-center gap-1" onClick={e => e.stopPropagation()}>
-                    <button 
-                      onClick={() => updateKycStatus(k._id, 'approved', docs.length)}
-                      disabled={k.kycStatus === 'approved'}
-                      className={`px-2 py-1 rounded text-[9px] font-black uppercase ${
-                        k.kycStatus === 'approved' 
-                          ? 'opacity-30 cursor-not-allowed bg-slate-100 text-slate-400' 
-                          : 'bg-emerald-500 text-white hover:bg-emerald-600'
-                      }`}
-                    >
-                      Approve
-                    </button>
-                    <button 
+
+                    <button
                       onClick={() => setKycViewModal({ open: true, data: k })}
                       className="px-2 py-1 rounded text-[9px] font-black uppercase bg-blue-500 text-white hover:bg-blue-600"
                     >
                       View Docs
                     </button>
-                    <button 
-                      onClick={() => updateKycStatus(k._id, 'rejected', docs.length)}
-                      disabled={k.kycStatus === 'rejected'}
-                      className={`px-2 py-1 rounded text-[9px] font-black uppercase ${
-                        k.kycStatus === 'rejected' 
-                          ? 'opacity-30 cursor-not-allowed bg-slate-100 text-slate-400' 
-                          : 'bg-red-500 text-white hover:bg-red-600'
-                      }`}
-                    >
-                      Reject
-                    </button>
+
                   </div>
                 );
               }
@@ -1429,36 +1423,35 @@ export function KitchensTab({ kitchens, menuItems, setKitchenModal, fetchAll, he
                         <p className="text-[10px] font-black text-amber-600 uppercase tracking-widest">No Owner Assigned</p>
                       </div>
                     )}
-                    
+
                     <div className="mt-4 p-3 rounded-2xl bg-slate-50 border border-slate-100">
                       <div className="flex justify-between items-center mb-2">
                         <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">KYC Status</p>
                         <p className="text-[10px] font-bold text-slate-600">{getKycDocs(k).length}/3 Documents</p>
                       </div>
                       <div className="flex items-center justify-between gap-2">
-                        <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase ${
-                          k.kycStatus === 'approved' ? 'bg-emerald-100 text-emerald-700' :
-                          k.kycStatus === 'rejected' ? 'bg-red-100 text-red-700' :
-                          'bg-amber-100 text-amber-700'
-                        }`}>
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase ${k.kycStatus === 'approved' ? 'bg-emerald-100 text-emerald-700' :
+                            k.kycStatus === 'rejected' ? 'bg-red-100 text-red-700' :
+                              'bg-amber-100 text-amber-700'
+                          }`}>
                           {k.kycStatus || 'pending'}
                         </span>
                         <div className="flex gap-1" onClick={e => e.stopPropagation()}>
-                          <button 
+                          <button
                             onClick={() => updateKycStatus(k._id, 'approved', getKycDocs(k).length)}
                             className={`p-1.5 rounded bg-emerald-500 text-white hover:bg-emerald-600 transition-colors shadow-sm ${k.kycStatus === 'approved' ? 'opacity-30 cursor-not-allowed' : ''}`}
                             title="Approve KYC"
                           >
                             <CheckCircle className="w-3.5 h-3.5" />
                           </button>
-                          <button 
+                          <button
                             onClick={() => setKycViewModal({ open: true, data: k })}
                             className="p-1.5 rounded bg-blue-500 text-white hover:bg-blue-600 transition-colors shadow-sm"
                             title="View Documents"
                           >
                             <Eye className="w-3.5 h-3.5" />
                           </button>
-                          <button 
+                          <button
                             onClick={() => updateKycStatus(k._id, 'rejected', getKycDocs(k).length)}
                             className={`p-1.5 rounded bg-red-500 text-white hover:bg-red-600 transition-colors shadow-sm ${k.kycStatus === 'rejected' ? 'opacity-30 cursor-not-allowed' : ''}`}
                             title="Reject KYC"
@@ -1476,13 +1469,21 @@ export function KitchensTab({ kitchens, menuItems, setKitchenModal, fetchAll, he
                       <p className="text-sm font-black text-slate-700">{k.menuCount} Items</p>
                     </div>
                     <div className="p-3 rounded-2xl bg-slate-50 border border-slate-100 text-center">
-                      <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Status</p>
+                      <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Status</p>
                       <button
                         onClick={(e) => { e.stopPropagation(); toggleKitchenStatus(k._id, k.isActive); }}
-                        className={`text-[10px] font-bold rounded-full px-2 py-0.5 inline-block shadow-sm ${k.isActive ? 'text-emerald-600 bg-emerald-50 border border-emerald-100' : 'text-red-600 bg-red-50 border border-red-100'}`}
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                          k.isActive ? 'bg-emerald-500' : 'bg-slate-300'
+                        }`}
+                        title={k.isActive ? 'Click to deactivate' : 'Click to activate'}
                       >
-                        {k.isActive ? 'Online' : 'Offline'}
+                        <span
+                          className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-md transition-transform ${
+                            k.isActive ? 'translate-x-5' : 'translate-x-0.5'
+                          }`}
+                        />
                       </button>
+                      <p className="text-[9px] font-bold text-slate-600 mt-2">{k.isActive ? 'Active' : 'Inactive'}</p>
                     </div>
                   </div>
 
@@ -1522,6 +1523,159 @@ export function KitchensTab({ kitchens, menuItems, setKitchenModal, fetchAll, he
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* KYC Documents Modal */}
+      {kycViewModal.open && kycViewModal.data && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl w-full max-w-4xl shadow-2xl">
+            {/* Modal Header */}
+            <div className="bg-white border-b border-slate-100 px-6 py-4 flex items-center justify-between">
+              <div>
+                <h2 className="text-xl font-black text-slate-900">KYC Documents Review</h2>
+                <p className="text-sm text-slate-400 truncate">{kycViewModal.data.name}</p>
+              </div>
+              <button
+                onClick={() => setKycViewModal({ open: false, data: null })}
+                className="text-slate-400 hover:text-slate-600 transition"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div className="p-6 space-y-5">
+              {/* Documents in Row */}
+              <div className="grid grid-cols-3 gap-4">
+                {/* PAN Document */}
+                {kycViewModal.data.panImage && (
+                  <div className="border border-slate-200 rounded-lg overflow-hidden flex flex-col">
+                    <div className="bg-slate-50 px-4 py-3 border-b border-slate-200">
+                      <p className="text-sm font-black text-slate-900">PAN Card</p>
+                      <p className="text-xs text-slate-500 mt-0.5">Num: {kycViewModal.data.panNumber || 'N/A'}</p>
+                    </div>
+                    <div className="flex-1 p-3 flex flex-col">
+                      <img
+                        src={kycViewModal.data.panImage}
+                        alt="PAN"
+                        className="w-full h-40 rounded border border-slate-100 object-contain bg-slate-50"
+                        onError={(e) => { (e.target as HTMLImageElement).src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 250"%3E%3Crect fill="%23f1f5f9" width="400" height="250"/%3E%3Ctext x="50%25" y="50%25" font-size="16" fill="%2394a3b8" text-anchor="middle" dominant-baseline="middle"%3ENot Available%3C/text%3E%3C/svg%3E'; }}
+                      />
+                      <button
+                        className="mt-2 px-3 py-1.5 bg-blue-500 text-white rounded text-xs font-bold hover:bg-blue-600 transition"
+                      >
+                        Change
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Aadhar Document */}
+                {kycViewModal.data.aadharImage && (
+                  <div className="border border-slate-200 rounded-lg overflow-hidden flex flex-col">
+                    <div className="bg-slate-50 px-4 py-3 border-b border-slate-200">
+                      <p className="text-sm font-black text-slate-900">Aadhar Card</p>
+                      <p className="text-xs text-slate-500 mt-0.5">Num: {kycViewModal.data.aadharNumber || 'N/A'}</p>
+                    </div>
+                    <div className="flex-1 p-3 flex flex-col">
+                      <img
+                        src={kycViewModal.data.aadharImage}
+                        alt="Aadhar"
+                        className="w-full h-40 rounded border border-slate-100 object-contain bg-slate-50"
+                        onError={(e) => { (e.target as HTMLImageElement).src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 250"%3E%3Crect fill="%23f1f5f9" width="400" height="250"/%3E%3Ctext x="50%25" y="50%25" font-size="16" fill="%2394a3b8" text-anchor="middle" dominant-baseline="middle"%3ENot Available%3C/text%3E%3C/svg%3E'; }}
+                      />
+                      <button
+                        className="mt-2 px-3 py-1.5 bg-blue-500 text-white rounded text-xs font-bold hover:bg-blue-600 transition"
+                      >
+                        Change
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* FSSAI Document */}
+                {kycViewModal.data.fssaiImage && (
+                  <div className="border border-slate-200 rounded-lg overflow-hidden flex flex-col">
+                    <div className="bg-slate-50 px-4 py-3 border-b border-slate-200">
+                      <p className="text-sm font-black text-slate-900">FSSAI License</p>
+                      <p className="text-xs text-slate-500 mt-0.5">Lic: {kycViewModal.data.fssaiLicense || 'N/A'}</p>
+                    </div>
+                    <div className="flex-1 p-3 flex flex-col">
+                      <img
+                        src={kycViewModal.data.fssaiImage}
+                        alt="FSSAI"
+                        className="w-full h-40 rounded border border-slate-100 object-contain bg-slate-50"
+                        onError={(e) => { (e.target as HTMLImageElement).src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 250"%3E%3Crect fill="%23f1f5f9" width="400" height="250"/%3E%3Ctext x="50%25" y="50%25" font-size="16" fill="%2394a3b8" text-anchor="middle" dominant-baseline="middle"%3ENot Available%3C/text%3E%3C/svg%3E'; }}
+                      />
+                      <button
+                        className="mt-2 px-3 py-1.5 bg-blue-500 text-white rounded text-xs font-bold hover:bg-blue-600 transition"
+                      >
+                        Change
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* No Documents Message */}
+              {!kycViewModal.data.panImage && !kycViewModal.data.aadharImage && !kycViewModal.data.fssaiImage && (
+                <div className="text-center py-8 bg-slate-50 rounded-lg border border-slate-100">
+                  <p className="text-sm text-slate-500 font-medium">No documents uploaded</p>
+                </div>
+              )}
+
+              {/* Kitchen Owner Info */}
+              <div className="grid grid-cols-2 gap-4 bg-slate-50 p-4 rounded-lg border border-slate-100">
+                <div>
+                  <p className="text-xs font-black text-slate-400 uppercase tracking-tighter mb-1">Owner Name</p>
+                  <p className="font-bold text-slate-800">{kycViewModal.data.ownerName || 'N/A'}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-black text-slate-400 uppercase tracking-tighter mb-1">Phone</p>
+                  <p className="font-bold text-slate-800">{kycViewModal.data.ownerPhone || 'N/A'}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Footer - Action Buttons */}
+            <div className="bg-white border-t border-slate-100 px-6 py-4 flex gap-3 justify-end">
+              <button
+                onClick={() => setKycViewModal({ open: false, data: null })}
+                className="px-4 py-2.5 bg-white text-slate-700 border border-slate-200 rounded-lg font-black text-sm uppercase tracking-tight hover:bg-slate-50 transition"
+              >
+                Close
+              </button>
+              {kycViewModal.data.kycStatus !== 'approved' && (
+                <button
+                  onClick={() => {
+                    updateKycStatus(kycViewModal.data._id, 'rejected', getKycDocs(kycViewModal.data).length);
+                    setKycViewModal({ open: false, data: null });
+                  }}
+                  disabled={kycViewModal.data.kycStatus === 'rejected'}
+                  className={`px-4 py-2.5 rounded-lg font-black text-sm uppercase tracking-tight transition ${kycViewModal.data.kycStatus === 'rejected'
+                      ? 'opacity-30 cursor-not-allowed bg-slate-100 text-slate-400'
+                      : 'bg-red-500 text-white hover:bg-red-600'
+                    }`}
+                >
+                  Reject
+                </button>
+              )}
+              <button
+                onClick={() => {
+                  updateKycStatus(kycViewModal.data._id, 'approved', getKycDocs(kycViewModal.data).length);
+                  setKycViewModal({ open: false, data: null });
+                }}
+                disabled={kycViewModal.data.kycStatus === 'approved'}
+                className={`px-4 py-2.5 rounded-lg font-black text-sm uppercase tracking-tight transition ${kycViewModal.data.kycStatus === 'approved'
+                    ? 'opacity-30 cursor-not-allowed bg-slate-100 text-slate-400'
+                    : 'bg-emerald-500 text-white hover:bg-emerald-600'
+                  }`}
+              >
+                Approve
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
@@ -2006,7 +2160,7 @@ export function SettingsTab({ categories = [], fetchAll, headers, API_URL, user 
           <div className="bg-blue-50 border border-blue-200 p-3 rounded-lg">
             <p className="text-xs text-blue-700 font-bold">ℹ️ Kitchen owners can search and select from the gallery when creating menu items</p>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
               <p className="text-xs font-bold text-slate-700 mb-2">📊 Gallery Statistics</p>
@@ -2015,7 +2169,7 @@ export function SettingsTab({ categories = [], fetchAll, headers, API_URL, user 
                 <p className="text-[10px] text-slate-500">Total images uploaded</p>
               </div>
             </div>
-            
+
             <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
               <p className="text-xs font-bold text-slate-700 mb-2">🏷️ Image Categories</p>
               <p className="text-[10px] text-slate-500">General, Regular, Thali, Breakfast, Lunch, Dinner</p>
@@ -2236,14 +2390,18 @@ export function NotificationsTab({ notifications, setNotifications, notifForm, s
                     headers
                   });
                   const data = await res.json();
+                  console.log('Delete all response:', data);
                   if (data.success) {
                     setNotifications([]);
-                    alert('All notifications deleted successfully');
+                    alert(`✅ ${data.deletedCount} notifications deleted successfully`);
                   } else {
-                    alert(data.error || 'Failed to delete notifications');
+                    console.error('Delete error:', data.error);
+                    alert(`❌ Error: ${data.error || 'Failed to delete notifications'}`);
                   }
                 } catch (error) {
-                  alert('Error deleting notifications');
+                  console.error('Delete request error:', error);
+                  const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+                  alert(`❌ Error deleting notifications: ${errorMessage}`);
                 }
               }}
               className="text-[10px] font-black text-red-500 hover:text-red-700 hover:bg-red-50 px-3 py-1 rounded-full border border-red-200 transition"
@@ -2518,7 +2676,7 @@ export function HomestyleTab({
             { id: 'regular', label: 'Regular' },
             { id: 'shahiThali', label: 'Shahi Thali' },
             { id: 'corporateOrder', label: 'Corporate Order' },
-            { id: 'schoolTiffins', label: 'School Tiffins' }
+            { id: 'miniBowl', label: 'Mini Bowl' }
           ].map(section => (
             <div key={section.id} className="space-y-4">
               <div className="flex items-center justify-between px-2">
@@ -2992,10 +3150,10 @@ export function ScheduleOrdersTab({ scheduleOrders, expandedRow, setExpandedRow,
 
                 <div className="px-7 pb-7 pt-2 flex items-center gap-3">
                   <button
-                    onClick={async () => { 
-                      if (confirm('Abort absolute subscription?')) { 
+                    onClick={async () => {
+                      if (confirm('Abort absolute subscription?')) {
                         try {
-                          const res = await fetch(`${API_URL}/admin/schedules/${s._id}`, { method: 'DELETE', headers }); 
+                          const res = await fetch(`${API_URL}/admin/schedules/${s._id}`, { method: 'DELETE', headers });
                           const data = await res.json();
                           if (data.success) {
                             alert('✅ Schedule deleted successfully');
@@ -3006,7 +3164,7 @@ export function ScheduleOrdersTab({ scheduleOrders, expandedRow, setExpandedRow,
                         } catch (err) {
                           alert(`❌ Error: ${err instanceof Error ? err.message : 'Unknown error'}`);
                         }
-                      } 
+                      }
                     }}
                     className="flex-1 py-3.5 rounded-full border border-red-200 text-red-600 text-[10px] font-black uppercase tracking-widest hover:bg-red-50 hover:border-red-300 transition"
                   >
@@ -3427,11 +3585,11 @@ export function KYCTab({ kitchens, fetchAll, headers, API_URL }: any) {
 
   return (
     <div className={ERP.page}>
-      <AdminPageHeader 
-        title="KYC Document Review" 
-        subtitle="Review and verify kitchen owner identities and licenses" 
+      <AdminPageHeader
+        title="KYC Document Review"
+        subtitle="Review and verify kitchen owner identities and licenses"
       />
-      
+
       <div className="grid grid-cols-1 gap-8">
         {kitchens.length === 0 ? (
           <div className="text-center py-32 bg-white rounded-[3rem] border border-slate-100 shadow-sm">
@@ -3459,8 +3617,8 @@ export function KYCTab({ kitchens, fetchAll, headers, API_URL }: any) {
                     <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Owner Details</p>
                     <p className="font-bold text-slate-800 text-sm">{k.ownerName || 'N/A'}</p>
                     <div className="flex items-center gap-2 mt-2">
-                       <Phone className="w-3 h-3 text-slate-400" />
-                       <span className="text-xs font-bold text-slate-600">{k.ownerPhone}</span>
+                      <Phone className="w-3 h-3 text-slate-400" />
+                      <span className="text-xs font-bold text-slate-600">{k.ownerPhone}</span>
                     </div>
                   </div>
 
@@ -3567,6 +3725,7 @@ export function KitchenSettingsTab({ user, kitchen: initialKitchen, headers, API
   const [kitchen, setKitchen] = React.useState<any>(initialKitchen);
   const [loading, setLoading] = React.useState(true);
   const [saving, setSaving] = React.useState(false);
+  const [profilePhoto, setProfilePhoto] = React.useState<string>(user?.profilePhoto || '');
   const [kycData, setKycData] = React.useState({
     panNumber: '',
     aadharNumber: '',
@@ -3577,13 +3736,20 @@ export function KitchenSettingsTab({ user, kitchen: initialKitchen, headers, API
   });
   const [profileData, setProfileData] = React.useState({
     name: user?.name || '',
-    phone: user?.phone || ''
+    phone: user?.phone || '',
+    email: user?.email || ''
   });
   const [uploading, setUploading] = React.useState<string | null>(null);
 
   React.useEffect(() => {
     if (initialKitchen) {
       setKitchen(initialKitchen);
+      setProfilePhoto(initialKitchen.profilePhoto || '');
+      setProfileData({
+        name: initialKitchen.ownerName || '',
+        phone: initialKitchen.ownerPhone || '',
+        email: initialKitchen.ownerEmail || ''
+      });
       setKycData({
         panNumber: initialKitchen.panNumber || '',
         aadharNumber: initialKitchen.aadharNumber || '',
@@ -3604,6 +3770,12 @@ export function KitchenSettingsTab({ user, kitchen: initialKitchen, headers, API
         const data = await res.json();
         if (data.success) {
           setKitchen(data.kitchen);
+          setProfilePhoto(data.kitchen.profilePhoto || '');
+          setProfileData({
+            name: data.kitchen.ownerName || '',
+            phone: data.kitchen.ownerPhone || '',
+            email: data.kitchen.ownerEmail || ''
+          });
           setKycData({
             panNumber: data.kitchen.panNumber || '',
             aadharNumber: data.kitchen.aadharNumber || '',
@@ -3634,7 +3806,11 @@ export function KitchenSettingsTab({ user, kitchen: initialKitchen, headers, API
       });
       const data = await res.json();
       if (data.success) {
-        setKycData(prev => ({ ...prev, [type]: data.url }));
+        if (type === 'profilePhoto') {
+          setProfilePhoto(data.url);
+        } else {
+          setKycData(prev => ({ ...prev, [type]: data.url }));
+        }
       }
     } catch (err) {
       alert('Upload failed');
@@ -3654,6 +3830,7 @@ export function KitchenSettingsTab({ user, kitchen: initialKitchen, headers, API
           name: kitchen?.name,
           ownerName: profileData.name,
           ownerPhone: profileData.phone,
+          profilePhoto: profilePhoto,
           panNumber: kycData.panNumber,
           aadharNumber: kycData.aadharNumber,
           fssaiLicense: kycData.fssaiLicense,
@@ -3681,192 +3858,235 @@ export function KitchenSettingsTab({ user, kitchen: initialKitchen, headers, API
 
   return (
     <div className={ERP.page}>
-      <AdminPageHeader 
-        title="Kitchen Profile & KYC" 
-        subtitle="Manage your business details and verification documents" 
+      <AdminPageHeader
+        title=""
+        subtitle=""
       />
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Left Column: Profile & Kitchen Info */}
-        <div className="lg:col-span-1 space-y-6">
-          <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-xl p-8">
-            <h3 className="text-lg font-black text-slate-900 mb-6 flex items-center gap-2">
-              <User className="w-5 h-5 text-orange-500" />
-              Owner Information
-            </h3>
-            <div className="space-y-4">
+      <div className="space-y-4">
+        {/* Profile Card - Photo Left + Info Right */}
+        <div className="bg-white rounded-lg border border-slate-100 shadow-sm p-3">
+          <div className="flex sm:flex-row gap-4">
+            {/* Profile Photo - Left with Save Button */}
+            <div className="flex-shrink-0 flex flex-col items-center gap-3">
+              <div className="relative w-24 h-24 sm:w-28 sm:h-28">
+                <div className="w-full h-full rounded-2xl bg-gradient-to-br from-orange-400 to-amber-500 flex items-center justify-center shadow-md overflow-hidden">
+                  {profilePhoto ? (
+                    <img src={profilePhoto} alt="Profile" className="w-full h-full object-cover" />
+                  ) : (
+                    <span className="text-4xl sm:text-5xl font-black text-white">{profileData.name?.[0]?.toUpperCase() || 'O'}</span>
+                  )}
+                </div>
+                <label className="absolute -bottom-1 -right-1 bg-white rounded-full p-1.5 shadow-md cursor-pointer hover:bg-slate-50 transition border border-slate-200">
+                  <input type="file" className="hidden" onChange={e => e.target.files?.[0] && handleUpload(e.target.files[0], 'profilePhoto')} />
+                  {uploading === 'profilePhoto' ? (
+                    <Loader2 className="w-4 h-4 text-orange-500 animate-spin" />
+                  ) : (
+                    <Camera className="w-4 h-4 text-orange-500" />
+                  )}
+                </label>
+              </div>
+              <button
+                onClick={handleSave}
+                disabled={saving || uploading !== null}
+                className="w-24 sm:w-28 py-2 bg-slate-900 text-white rounded-lg font-black text-[10px] uppercase tracking-widest hover:bg-orange-600 transition active:scale-95 shadow-sm flex items-center justify-center gap-1 disabled:opacity-50"
+              >
+                {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+                {saving ? 'Saving' : 'Save'}
+              </button>
+            </div>
+
+            {/* Owner Info - Right */}
+            <div className="flex-1 grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div>
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Your Name</p>
-                <input 
-                  type="text" 
-                  value={profileData.name} 
-                  onChange={e => setProfileData(p => ({...p, name: e.target.value}))}
-                  className="w-full bg-slate-50 border-none rounded-2xl px-5 py-4 font-bold text-slate-700 focus:ring-2 focus:ring-orange-500/20"
+                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Owner Name</p>
+                <input
+                  type="text"
+                  value={profileData.name}
+                  onChange={e => setProfileData(p => ({ ...p, name: e.target.value }))}
+                  className="w-full bg-slate-50 border-none rounded-lg px-3 py-2 font-bold text-slate-700 focus:ring-2 focus:ring-orange-500/20 text-sm"
+                  placeholder="Name"
                 />
               </div>
               <div>
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Phone Number</p>
-                <input 
-                  type="tel" 
-                  value={profileData.phone} 
-                  onChange={e => setProfileData(p => ({...p, phone: e.target.value}))}
-                  className="w-full bg-slate-50 border-none rounded-2xl px-5 py-4 font-bold text-slate-700 focus:ring-2 focus:ring-orange-500/20"
+                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Phone</p>
+                <input
+                  type="tel"
+                  value={profileData.phone}
+                  onChange={e => setProfileData(p => ({ ...p, phone: e.target.value }))}
+                  className="w-full bg-slate-50 border-none rounded-lg px-3 py-2 font-bold text-slate-700 focus:ring-2 focus:ring-orange-500/20 text-sm"
+                  placeholder="Phone"
+                />
+              </div>
+              <div>
+                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Email</p>
+                <input
+                  type="email"
+                  value={profileData.email}
+                  disabled
+                  className="w-full bg-slate-100 border-none rounded-lg px-3 py-2 font-bold text-slate-500 cursor-not-allowed text-sm"
+                  placeholder="Email"
                 />
               </div>
             </div>
           </div>
-
-          {kitchen && (
-            <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-xl p-8">
-              <h3 className="text-lg font-black text-slate-900 mb-6 flex items-center gap-2">
-                <Store className="w-5 h-5 text-indigo-500" />
-                Kitchen Business Details
-              </h3>
-              <div className="space-y-4">
-                <div>
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Kitchen Name</p>
-                  <input 
-                    type="text" 
-                    value={kitchen.name} 
-                    onChange={e => setKitchen((p: any) => ({...p, name: e.target.value}))}
-                    className="w-full bg-slate-50 border-none rounded-2xl px-5 py-4 font-bold text-slate-700 focus:ring-2 focus:ring-indigo-500/20"
-                  />
-                </div>
-                <div>
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Business Address</p>
-                  <textarea 
-                    rows={3}
-                    value={kitchen.address} 
-                    onChange={e => setKitchen((p: any) => ({...p, address: e.target.value}))}
-                    className="w-full bg-slate-50 border-none rounded-2xl px-5 py-4 font-bold text-slate-700 focus:ring-2 focus:ring-indigo-500/20 resize-none"
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Latitude</p>
-                    <input type="text" readOnly value={kitchen.location?.coordinates?.[1] || ''} className="w-full bg-slate-100 border-none rounded-2xl px-5 py-4 font-bold text-slate-500 cursor-not-allowed" />
-                  </div>
-                  <div>
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Longitude</p>
-                    <input type="text" readOnly value={kitchen.location?.coordinates?.[0] || ''} className="w-full bg-slate-100 border-none rounded-2xl px-5 py-4 font-bold text-slate-500 cursor-not-allowed" />
-                  </div>
-                </div>
-                <button 
-                  onClick={() => {
-                    navigator.geolocation.getCurrentPosition((pos) => {
-                      setKitchen((p: any) => ({
-                        ...p,
-                        location: { type: 'Point', coordinates: [pos.coords.longitude, pos.coords.latitude] }
-                      }));
-                    });
-                  }}
-                  className="w-full py-3 bg-indigo-50 text-indigo-600 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-indigo-100 transition"
-                >
-                  Update Current Location
-                </button>
-              </div>
-            </div>
-          )}
         </div>
 
-        {/* Right Column: KYC Documents */}
-        <div className="lg:col-span-2 space-y-6">
-          <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-xl p-8">
-            <div className="flex items-center justify-between mb-8">
-              <h3 className="text-lg font-black text-slate-900 flex items-center gap-2">
-                <FileText className="w-5 h-5 text-emerald-500" />
-                KYC Verification Documents
-              </h3>
-              <div className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${
-                kitchen?.kycStatus === 'approved' ? 'bg-emerald-100 text-emerald-600' :
-                kitchen?.kycStatus === 'pending' ? 'bg-amber-100 text-amber-600' : 'bg-red-100 text-red-600'
-              }`}>
-                Status: {kitchen?.kycStatus || 'Not Submitted'}
+        {/* Kitchen Details Card */}
+        {kitchen && (
+          <div className="bg-white rounded-lg border border-slate-100 shadow-sm p-4">
+            <h3 className="text-sm font-black text-slate-900 mb-3 flex items-center gap-2">
+              <Store className="w-4 h-4 text-indigo-500" />
+              Kitchen Details
+            </h3>
+            <div className="space-y-3">
+              <div>
+                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Kitchen Name</p>
+                <input
+                  type="text"
+                  value={kitchen.name}
+                  onChange={e => setKitchen((p: any) => ({ ...p, name: e.target.value }))}
+                  className="w-full bg-slate-50 border-none rounded-lg px-3 py-2 font-bold text-slate-700 focus:ring-2 focus:ring-indigo-500/20 text-sm"
+                  placeholder="Kitchen name"
+                />
               </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              {/* PAN Card */}
-              <div className="space-y-4">
-                <div className="space-y-3">
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">PAN Card Photo</p>
-                  <div className="aspect-[3/2] rounded-3xl bg-slate-50 border-2 border-dashed border-slate-200 overflow-hidden relative group">
-                    {kycData.panImage ? (
-                      <img src={kycData.panImage} className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-400">
-                        <Camera className="w-8 h-8 mb-2" />
-                        <span className="text-[10px] font-bold">Upload Horizontal Photo</span>
-                      </div>
-                    )}
-                    <label className="absolute inset-0 cursor-pointer bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                      <input type="file" className="hidden" onChange={e => e.target.files?.[0] && handleUpload(e.target.files[0], 'panImage')} />
-                      {uploading === 'panImage' ? <Loader2 className="w-6 h-6 text-white animate-spin" /> : <Plus className="w-8 h-8 text-white" />}
-                    </label>
-                  </div>
-                </div>
+              <div>
+                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Business Address</p>
+                <textarea
+                  rows={2}
+                  value={kitchen.address}
+                  onChange={e => setKitchen((p: any) => ({ ...p, address: e.target.value }))}
+                  className="w-full bg-slate-50 border-none rounded-lg px-3 py-2 font-bold text-slate-700 focus:ring-2 focus:ring-indigo-500/20 resize-none text-sm"
+                  placeholder="Enter address"
+                />
               </div>
-
-              {/* Aadhar Card */}
-              <div className="space-y-4">
-                <div className="space-y-3">
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Aadhar Card Photo</p>
-                  <div className="aspect-[3/2] rounded-3xl bg-slate-50 border-2 border-dashed border-slate-200 overflow-hidden relative group">
-                    {kycData.aadharImage ? (
-                      <img src={kycData.aadharImage} className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-400">
-                        <Camera className="w-8 h-8 mb-2" />
-                        <span className="text-[10px] font-bold">Upload Horizontal Photo</span>
-                      </div>
-                    )}
-                    <label className="absolute inset-0 cursor-pointer bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                      <input type="file" className="hidden" onChange={e => e.target.files?.[0] && handleUpload(e.target.files[0], 'aadharImage')} />
-                      {uploading === 'aadharImage' ? <Loader2 className="w-6 h-6 text-white animate-spin" /> : <Plus className="w-8 h-8 text-white" />}
-                    </label>
-                  </div>
-                </div>
-              </div>
-
-              {/* FSSAI License */}
-              <div className="md:col-span-2 space-y-4 pt-4 border-t border-slate-100">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h4 className="font-black text-slate-900 text-sm">FSSAI License (Optional)</h4>
-                    <p className="text-xs text-slate-400 font-bold mt-0.5">Upload your food safety license if available</p>
-                  </div>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  <div className="space-y-3 md:col-span-2">
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">License Certificate Photo</p>
-                    <div className="aspect-[3/1] rounded-3xl bg-slate-50 border-2 border-dashed border-slate-200 overflow-hidden relative group">
-                      {kycData.fssaiImage ? (
-                        <img src={kycData.fssaiImage} className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="absolute inset-0 flex items-center justify-center gap-3 text-slate-400">
-                          <Plus className="w-5 h-5" />
-                          <span className="text-[10px] font-bold">Upload Certificate</span>
-                        </div>
-                      )}
-                      <label className="absolute inset-0 cursor-pointer bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                        <input type="file" className="hidden" onChange={e => e.target.files?.[0] && handleUpload(e.target.files[0], 'fssaiImage')} />
-                        {uploading === 'fssaiImage' ? <Loader2 className="w-6 h-6 text-white animate-spin" /> : <Plus className="w-8 h-8 text-white" />}
-                      </label>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-12">
-              <button 
-                onClick={handleSave}
-                disabled={saving || uploading !== null}
-                className="w-full py-5 bg-slate-900 text-white rounded-[2rem] font-black text-sm uppercase tracking-widest hover:bg-orange-600 transition active:scale-95 shadow-2xl shadow-slate-200 flex items-center justify-center gap-3 disabled:opacity-50"
+              <button
+                onClick={() => {
+                  navigator.geolocation.getCurrentPosition((pos) => {
+                    setKitchen((p: any) => ({
+                      ...p,
+                      location: { type: 'Point', coordinates: [pos.coords.longitude, pos.coords.latitude] }
+                    }));
+                  });
+                }}
+                className="w-full py-2 bg-indigo-50 text-indigo-600 rounded-lg font-black text-[9px] uppercase tracking-widest hover:bg-indigo-100 transition flex items-center justify-center gap-2"
               >
-                {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
-                {saving ? 'Saving Changes…' : 'Save Profile & KYC Details'}
+                <MapPin className="w-3.5 h-3.5" />
+                Use Current Location
               </button>
+              <div className="grid grid-cols-2 gap-2 bg-slate-50 p-2 rounded-lg">
+                <div>
+                  <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Lat</p>
+                  <p className="font-bold text-slate-700 text-xs">{kitchen.location?.coordinates?.[1]?.toFixed(4) || '—'}</p>
+                </div>
+                <div>
+                  <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Lng</p>
+                  <p className="font-bold text-slate-700 text-xs">{kitchen.location?.coordinates?.[0]?.toFixed(4) || '—'}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* KYC Documents Card */}
+        <div className="bg-white rounded-lg border border-slate-100 shadow-sm p-4">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-xs font-black text-slate-900 flex items-center gap-2">
+              <FileText className="w-3.5 h-3.5 text-emerald-500" />
+              KYC Documents
+            </h3>
+            <div className={`px-2 py-0.5 rounded-full text-[7px] font-black uppercase tracking-widest ${
+              kitchen?.kycStatus === 'approved' ? 'bg-emerald-100 text-emerald-600' :
+              kitchen?.kycStatus === 'pending' ? 'bg-amber-100 text-amber-600' : 'bg-red-100 text-red-600'
+            }`}>
+              {kitchen?.kycStatus || 'Not Submitted'}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+
+            {/* PAN Card */}
+            <div className="space-y-1.5">
+              <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">PAN Card</p>
+              <div className="space-y-1">
+                <input
+                  type="text"
+                  placeholder="PAN Number"
+                  value={kycData.panNumber}
+                  onChange={e => setKycData(prev => ({ ...prev, panNumber: e.target.value }))}
+                  className="w-full bg-slate-50 border-none rounded-md px-2 py-1 text-xs font-bold text-slate-700 placeholder-slate-400 focus:ring-2 focus:ring-emerald-500/20"
+                />
+                <div className="aspect-[3/2] rounded-md bg-slate-50 border border-dashed border-slate-200 overflow-hidden relative group">
+                  {kycData.panImage ? (
+                    <img src={kycData.panImage} className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-400">
+                      <Camera className="w-3 h-3 mb-0.5" />
+                      <span className="text-[7px] font-bold">Upload</span>
+                    </div>
+                  )}
+                  <label className="absolute inset-0 cursor-pointer bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <input type="file" className="hidden" onChange={e => e.target.files?.[0] && handleUpload(e.target.files[0], 'panImage')} />
+                    {uploading === 'panImage' ? <Loader2 className="w-3.5 h-3.5 text-white animate-spin" /> : <Plus className="w-3.5 h-3.5 text-white" />}
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            {/* Aadhar Card */}
+            <div className="space-y-1.5">
+              <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Aadhar Card</p>
+              <div className="space-y-1">
+                <input
+                  type="text"
+                  placeholder="Aadhar Number"
+                  value={kycData.aadharNumber}
+                  onChange={e => setKycData(prev => ({ ...prev, aadharNumber: e.target.value }))}
+                  className="w-full bg-slate-50 border-none rounded-md px-2 py-1 text-xs font-bold text-slate-700 placeholder-slate-400 focus:ring-2 focus:ring-emerald-500/20"
+                />
+                <div className="aspect-[3/2] rounded-md bg-slate-50 border border-dashed border-slate-200 overflow-hidden relative group">
+                  {kycData.aadharImage ? (
+                    <img src={kycData.aadharImage} className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-400">
+                      <Camera className="w-3 h-3 mb-0.5" />
+                      <span className="text-[7px] font-bold">Upload</span>
+                    </div>
+                  )}
+                  <label className="absolute inset-0 cursor-pointer bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <input type="file" className="hidden" onChange={e => e.target.files?.[0] && handleUpload(e.target.files[0], 'aadharImage')} />
+                    {uploading === 'aadharImage' ? <Loader2 className="w-3.5 h-3.5 text-white animate-spin" /> : <Plus className="w-3.5 h-3.5 text-white" />}
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            {/* FSSAI License */}
+            <div className="sm:col-span-2 space-y-1.5">
+              <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">FSSAI License (Optional)</p>
+              <div className="space-y-1">
+                <input
+                  type="text"
+                  placeholder="License Number"
+                  value={kycData.fssaiLicense}
+                  onChange={e => setKycData(prev => ({ ...prev, fssaiLicense: e.target.value }))}
+                  className="w-full bg-slate-50 border-none rounded-md px-2 py-1 text-xs font-bold text-slate-700 placeholder-slate-400 focus:ring-2 focus:ring-emerald-500/20"
+                />
+                <div className="aspect-[4/1] rounded-md bg-slate-50 border border-dashed border-slate-200 overflow-hidden relative group">
+                  {kycData.fssaiImage ? (
+                    <img src={kycData.fssaiImage} className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="absolute inset-0 flex items-center justify-center gap-1.5 text-slate-400">
+                      <Camera className="w-3.5 h-3.5" />
+                      <span className="text-[7px] font-bold">Upload Certificate</span>
+                    </div>
+                  )}
+                  <label className="absolute inset-0 cursor-pointer bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <input type="file" className="hidden" onChange={e => e.target.files?.[0] && handleUpload(e.target.files[0], 'fssaiImage')} />
+                    {uploading === 'fssaiImage' ? <Loader2 className="w-4 h-4 text-white animate-spin" /> : <Plus className="w-4 h-4 text-white" />}
+                  </label>
+                </div>
+              </div>
             </div>
           </div>
         </div>

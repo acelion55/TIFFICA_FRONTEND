@@ -65,7 +65,7 @@ export default function AdminDashboard() {
   const [hsSubscriptionBanners, setHsSubscriptionBanners] = useState<string[]>([]);
   const [hsSubscriptionBannerUploading, setHsSubscriptionBannerUploading] = useState(false);
   const [hsScheduleSectionImages, setHsScheduleSectionImages] = useState<any>({
-    regular: '', shahiThali: '', corporateOrder: '', schoolTiffins: ''
+    regular: '', shahiThali: '', corporateOrder: '', miniBowl: ''
   });
   const [hsSectionUploading, setHsSectionUploading] = useState<string | null>(null);
   const [kitchenModal, setKitchenModal] = useState<{ open: boolean; data: any }>({ open: false, data: null });
@@ -260,7 +260,7 @@ export default function AdminDashboard() {
         setHsScheduleBannerImages(d.data.scheduleBannerImages || []);
         setHsSubscriptionBanners(d.data.subscriptionBanners || []);
         setHsScheduleSectionImages(d.data.scheduleSectionImages || {
-          regular: '', shahiThali: '', corporateOrder: '', schoolTiffins: ''
+          regular: '', shahiThali: '', corporateOrder: '', miniBowl: ''
         });
       }
     } catch { }
@@ -1215,7 +1215,7 @@ export default function AdminDashboard() {
                   <div className="space-y-2">
                     <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-4">Schedule Category</p>
                     <div className="flex gap-3 px-4 flex-wrap">
-                      {['Regular','Shahi Thali','Corporate Order','School Tiffins'].map(opt => (
+                      {['Regular','Shahi Thali','Corporate Order','Mini Bowl'].map(opt => (
                         <label key={opt} className="inline-flex items-center gap-2 text-sm">
                           <input
                             type="checkbox"
