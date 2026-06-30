@@ -59,9 +59,9 @@ export default function SubscriptionsPage() {
   }, [banners]);
 
   return (
-    <div className="min-h-screen bg-[#FAF7F5] pb-24">
+    <div className="min-h-screen bg-[#FAF7F5] pb-24 mt-16">
       {/* Sliding Banner - Full Width */}
-      <div className="relative w-full h-[30vh] bg-gray-200 overflow-hidden">
+      <div className="relative w-full h-[22vh] bg-gray-200 overflow-hidden">
         <AnimatePresence mode="wait">
           {banners.map((url, index) => (
             index === currentBanner && (
@@ -94,8 +94,8 @@ export default function SubscriptionsPage() {
       <div className="px-6 pt-6 space-y-6">
 
         {/* Subscription Menus */}
-        <div className="pt-2">
-          <h3 className="font-extrabold text-gray-900 text-lg mb-4 flex items-center gap-2">
+        <div className="">
+          <h3 className="font-extrabold text-gray-900 text-[1.5rem] mb-4 flex items-center gap-2">
             <UtensilsCrossed className="w-5 h-5 text-orange-500" />
             Subscription Meals
           </h3>

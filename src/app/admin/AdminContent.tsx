@@ -1696,7 +1696,7 @@ export function SettingsTab({ categories = [], fetchAll, headers, API_URL, user 
   });
 
   // App delivery settings (editable by admin)
-  const [appSettings, setAppSettings] = React.useState({ defaultDeliveryFee: '25', corporateDeliveryFee: '100', subscriptionDeliveryPerTiffin: '20' });
+  const [appSettings, setAppSettings] = React.useState({ defaultDeliveryFee: '25', corporateDeliveryFee: '100', subscriptionDeliveryPerTiffin: '20', adminCommissionPercentage: '13' });
   const [settingsSaving, setSettingsSaving] = React.useState(false);
 
   const [locationForm, setLocationForm] = React.useState({
@@ -1727,7 +1727,8 @@ export function SettingsTab({ categories = [], fetchAll, headers, API_URL, user 
           setAppSettings({
             defaultDeliveryFee: String(d.settings.defaultDeliveryFee || 25),
             corporateDeliveryFee: String(d.settings.corporateDeliveryFee || 100),
-            subscriptionDeliveryPerTiffin: String(d.settings.subscriptionDeliveryPerTiffin || 20)
+            subscriptionDeliveryPerTiffin: String(d.settings.subscriptionDeliveryPerTiffin || 20),
+            adminCommissionPercentage: String(d.settings.adminCommissionPercentage || 13)
           });
         }
       } catch (err) { console.error('Failed to load admin settings', err); }
@@ -1921,6 +1922,21 @@ export function SettingsTab({ categories = [], fetchAll, headers, API_URL, user 
               />
               <p className="text-[10px] text-slate-500 mt-1">Per tiffin subscription delivery</p>
             </div>
+
+            <div>
+              <label className="block text-xs font-bold mb-2 text-slate-700">Admin Commission Percentage (%)</label>
+              <input
+                type="number"
+                value={(appSettings as any).adminCommissionPercentage}
+                onChange={e => setAppSettings(s => ({ ...s, adminCommissionPercentage: e.target.value }))}
+                placeholder="13"
+                min="0"
+                max="100"
+                step="0.1"
+                className={`${ERP.input}`}
+              />
+              <p className="text-[10px] text-slate-500 mt-1">Added to Regular, Shahi Thali, Mini Bowl prices</p>
+            </div>
           </div>
 
           <button
@@ -1933,25 +1949,26 @@ export function SettingsTab({ categories = [], fetchAll, headers, API_URL, user 
                   body: JSON.stringify({
                     defaultDeliveryFee: Number(appSettings.defaultDeliveryFee),
                     corporateDeliveryFee: Number(appSettings.corporateDeliveryFee),
-                    subscriptionDeliveryPerTiffin: Number(appSettings.subscriptionDeliveryPerTiffin)
+                    subscriptionDeliveryPerTiffin: Number(appSettings.subscriptionDeliveryPerTiffin),
+                    adminCommissionPercentage: Number((appSettings as any).adminCommissionPercentage)
                   })
                 });
                 const data = await res.json();
                 if (data.success) {
-                  alert('✅ Delivery fees updated successfully!');
+                  alert('✅ Settings updated successfully!');
                 } else {
                   alert(data.error || 'Failed to save settings');
                 }
               } catch (err) {
-                console.error('Error saving delivery fees', err);
-                alert('Failed to save delivery fees');
+                console.error('Error saving settings', err);
+                alert('Failed to save settings');
               }
               setSettingsSaving(false);
             }}
             disabled={settingsSaving}
             className={`${ERP.btn} ${ERP.btnPrimary} w-full md:w-auto`}
           >
-            {settingsSaving ? 'Saving…' : '💾 Save Delivery Fees'}
+            {settingsSaving ? 'Saving…' : '💾 Save Settings'}
           </button>
         </div>
       </div>

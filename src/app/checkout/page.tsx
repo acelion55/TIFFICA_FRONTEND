@@ -143,55 +143,13 @@ export default function CheckoutPage() {
     }).catch(() => {});
   }, []);
 
-  const checkTimeWindowForCart = () => {
-    const restrictedCats = ['regular', 'shahi thali', 'mini bowl'];
-    const restrictedItem = cart.find((item: any) => {
-      const cat = String(item.category || '').toLowerCase().trim();
-      const name = String(item.name || '').toLowerCase();
-      const scheduleSections = Array.isArray((item as any).scheduleSections)
-        ? (item as any).scheduleSections.map((s: string) => String(s).toLowerCase().trim())
-        : [];
-      return restrictedCats.includes(cat) ||
-             name.includes('regular') ||
-             name.includes('shahi thali') ||
-             name.includes('mini bowl') ||
-             scheduleSections.some((s: string) => restrictedCats.includes(s));
-    });
-
-    if (restrictedItem) {
-      const now = new Date();
-      const currentHour = now.getHours();
-      const currentMin = now.getMinutes();
-      const totalMinutes = currentHour * 60 + currentMin;
-
-      const mealTypes = [
-        ...(Array.isArray((restrictedItem as any).mealTypes) ? (restrictedItem as any).mealTypes : []),
-        ...((restrictedItem as any).mealType ? [(restrictedItem as any).mealType] : [])
-      ].map((m: string) => String(m).toLowerCase().trim());
-
-      const isLunch = mealTypes.includes('lunch') || (!mealTypes.includes('dinner') && totalMinutes < 14 * 60);
-      const isDinner = mealTypes.includes('dinner') || (!mealTypes.includes('lunch') && totalMinutes >= 14 * 60);
-
-      if (isLunch && totalMinutes >= 710) {
-        addToast(`Lunch orders for "${restrictedItem.name}" must be placed before 11:50 AM. Please remove it from your cart.`, 'error');
-        return false;
-      }
-
-      if (isDinner && totalMinutes >= 1080) {
-        addToast(`Dinner orders for "${restrictedItem.name}" must be placed before 6:00 PM. Please remove it from your cart.`, 'error');
-        return false;
-      }
-    }
-    return true;
-  };
+  // Time-window validation is handled server-side for scheduled orders.
+  // Immediate/cart orders are not subject to cutoff restrictions.
 
   const handlePayment = async () => {
     if (!token || !user) return;
     if (!selectedAddress) {
       addToast('Please select a delivery address', 'error');
-      return;
-    }
-    if (!checkTimeWindowForCart()) {
       return;
     }
     setPaying(true);
@@ -279,9 +237,6 @@ export default function CheckoutPage() {
 
   const handleWalletPayment = async () => {
     if (!token || !user || !selectedAddress) return;
-    if (!checkTimeWindowForCart()) {
-      return;
-    }
     setPaying(true);
 
     try {
@@ -460,20 +415,20 @@ export default function CheckoutPage() {
 
         {/* Add More Menu Section - Horizontal Scrolling */}
         {menuItems && menuItems.length > 0 && (
-          <div className="bg-white rounded-3xl shadow-sm p-5 space-y-4">
-            <h2 className="text-sm font-extrabold text-gray-900 flex items-center gap-2">
-              <UtensilsCrossed className="w-4 h-4 text-orange-500" />
+          <div className="bg-white rounded-3xl shadow-sm p-4 space-y-3">
+            <h2 className="text-xs font-extrabold text-gray-900 flex items-center gap-2">
+              <UtensilsCrossed className="w-3.5 h-3.5 text-orange-500" />
               Recommended For You
             </h2>
-            <div className="overflow-x-auto -mx-5 px-5 pb-2">
-              <div className="flex gap-4 min-w-min">
+            <div className="overflow-x-auto -mx-4 px-4 pb-2">
+              <div className="flex gap-3 min-w-min">
                 {menuItems.map((item: any) => (
                   <div
                     key={item._id}
-                    className="w-64 flex-shrink-0 bg-gray-50 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow"
+                    className="w-48 flex-shrink-0 bg-gray-50 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow"
                   >
                     {/* Image Section */}
-                    <div className="relative h-40 overflow-hidden bg-gray-200">
+                    <div className="relative h-32 overflow-hidden bg-gray-200">
                       {item.image && (
                         <img
                           src={item.image}
@@ -484,20 +439,20 @@ export default function CheckoutPage() {
                     </div>
                     
                     {/* Content Section */}
-                    <div className="p-4 space-y-3">
+                    <div className="p-3 space-y-2">
                       {/* Description */}
                       <div>
-                        <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-1">
+                        <p className="text-[9px] text-gray-500 uppercase tracking-wider font-semibold mb-0.5 line-clamp-1">
                           {item.cloudKitchen?.name || 'Special Menu'}
                         </p>
-                        <p className="font-semibold text-sm text-gray-900 line-clamp-2">
+                        <p className="font-semibold text-xs text-gray-900 line-clamp-2">
                           {item.description || item.name}
                         </p>
                       </div>
 
                       {/* Price & Action */}
                       <div className="flex items-center justify-between pt-2 border-t border-gray-200">
-                        <span className="text-lg font-black text-orange-600">₹{item.price}</span>
+                        <span className="text-sm font-black text-orange-600">₹{item.price}</span>
                         <button
                           type="button"
                           onClick={() => {
@@ -506,9 +461,9 @@ export default function CheckoutPage() {
                               if (addToast) addToast(`Added ${item.name}`, 'success');
                             }
                           }}
-                          className="w-9 h-9 bg-orange-500 text-white rounded-lg flex items-center justify-center active:scale-90 transition hover:bg-orange-600 shadow-sm"
+                          className="w-7 h-7 bg-orange-500 text-white rounded-lg flex items-center justify-center active:scale-90 transition hover:bg-orange-600 shadow-sm"
                         >
-                          <Plus className="w-4 h-4" />
+                          <Plus className="w-3.5 h-3.5" />
                         </button>
                       </div>
                     </div>

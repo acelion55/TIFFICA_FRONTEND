@@ -109,7 +109,7 @@ export default function AdminDashboard() {
   const [menuItemInputs, setMenuItemInputs] = useState<string[]>(['', '', '', '']);
   const [descriptionText, setDescriptionText] = useState<string>('');
   const [infoText, setInfoText] = useState<string>('');
-  const [corporateChecked, setCorporateChecked] = useState<boolean>(false);
+
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
   const [isGenerateDisabled, setIsGenerateDisabled] = useState(false);
   const [showImageGallery, setShowImageGallery] = useState(false);
@@ -342,6 +342,8 @@ export default function AdminDashboard() {
       window.history.pushState(null, '', window.location.href);
 
       if (menuModal.data) {
+        console.log('📝 Menu modal opened with data:', menuModal.data);
+        console.log('✅ Setting isInstant from data:', menuModal.data.isInstant);
         const activeCategory = (menuModal.data.scheduleSections && menuModal.data.scheduleSections.length > 0) ? menuModal.data.scheduleSections[0] : (menuModal.data.category || 'Regular');
         setSelectedCategory(activeCategory);
         setDishName(menuModal.data.name || '');
@@ -355,21 +357,15 @@ export default function AdminDashboard() {
           setDeliveryPrice(menuModal.data.deliveryPrice !== undefined && menuModal.data.deliveryPrice !== null ? menuModal.data.deliveryPrice : '');
           setFreeDelivery(!!menuModal.data.freeDelivery);
           setIsInstantLocal(!!menuModal.data.isInstant);
+          console.log('✅ setIsInstantLocal called with:', !!menuModal.data.isInstant);
         } catch (e) { /* ignore */ }
         // For admin show full description textarea, for kitchen-owner keep legacy item inputs
         if (isAdmin) {
           setDescriptionText(menuModal.data.description || '');
           setInfoText(menuModal.data.info || '');
-          setCorporateChecked((menuModal.data.scheduleSections || []).includes?.('Corporate Order') || false);
+  
         } else {
-          let inputs = menuModal.data.description ? menuModal.data.description.split(', ') : [];
-          if (activeCategory.toLowerCase() === 'shahi thali') {
-             while (inputs.length < 5) inputs.push('');
-             setMenuItemInputs(inputs.slice(0, 5));
-          } else {
-             while (inputs.length < 4) inputs.push('');
-             setMenuItemInputs(inputs.slice(0, 4));
-          }
+          setDescriptionText(menuModal.data.description || '');
         }
       } else {
         setSelectedCategory('Regular');
@@ -379,7 +375,6 @@ export default function AdminDashboard() {
         setMenuItemInputs(['', '', '', '']);
         setDescriptionText('');
         setInfoText('');
-        setCorporateChecked(false);
         // initialize default prices from categories (if available) - only for admin, not for kitchen owners
         if (isAdmin) {
           try {
@@ -578,7 +573,8 @@ export default function AdminDashboard() {
       const fdDesc = fd.get('description');
       descriptionValue = (typeof fdDesc === 'string' && fdDesc) ? fdDesc : (descriptionText || '');
     } else {
-      descriptionValue = menuItemInputs.filter(Boolean).join(', ');
+      const fdDesc = fd.get('description');
+      descriptionValue = (typeof fdDesc === 'string' && fdDesc) ? fdDesc : (descriptionText || '');
     }
 
     const categoryValue = selectedCategory || 'regular';
@@ -605,7 +601,7 @@ export default function AdminDashboard() {
       freeDelivery: freeDelivery,
       image: imgPreview || fd.get('imageUrl'),
       isVeg: true,
-      isInstant: false,
+      isInstant: isInstantLocal,
       isSpecial: fd.get('isSpecial') === 'true',
       isSubscription: fd.get('isSubscription') === 'true',
       cloudKitchen: cloudKitchenValue || null,
@@ -618,6 +614,8 @@ export default function AdminDashboard() {
       info: infoText || null,
     };
 
+    console.log('📝 Saving menu item...');
+    console.log('isInstantLocal state:', isInstantLocal);
     console.log('Saving menu with data:', body);
 
     const isEdit = !!menuModal.data?._id;
@@ -635,10 +633,10 @@ export default function AdminDashboard() {
       setSelectedCategory('regular');
       setDescriptionText('');
       setInfoText('');
-      setCorporateChecked(false);
       setSellingPrice(0);
       setDeliveryPrice('');
       setFreeDelivery(false);
+      setIsInstantLocal(false);
       setIsGenerateDisabled(false);
       fetchAll();
     } else {
@@ -1162,7 +1160,7 @@ export default function AdminDashboard() {
                 <div className="space-y-2">
                   <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-4">Schedule Category</p>
                   <div className="flex gap-3 px-4 flex-wrap">
-                    {['Regular','Shahi Thali','Corporate Order','Mini Bowl'].map(opt => (
+                    {['Regular','Shahi Thali','Mini Bowl'].map(opt => (
                       <label key={opt} className="inline-flex items-center gap-2 text-sm">
                         <input
                           type="checkbox"
@@ -1178,12 +1176,6 @@ export default function AdminDashboard() {
                                 setMenuItemInputs(prev => { let next = [...prev]; while (next.length < 5) next.push(''); return next.slice(0,5); });
                               } else {
                                 setMenuItemInputs(prev => { let next = [...prev]; while (next.length < 4) next.push(''); return next.slice(0,4); });
-                              }
-                              // try to apply category prices
-                              const selectedCat = categories?.find((c: any) => (c.name || '').toLowerCase() === opt.toLowerCase());
-                              if (selectedCat) {
-                                setSellingPrice(selectedCat.sellPrice || 0);
-                                setDeliveryPrice('');
                               }
                             } else {
                               setSelectedCategory('');
@@ -1215,7 +1207,7 @@ export default function AdminDashboard() {
                   <div className="space-y-2">
                     <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-4">Schedule Category</p>
                     <div className="flex gap-3 px-4 flex-wrap">
-                      {['Regular','Shahi Thali','Corporate Order','Mini Bowl'].map(opt => (
+                      {['Regular','Shahi Thali','Mini Bowl'].map(opt => (
                         <label key={opt} className="inline-flex items-center gap-2 text-sm">
                           <input
                             type="checkbox"
@@ -1230,11 +1222,6 @@ export default function AdminDashboard() {
                                   setMenuItemInputs(prev => { let next = [...prev]; while (next.length < 5) next.push(''); return next.slice(0,5); });
                                 } else {
                                   setMenuItemInputs(prev => { let next = [...prev]; while (next.length < 4) next.push(''); return next.slice(0,4); });
-                                }
-                                const selectedCat = categories?.find((c: any) => (c.name || '').toLowerCase() === opt.toLowerCase());
-                                if (selectedCat) {
-                                  setSellingPrice(selectedCat.sellPrice || 0);
-                                  setDeliveryPrice('');
                                 }
                               } else {
                                 setSelectedCategory('');
@@ -1294,20 +1281,7 @@ export default function AdminDashboard() {
                 )
               )}
 
-              {/* Corporate Info field — admin only, shown when Corporate Order is selected */}
-              {isAdmin && (corporateChecked || selectedCategory?.toLowerCase() === 'corporate order') && (
-                <div className="space-y-1">
-                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-4">Corporate Info / Details</p>
-                  <p className="text-[10px] text-blue-500 px-4">This will be shown as formatted info in the Corporate section.</p>
-                  <textarea
-                    name="info"
-                    value={infoText}
-                    onChange={e => { setInfoText(e.target.value); setMenuFormDirty(true); }}
-                    placeholder={`e.g. Min order: 10 boxes\nEach box includes:\n- 4 roti\n- dal\n- sabji\n- salad`}
-                    className={inputCls + ' h-36 resize-y font-mono text-sm'}
-                  />
-                </div>
-              )}
+
 
              
 
@@ -1334,7 +1308,7 @@ export default function AdminDashboard() {
                         setDishName(e.target.value);
                         setMenuFormDirty(true);
                       }}
-                      placeholder="e.g., Chicken Biryani, Paneer Tikka"
+                      placeholder="e.g., Matar Paneer, Paneer Tikka"
                       className={inputCls}
                     />
                   </div>

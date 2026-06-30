@@ -3,8 +3,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  ChevronLeft,
-  ChevronRight,
   X,
   Loader2,
   Calendar,
@@ -204,21 +202,17 @@ export default function ScheduleClient() {
       return;
     }
 
-    if (isRestrictedSectionItem(item)) {
-      const validation = validateTimeWindow(mealTypeFilter);
-      if (!validation.valid) {
-        addToast(validation.msg || "Ordering window has closed for today.", "error");
-        return;
-      }
-    }
+    // Quick "Buy Now" — no date selection available here.
+    // Time restrictions are enforced on the dialog (with date picker) and backend.
 
-    // Add item to cart
+    const cartPrice = (item as any).customerPrice || item.price;
     if (addToCart) {
       addToCart({
         _id: item._id,
         name: item.name,
         description: item.description,
-        price: item.price,
+        price: cartPrice,
+        customerPrice: (item as any).customerPrice,
         image: item.image,
         cloudKitchen: item.cloudKitchen,
         isCorporate: selectedSection === 'corporateOrder'
@@ -244,12 +238,14 @@ export default function ScheduleClient() {
       }
     }
 
+    const cartPrice = (selectedItem as any).customerPrice || selectedItem.price;
     if (addToCart) {
       addToCart({
         _id: selectedItem._id,
         name: selectedItem.name,
         description: selectedItem.description,
-        price: selectedItem.price,
+        price: cartPrice,
+        customerPrice: (selectedItem as any).customerPrice,
         image: selectedItem.image,
         cloudKitchen: selectedItem.cloudKitchen,
         isCorporate: selectedSection === 'corporateOrder'
@@ -268,17 +264,17 @@ export default function ScheduleClient() {
   }
 
   return (
-    <div className="min-h-screen bg-[#FAF7F5] pb-32 pt-16">
-      {/* 20vh sliding banner */}
-      <div className="relative h-[23vh] w-full overflow-hidden shadow-lg">
+    <div className="min-h-screen bg-[#FAF7F5] pb-32 mt-16">
+      {/* Sliding Banner - Full Width (Same as Subscription) */}
+      <div className="relative h-[22vh] w-full overflow-hidden shadow-lg bg-gray-200">
         <AnimatePresence mode="wait">
           <motion.img
             key={currentBanner}
             src={banners[currentBanner]}
-            initial={{ opacity: 0, scale: 1.1 }}
+            initial={{ opacity: 0, scale: 1.05 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
-            transition={{ duration: 0.8 }}
+            transition={{ duration: 0.5 }}
             className="absolute inset-0 w-full h-full object-cover"
           />
         </AnimatePresence>
@@ -296,23 +292,6 @@ export default function ScheduleClient() {
             ))}
           </div>
         )}
-
-        <div className="absolute top-1/2 -translate-y-1/2 left-6 right-6 flex items-center justify-between pointer-events-none">
-          <button
-            onClick={() =>
-              setCurrentBanner((p) => (p - 1 + banners.length) % banners.length)
-            }
-            className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center pointer-events-auto hover:bg-white/20 transition"
-          >
-            <ChevronLeft className="w-6 h-6 text-white" />
-          </button>
-          <button
-            onClick={() => setCurrentBanner((p) => (p + 1) % banners.length)}
-            className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center pointer-events-auto hover:bg-white/20 transition"
-          >
-            <ChevronRight className="w-6 h-6 text-white" />
-          </button>
-        </div>
       </div>
 
       <div className="px-5 py-3  ">
@@ -337,9 +316,10 @@ export default function ScheduleClient() {
           <>
             <div className="grid grid-cols-2 gap-4">
               {SECTIONS.map((section, idx) => {
-                const imageUrl =
-                  homestyle?.scheduleSectionImages?.[section.id] ||
-                  "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&h=400&fit=crop";
+                const sectionImg = homestyle?.scheduleSectionImages?.[section.id];
+                const imageUrl = sectionImg && sectionImg.trim()
+                  ? sectionImg
+                  : "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&h=400&fit=crop";
                 return (
                   <motion.div
                     key={section.id}
@@ -347,7 +327,7 @@ export default function ScheduleClient() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: idx * 0.1 }}
                     onClick={() => setSelectedSection(section.id)}
-                    className="group relative h-52 rounded-[1.5rem] overflow-hidden shadow-lg cursor-pointer active:scale-[0.98] transition-transform"
+                    className="group relative h-58 rounded-[1.5rem] overflow-hidden shadow-lg cursor-pointer active:scale-[0.98] transition-transform"
                   >
                     <img
                       src={imageUrl}
@@ -484,7 +464,7 @@ export default function ScheduleClient() {
                             </div>
 
                             <p className="text-orange-500 font-black text-lg mt-2">
-                              ₹{item.price}
+                              ₹{(item as any).customerPrice || item.price}
                             </p>
 
 
@@ -558,8 +538,13 @@ export default function ScheduleClient() {
                     {selectedItem.description}
                   </p>
                   <p className="text-orange-500 font-black text-2xl mt-3">
-                    ₹{selectedItem.price}
+                    ₹{(selectedItem as any).customerPrice || selectedItem.price}
                   </p>
+                  {(selectedItem as any).customerPrice && (
+                    <p className="text-slate-500 text-xs mt-1">
+                      (Base ₹{selectedItem.price} + 10% commission)
+                    </p>
+                  )}
                 </div>
 
                 {/* Date Selector */}
